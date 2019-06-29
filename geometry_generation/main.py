@@ -14,6 +14,18 @@ author: stefanaparascho
 
 print("start")
 import pickle
+import coop_assembly
+import compas
+import platform
+
+if platform.python_implementation() == "CPython":
+    import importlib
+    importlib.reload(coop_assembly)
+    importlib.reload(compas)
+else:
+    reload(coop_assembly)
+    reload(compas)
+    print "yessssss"
 
 from compas.utilities.xfunc import XFunc
 
@@ -23,12 +35,14 @@ from coop_assembly.data_structure.data_structure_compas import Overall_Structure
 
 from spatial_structures.bar_structure import Bar_Structure
 
+# import coop_assembly
+
 
 def main():
-    print("running main")
+    print("running main pff")
 
     run_python = True
-    bool_draw = False
+    bool_draw = True
     draw_meshes = False
     draw_analysis = True
 
