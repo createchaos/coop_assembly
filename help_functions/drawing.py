@@ -38,7 +38,7 @@ def draw(b_struct, o_struct, j, colors_b=(None, None), colors_o=(None, None)):
     Rhino.RhinoApp.Wait()
     # if bool_export:
     #     capture_to_file("C:\Users\Stefana\Documents\imgs_lws\img9999_" + str(j) + ".jpg",  "network_1", 1)
-
+    
     if bool_debug:
         for b in b_struct.edge:
             for c in b_struct.edge[b]:

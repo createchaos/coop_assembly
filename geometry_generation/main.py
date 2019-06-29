@@ -25,7 +25,6 @@ if platform.python_implementation() == "CPython":
 else:
     reload(coop_assembly)
     reload(compas)
-    print "yessssss"
 
 from compas.utilities.xfunc import XFunc
 
@@ -39,7 +38,7 @@ from spatial_structures.bar_structure import Bar_Structure
 
 
 def main():
-    print("running main pff")
+    print("hmmmmm")
 
     run_python = True
     bool_draw = True
