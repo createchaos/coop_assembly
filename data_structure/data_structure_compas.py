@@ -1,7 +1,7 @@
 
 '''
                                                                                                  
-    °***       *****       ******       ****       ******  ******          **           **       
+    ****       *****       ******       ****       ******  ******          **           **       
    **  **      **  **      **          **  **        **    **              **           **       
    **          *****       ****        ******        **    ****            **   *****   *****    
    **  **      **  **      **          **  **        **    **              **  **  **   **  **   
@@ -20,6 +20,7 @@ from compas.geometry.basic import add_vectors, scale_vector, cross_vectors, subt
 from compas.geometry.distance import distance_point_point, closest_point_on_plane
 from compas.geometry.average import centroid_points
 
+from coop_assembly.help_functions.helpers_geometry import dropped_perpendicular_points
 
 
 class Overall_Structure(Network):
@@ -73,17 +74,17 @@ class Overall_Structure(Network):
         self.struct_bar.vertex[vertex_bar_struct].update({"o_edge":(v_key_1, v_key_2)})
         return e_keys
     
-    # def calculate_point(self, v_key):
-    #     cons = self.connectors(v_key)
-    #     pts = []
-    #     for con in cons:
-    #         points_1 = self.struct_bar.vertex[con[0]]["axis_endpoints"]
-    #         points_2 = self.struct_bar.vertex[con[1]]["axis_endpoints"]
-    #         dpp = dropped_perpendicular_points(points_1[0], points_1[1], points_2[0], points_2[1])
-    #         pts.append(point_mean(dpp))
-    #     pt_mean = point_mean(pts)   
-    #     self.vertex[v_key].update({"x":pt_mean[0], "y":pt_mean[1], "z":pt_mean[2], "point_xyz":pt_mean})
-    #     return pt_mean
+    def calculate_point(self, v_key):
+        cons = self.connectors(v_key)
+        pts = []
+        for con in cons:
+            points_1 = self.struct_bar.vertex[con[0]]["axis_endpoints"]
+            points_2 = self.struct_bar.vertex[con[1]]["axis_endpoints"]
+            dpp = dropped_perpendicular_points(points_1[0], points_1[1], points_2[0], points_2[1])
+            pts.append(centroid_points(dpp))
+        pt_mean = centroid_points(pts)   
+        self.vertex[v_key].update({"x":pt_mean[0], "y":pt_mean[1], "z":pt_mean[2], "point_xyz":pt_mean})
+        return pt_mean
         
     def connectors(self, n_key):
         #self.vertex[n_key]
