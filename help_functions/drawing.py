@@ -26,6 +26,8 @@ def draw(b_struct, o_struct, j, colors_b=(None, None), colors_o=(None, None)):
     import Rhino
     import time
 
+    print("drawing again :) and again")
+
     bool_export = False
     bool_debug = False
 

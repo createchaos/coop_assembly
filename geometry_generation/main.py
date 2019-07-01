@@ -18,13 +18,13 @@ import coop_assembly
 import compas
 import platform
 
-if platform.python_implementation() == "CPython":
-    import importlib
-    importlib.reload(coop_assembly)
-    importlib.reload(compas)
-else:
-    reload(coop_assembly)
-    reload(compas)
+# if platform.python_implementation() == "CPython":
+#     import importlib
+#     importlib.reload(coop_assembly)
+#     importlib.reload(compas)
+# else:
+#     reload(coop_assembly)
+#     reload(compas)
 
 from compas.utilities.xfunc import XFunc
 
@@ -45,7 +45,6 @@ def main():
     draw_meshes = False
     draw_analysis = True
 
-
     try:
         #import compas_rhino
         import Rhino
@@ -55,7 +54,7 @@ def main():
     if run_python:
         print("calling function in python")
         xfunc = XFunc(
-            'coop_assembly.geometry_generation.execute.execute')
+            'coop_assembly.geometry_generation.execute.execute', python=r'C:\Users\Stefana\Anaconda2\envs\py36\python')
         xfunc()
         print("error", xfunc.error)
         
@@ -73,7 +72,7 @@ def main():
     if bool_draw:
         import Rhino.RhinoDoc
         import compas_rhino.helpers
-        # from lws_geometry.geometry_generation.draw_compas import create_rhino_mesh, draw_robots, draw_structure
+        
         draw(b, o, 0, colors_b=((0, 255, 0), (70, 70, 255)),
              colors_o=((0, 255, 0), (170, 170, 255)))
         
