@@ -13,9 +13,9 @@ author: stefanaparascho
 '''
 
 from compas.utilities.colors import color_to_colordict
-from lws_geometry.help_functions.help_functions_compas import dropped_perpendicular_points,\
-    dropped_perpendicular_points_ipy
 from compas.geometry.basic import add_vectors, scale_vector
+
+from coop_assembly.help_functions.helpers_geometry import dropped_perpendicular_points
 
 def draw(b_struct, o_struct, j, colors_b=(None, None), colors_o=(None, None)):
 
@@ -26,7 +26,7 @@ def draw(b_struct, o_struct, j, colors_b=(None, None), colors_o=(None, None)):
     import Rhino
     import time
 
-    print("drawing again :) and again")
+    print("yuhuuuuuuuu")
 
     bool_export = False
     bool_debug = False
@@ -101,7 +101,7 @@ def draw_network_inv(network,
 
     for u, v, attr in network.edges(True):
 
-        dpp = dropped_perpendicular_points_ipy(network.vertex[u]["axis_endpoints"][0],
+        dpp = dropped_perpendicular_points(network.vertex[u]["axis_endpoints"][0],
                                                network.vertex[u]["axis_endpoints"][1],
                                                network.vertex[v]["axis_endpoints"][0],
                                                network.vertex[v]["axis_endpoints"][1])
