@@ -14,7 +14,7 @@ author: stefanaparascho
 
 print("start")
 import pickle
-import coop_assembly
+# import coop_assembly
 import compas
 import platform
 
@@ -53,8 +53,11 @@ def main():
 
     if run_python:
         print("calling function in python")
+        # xfunc = XFunc(
+        #     'coop_assembly.geometry_generation.execute.execute', python=r'C:\Users\Stefana\Anaconda2\envs\py36\python')
         xfunc = XFunc(
-            'coop_assembly.geometry_generation.execute.execute', python=r'C:\Users\Stefana\Anaconda2\envs\py36\python')
+            'coop_assembly.geometry_generation.execute.execute', python=r'C:\Users\parascho\AppData\Local\Continuum\anaconda3\envs\env_python3\python')
+                         
         xfunc()
         print("error", xfunc.error)
         
