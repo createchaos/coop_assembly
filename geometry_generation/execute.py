@@ -46,9 +46,9 @@ def execute():
     t1      = time.time()
 
     generate_first_tri(o_struct, b_struct, r)
-    print 
+
     update_bar_lengths(b_struct)
-    generate_structure_rnd(o_struct, b_struct, bool_draw, r)
+    generate_structure(o_struct, b_struct, bool_draw, r)
     steps   = 3
     # generate_structure(o_struct, b_struct, bool_draw, r, support_bars, load_bars, correct=False)
     # print ("output",b_struct, o_struct)

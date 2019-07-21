@@ -15,6 +15,7 @@ author: stefanaparascho
 
 import random
 import itertools
+import math
 
 from compas.geometry.basic import add_vectors, normalize_vector, vector_from_points, scale_vector, cross_vectors, subtract_vectors
 from compas.geometry.distance import distance_point_point
@@ -112,59 +113,21 @@ def generate_first_tri(o_struct, b_struct, r, points = None):
     # b_struct.vertex[b_v1].update({"rob_num":rob_num_1})
     # b_struct.vertex[b_v2].update({"rob_num":rob_num_2})
 
-def generate_structure(o_struct, b_struct, bool_draw, r, supports=None, loads=None, correct=True):
-
-    for i in range(20):
-        # choose two random nodes to connect to
-        nodes_rnd   = random.sample(o_struct.vertex.keys(), 2)
-
-        # choose nodes close to target
-        # target      = [(10000,0,0)]
-        # nodes_all   = choose_nodes(o_struct, target)
-        # nodes_rnd   = random.sample(nodes_all, 3)
-
-        # choose random two edges per node to connect new bar to
-        o_e1_rnd    = random.sample(o_struct.vertex_connected_edges(nodes_rnd[0]), 2)
-        o_e2_rnd    = random.sample(o_struct.vertex_connected_edges(nodes_rnd[1]), 2)
-        o_e3_rnd    = random.sample(o_struct.vertex_connected_edges(nodes_rnd[2]), 2)
-
-        # choose not random two edges per node to connect new bar to
-        # o_e1_rnd = [o_struct.vertex_connected_edges(nodes_rnd[0])[-1], o_struct.vertex_connected_edges(nodes_rnd[0])[-2]]
-        # o_e2_rnd = [o_struct.vertex_connected_edges(nodes_rnd[1])[-1], o_struct.vertex_connected_edges(nodes_rnd[1])[-2]]
-        # o_e3_rnd = [o_struct.vertex_connected_edges(nodes_rnd[2])[-1], o_struct.vertex_connected_edges(nodes_rnd[2])[-2]]
-
-        list_bars_1 = o_struct.vertex_connected_edges(nodes_rnd[0])
-        com_bars_1 = itertools.combinations(list_bars_1, 2)
-        comb_1 = [x for x in com_bars_1]
-        comb_1.reverse()
-        list_bars_2 = o_struct.vertex_connected_edges(nodes_rnd[1])
-        com_bars_2 = itertools.combinations(list_bars_2, 2)
-        comb_2 = [x for x in com_bars_2]
-        comb_2.reverse()
-        list_bars_3 = o_struct.vertex_connected_edges(nodes_rnd[2])
-        com_bars_3 = itertools.combinations(list_bars_3, 2)
-        comb_3 = [x for x in com_bars_3]
-        comb_3.reverse()
-
-        # add new tetrahedron connected at chosen bars
-        # return_at   = add_tetra(o_struct, b_struct, nodes_rnd, o_e1_rnd, o_e2_rnd, o_e3_rnd, 1, None, r, correct=correct, check_col=True)
-        # return_at   = add_tetra(o_struct, b_struct, nodes_rnd, comb_1, comb_2, comb_3, 1, None, r, correct=correct, check_col=True)
-        # if return_at != None:
-        #     o_struct, b_struct = return_at
-
-        # update vertex points of overall structure according to the newly added connection points from b_struct
-        # o_struct.update_points()
-
-    # for sups in supports:
-    #     add_supports(b_struct, sups[0], sups[1])
-    # if loads:
-    #     for load in loads:
-    #         add_loads(b_struct, load[0], load[1], (0,0,-3000))
+    return b_struct, o_struct
 
 
-def generate_structure_rnd(o_struct, b_struct, bool_draw, r, supports=None, loads=None, correct=True):
 
-    for i in range(1):
+def generate_structure(o_struct, b_struct, bool_draw, r, points = None, supports=None, loads=None, correct=True):
+
+    if points: 
+        iterations = len(points)
+    else:
+        iterations = 1
+    print("iterations", iterations)
+        
+
+    for i in range(iterations):
+        print("i", i)
         # choose two random nodes to connect to
         # nodes_rnd   = random.sample(o_struct.vertex.keys(), 2)
 
@@ -196,10 +159,14 @@ def generate_structure_rnd(o_struct, b_struct, bool_draw, r, supports=None, load
         dist1       = r
         dist2       = r
 
-        if i == 0: 
-            pt_test     = (300,300,1000)
+        if points:
+            pt_test = points[i]
         else:
-            pt_test = (1200, 500, 700)
+            # reconsider point definition - random?
+            if i == 0: 
+                pt_test     = (300,300,1000)
+            else:
+                pt_test = (1200, 500, 700)
 
         rp          = pt_test
 
@@ -207,7 +174,21 @@ def generate_structure_rnd(o_struct, b_struct, bool_draw, r, supports=None, load
 
         bars_rnd    = random.sample(list_bars_all,1)
         bars_rnd.append(bar_index)
-        rp          = (rp[0] + random.random()*60 -30, rp[1] + random.random()*60 -30, rp[2] + random.random()*60 -30)
+
+        
+
+        # check problem with rotation of vector
+        vec_move = normalize_vector(b_struct.vertex[bar_index]["zdir"])
+        # print("vec_move", vec_move)
+        vec_axis = normalize_vector(subtract_vectors(b_struct.vertex[bar_index]["axis_endpoints"][1], b_struct.vertex[bar_index]["axis_endpoints"][0]))
+        # print("vec_axis")
+        # cross_vec = cross_vectors(vec_move, vec_axis)
+        # ang_rnd = random.uniform(math.radians(0), math.radians(360))
+        ang_rnd = math.radians(180)
+        vec_new = scale_vector(rotate_points([vec_move], ang_rnd, vec_axis)[0], 30)
+        # print("vec_new", vec_new)
+
+        rp          = (rp[0] + vec_new[0], rp[1] + vec_new[1], rp[2] + vec_new[2])
 
         # rp          = (150,150,500)
         # if i == 0: 
@@ -228,12 +209,15 @@ def generate_structure_rnd(o_struct, b_struct, bool_draw, r, supports=None, load
         bar_index   = add_tangent(b_struct, bp1, lv1, bp2, lv2, rp, dist1, dist2, bars_rnd)
 
         update_bar_lengths(b_struct)
+        
+
+    return b_struct
 
 
 def add_tangent(b_struct, bp1, lv1, bp2, lv2, rp, dist1, dist2, bars_rnd):
-    print("input tangent", bars_rnd, rp)
+    
     sol     = tangent_from_point(bp1, lv1, bp2, lv2, rp, dist1, dist2)
-    print("tangent solution", sol)
+    
     b1_key  = bars_rnd[0]
     b2_key  = bars_rnd[1]
     b1      = b_struct.vertex[b1_key]

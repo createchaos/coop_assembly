@@ -96,7 +96,7 @@ def check_dir(vec1, vec2):
 # to move to bar structure 
 def update_bar_lengths(b_struct):
 
-    print("input update", b_struct.vertex[0]["axis_endpoints"], b_struct.vertex[1]["axis_endpoints"], b_struct.vertex[2]["axis_endpoints"])
+    # print("input update", b_struct.vertex[0]["axis_endpoints"], b_struct.vertex[1]["axis_endpoints"], b_struct.vertex[2]["axis_endpoints"])
     for b in b_struct.vertex:
         edges_con = b_struct.vertex_connected_edges(b)
         list_pts = []
@@ -106,22 +106,22 @@ def update_bar_lengths(b_struct):
             points = b_struct.edge[e][f]["endpoints"]
             # points2 = b_struct.edge[f][e]["endpoints"]
             # points = points + points2
-            print(points)
+            # print(points)
             # if points != []:
             for p in points.keys():
                 pair_points = points[p]
-                print("pair points", pair_points)
+                # print("pair points", pair_points)
                 if pair_points !=[]:
                     for pt in pair_points:
                         # print("input",  b_struct.vertex[b]["axis_endpoints"])
                         bool_online = is_point_on_line(pt, b_struct.vertex[b]["axis_endpoints"], 0.1)
                         if bool_online:
-                            print("yes!", pt)
+                            # print("yes!", pt)
                             list_pts.append(pt)
-                        else:
-                            print("no!", pt)
+                        # else:
+                            # print("no!", pt)
 
-        print("list_points", list_pts)
+        # print("list_points", list_pts)
         if list_pts != []:
             # list_pts.append(b_struct.vertex[b]["axis_endpoints"][0])
             # list_pts.append(b_struct.vertex[b]["axis_endpoints"][1])
@@ -129,7 +129,7 @@ def update_bar_lengths(b_struct):
                 pts_extr = find_points_extreme(list_pts, b_struct.vertex[b]["axis_endpoints"])
             else:
                 pts_extr = list_pts
-            print("point extr", pts_extr)
+            # print("point extr", pts_extr)
             b_struct.vertex[b].update({"axis_endpoints":pts_extr})
 
 

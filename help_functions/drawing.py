@@ -203,7 +203,8 @@ def draw_network_inv_gh(network):
 
     """
 
-    from compas_fab.fab.grasshopper.utilities import drawing
+    # from compas_fab.fab.grasshopper.utilities import drawing
+    from compas_ghpython.utilities import drawing
 
     points = []
     for key, attr in network.vertices(True):
@@ -256,11 +257,11 @@ def draw_network_inv_gh(network):
                 "end": end_p
             })
 
-    points_gh = drawing.xdraw_points(points)
+    points_gh = drawing.draw_points(points)
 
-    lines_gh = drawing.xdraw_lines(lines)
+    lines_gh = drawing.draw_lines(lines)
 
-    lines_c_gh = drawing.xdraw_lines(lines_c)
+    lines_c_gh = drawing.draw_lines(lines_c)
 
     return points_gh, lines_gh, lines_c_gh
 

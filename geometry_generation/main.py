@@ -53,10 +53,10 @@ def main():
 
     if run_python:
         print("calling function in python")
-        # xfunc = XFunc(
-        #     'coop_assembly.geometry_generation.execute.execute', python=r'C:\Users\Stefana\Anaconda2\envs\py36\python')
         xfunc = XFunc(
-            'coop_assembly.geometry_generation.execute.execute', python=r'C:\Users\parascho\AppData\Local\Continuum\anaconda3\envs\env_python3\python')
+            'coop_assembly.geometry_generation.execute.execute', python=r'C:\Users\Stefana\Anaconda2\envs\py36\python')
+        # xfunc = XFunc(
+        #     'coop_assembly.geometry_generation.execute.execute', python=r'C:\Users\parascho\AppData\Local\Continuum\anaconda3\envs\env_python3\python')
                          
         xfunc()
         print("error", xfunc.error)
@@ -65,8 +65,6 @@ def main():
     else:
         data = pickle.loads(execute())
 
-    #print(data)
-    print("data", data)
     b = Bar_Structure.from_data(data[0])
     
     o = Overall_Structure(b)
