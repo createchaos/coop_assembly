@@ -22,7 +22,7 @@ from compas.geometry.transformations import rotate_points
 from compas.geometry.angles import angle_vectors
 from compas.geometry.average import centroid_points
 
-from coop_assembly.help_functions.helpers_geometry import calculate_coord_sys, calculate_bar_z, dropped_perpendicular_points
+from coop_assembly.help_functions.helpers_geometry import calculate_coord_sys, calculate_bar_z, dropped_perpendicular_points, update_bar_lengths
 from coop_assembly.help_functions.tangents import tangent_from_point, check_length_sol_one
 
 def generate_first_tri(o_struct, b_struct, r, points = None):
@@ -180,6 +180,7 @@ def generate_structure_rnd(o_struct, b_struct, bool_draw, r, supports=None, load
 
         # o_e1_rnd    = random.sample(o_struct.edges, 2)
         # print("vertices", type(b_struct.vertices()))
+
         list_bars_all = list(b_struct.vertices())
         bars_rnd    = random.sample(list_bars_all,2)
 
@@ -195,13 +196,24 @@ def generate_structure_rnd(o_struct, b_struct, bool_draw, r, supports=None, load
         dist1       = r
         dist2       = r
 
-        pt_test     = (300,300,1000)
+        if i == 0: 
+            pt_test     = (300,300,1000)
+        else:
+            pt_test = (1200, 500, 700)
+
         rp          = pt_test
 
         bar_index   = add_tangent(b_struct, bp1, lv1, bp2, lv2, rp, dist1, dist2, bars_rnd)
 
         bars_rnd    = random.sample(list_bars_all,1)
         bars_rnd.append(bar_index)
+        rp          = (rp[0] + random.random()*60 -30, rp[1] + random.random()*60 -30, rp[2] + random.random()*60 -30)
+
+        # rp          = (150,150,500)
+        # if i == 0: 
+        #     pt_test     = (150,150,500)
+        # else:
+        #     pt_test = (600, 250, 350)
         # print("bars random", bars_rnd)
 
         bar1        = b_struct.vertex[bars_rnd[0]]["axis_endpoints"]
@@ -215,6 +227,8 @@ def generate_structure_rnd(o_struct, b_struct, bool_draw, r, supports=None, load
 
         bar_index   = add_tangent(b_struct, bp1, lv1, bp2, lv2, rp, dist1, dist2, bars_rnd)
 
+        update_bar_lengths(b_struct)
+
 
 def add_tangent(b_struct, bp1, lv1, bp2, lv2, rp, dist1, dist2, bars_rnd):
     print("input tangent", bars_rnd, rp)
@@ -225,22 +239,26 @@ def add_tangent(b_struct, bp1, lv1, bp2, lv2, rp, dist1, dist2, bars_rnd):
     b1      = b_struct.vertex[b1_key]
     b2      = b_struct.vertex[b2_key]
 
+    vec_sol = sol[0]
+    end_pts_0 = [rp, add_vectors(rp, vec_sol)]
 
-    pt_mean_1 = (150,150,500)
-    ret_cls = check_length_sol_one(sol[0], pt_mean_1, rp, b1, b2, b1_key, b2_key, b_struct)
+    # pt_mean_1 = (200,200,500)
+    # ret_cls = check_length_sol_one(sol[0], pt_mean_1, rp, b1, b2, b1_key, b2_key, b_struct)
 
-    vec_sol_1, l1, pts_b1_1, pts_b1_2 = ret_cls
-    pt1_e = add_vectors(bp1, scale_vector(vec_sol_1, l1))
-    end_pts_0 = (bp1, pt1_e)
+    # vec_sol_1, l1, pts_b1_1, pts_b1_2 = ret_cls
+    # # pt1_e = add_vectors(bp1, scale_vector(vec_sol_1, l1))
+    # pt1_e = add_vectors(rp, scale_vector(vec_sol_1, l1))
+    # # end_pts_0 = (bp1, pt1_e)
+    # end_pts_0 = (rp, pt1_e)
     
-    # add extension
-    ext_len = 30
-    end_pts_0 = (add_vectors(bp1, scale_vector(normalize_vector(vector_from_points(pt1_e, bp1)), ext_len)), add_vectors(
-        pt1_e, scale_vector(normalize_vector(vector_from_points(bp1, pt1_e)), ext_len)))
+    # # add extension
+    # ext_len = 30
+    # # end_pts_0 = (add_vectors(bp1, scale_vector(normalize_vector(vector_from_points(pt1_e, bp1)), ext_len)), add_vectors(
+    # #     pt1_e, scale_vector(normalize_vector(vector_from_points(bp1, pt1_e)), ext_len)))
 
 
-    end_pts_0 = [map(float, p) for p in end_pts_0]
-    end_pts_0 = [list(p) for p in end_pts_0]
+    # end_pts_0 = [map(float, p) for p in end_pts_0]
+    # end_pts_0 = [list(p) for p in end_pts_0]
     
     vec_x, vec_y, vec_z = calculate_coord_sys(end_pts_0, (500,500,500))
     pt_o        = centroid_points(end_pts_0)
@@ -248,11 +266,11 @@ def add_tangent(b_struct, bp1, lv1, bp2, lv2, rp, dist1, dist2, bars_rnd):
     b_v0 = b_struct.add_bar(0, end_pts_0, "tube", (25.0, 2.0), vec_z)
 
 
-    # b_struct.vertex[b_v0].update({"index_sol":[ind]})
+    # # b_struct.vertex[b_v0].update({"index_sol":[ind]})
     b_struct.vertex[b_v0].update({"gripping_plane_no_offset":(pt_o, vec_x, vec_y, vec_z)})
 
-    # b1_1.update({"axis_endpoints" :  pts_b1_1})
-    # b1_2.update({"axis_endpoints" :  pts_b1_2})
+    # # b1_1.update({"axis_endpoints" :  pts_b1_1})
+    # # b1_2.update({"axis_endpoints" :  pts_b1_2})
     b_struct.connect_bars(b_v0, b1_key)
     b_struct.connect_bars(b_v0, b2_key)
 
@@ -263,5 +281,6 @@ def add_tangent(b_struct, bp1, lv1, bp2, lv2, rp, dist1, dist2, bars_rnd):
     k_2     = list(b_struct.edge[b_v0][b2_key]["endpoints"].keys())[0]
     b_struct.edge[b_v0][b1_key]["endpoints"].update({k_1:(dpp_1[0], dpp_1[1])})
     b_struct.edge[b_v0][b2_key]["endpoints"].update({k_2:(dpp_2[0], dpp_2[1])})
+
 
     return b_v0

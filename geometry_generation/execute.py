@@ -20,6 +20,7 @@ import time
 from spatial_structures.bar_structure import Bar_Structure
 from coop_assembly.data_structure.data_structure_compas import Overall_Structure
 from coop_assembly.geometry_generation.generate_triangles import generate_first_tri, generate_structure, generate_structure_rnd
+from coop_assembly.help_functions.helpers_geometry import update_bar_lengths
 
 
 def execute():
@@ -45,6 +46,8 @@ def execute():
     t1      = time.time()
 
     generate_first_tri(o_struct, b_struct, r)
+    print 
+    update_bar_lengths(b_struct)
     generate_structure_rnd(o_struct, b_struct, bool_draw, r)
     steps   = 3
     # generate_structure(o_struct, b_struct, bool_draw, r, support_bars, load_bars, correct=False)
