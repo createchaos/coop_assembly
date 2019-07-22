@@ -257,11 +257,11 @@ def draw_network_inv_gh(network):
                 "end": end_p
             })
 
-    points_gh = drawing.draw_points(points)
+    points_gh = drawing.xdraw_points(points)
 
-    lines_gh = drawing.draw_lines(lines)
+    lines_gh = drawing.xdraw_lines(lines)
 
-    lines_c_gh = drawing.draw_lines(lines_c)
+    lines_c_gh = drawing.xdraw_lines(lines_c)
 
     return points_gh, lines_gh, lines_c_gh
 
