@@ -145,7 +145,8 @@ def generate_structure(o_struct, b_struct, bool_draw, r, points = None, supports
         # print("vertices", type(b_struct.vertices()))
 
         list_bars_all = list(b_struct.vertices())
-        bars_rnd    = random.sample(list_bars_all,2)
+        # bars_rnd    = random.sample(list_bars_all,2)
+        bars_rnd    = [i*1, i*1+1]
 
         for b in bars_rnd:
             list_bars_all.remove(b)
@@ -173,6 +174,8 @@ def generate_structure(o_struct, b_struct, bool_draw, r, points = None, supports
         bar_index   = add_tangent(b_struct, bp1, lv1, bp2, lv2, rp, dist1, dist2, bars_rnd)
 
         bars_rnd    = random.sample(list_bars_all,1)
+        print("index", len(list_bars_all), bar_index)
+        bars_rnd    = [len(list_bars_all)+1]
         bars_rnd.append(bar_index)
 
         
@@ -223,7 +226,10 @@ def add_tangent(b_struct, bp1, lv1, bp2, lv2, rp, dist1, dist2, bars_rnd):
     b1      = b_struct.vertex[b1_key]
     b2      = b_struct.vertex[b2_key]
 
-    vec_sol = sol[0]
+    ind_max_ang = find_sol_interlock(b_struct, b1_key, b2_key, sol, rp)
+
+    # vec_sol = sol[0]
+    vec_sol = sol[ind_max_ang]
     end_pts_0 = [rp, add_vectors(rp, vec_sol)]
 
     # pt_mean_1 = (200,200,500)
@@ -266,5 +272,27 @@ def add_tangent(b_struct, bp1, lv1, bp2, lv2, rp, dist1, dist2, bars_rnd):
     b_struct.edge[b_v0][b1_key]["endpoints"].update({k_1:(dpp_1[0], dpp_1[1])})
     b_struct.edge[b_v0][b2_key]["endpoints"].update({k_2:(dpp_2[0], dpp_2[1])})
 
-
     return b_v0
+
+
+def find_sol_interlock(b_struct, b1_key, b2_key, sol, rp):
+
+    angles = []
+    for vec in sol:
+        pts_b1 = b_struct.vertex[b1_key]["axis_endpoints"] 
+        dpp1 = dropped_perpendicular_points(
+            pts_b1[0], pts_b1[1], rp, add_vectors(rp, vec))
+        pts_b2 = b_struct.vertex[b2_key]["axis_endpoints"]
+        dpp2 = dropped_perpendicular_points(
+            pts_b2[0], pts_b2[1], rp, add_vectors(rp, vec))
+        vec_1 = (subtract_vectors(dpp1[0], dpp1[1]))
+        vec_2 = (subtract_vectors(dpp2[0], dpp2[1]))
+
+        ang_vec = angle_vectors(vec_1, vec_2, deg=True)
+        angles.append(ang_vec)
+    print("all angles", angles)
+    ang_max = max(angles)
+    ind = angles.index(ang_max)
+    print("index max angle", ind, ang_max)
+
+    return ind
