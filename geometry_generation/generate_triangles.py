@@ -127,26 +127,10 @@ def generate_structure(o_struct, b_struct, bool_draw, r, points = None, supports
         
 
     for i in range(iterations):
-        print("i", i)
-        # choose two random nodes to connect to
-        # nodes_rnd   = random.sample(o_struct.vertex.keys(), 2)
-
-        # choose nodes close to target
-        # target      = [(10000,0,0)]
-        # nodes_all   = choose_nodes(o_struct, target)
-        # nodes_rnd   = random.sample(nodes_all, 3)
-
-        # choose random two edges per node to connect new bar to
-        # o_e1_rnd    = random.sample(o_struct.vertex_connected_edges(nodes_rnd[0]), 2)
-        # o_e2_rnd    = random.sample(o_struct.vertex_connected_edges(nodes_rnd[1]), 2)
-        # o_e3_rnd    = random.sample(o_struct.vertex_connected_edges(nodes_rnd[2]), 2)
-
-        # o_e1_rnd    = random.sample(o_struct.edges, 2)
-        # print("vertices", type(b_struct.vertices()))
 
         list_bars_all = list(b_struct.vertices())
         # bars_rnd    = random.sample(list_bars_all,2)
-        bars_rnd    = [i*1, i*1+1]
+        bars_rnd    = [i, i+1]
 
         for b in bars_rnd:
             list_bars_all.remove(b)
@@ -163,7 +147,6 @@ def generate_structure(o_struct, b_struct, bool_draw, r, points = None, supports
         if points:
             pt_test = points[i]
         else:
-            # reconsider point definition - random?
             if i == 0: 
                 pt_test     = (300,300,1000)
             else:
@@ -173,32 +156,16 @@ def generate_structure(o_struct, b_struct, bool_draw, r, points = None, supports
 
         bar_index   = add_tangent(b_struct, bp1, lv1, bp2, lv2, rp, dist1, dist2, bars_rnd)
 
-        bars_rnd    = random.sample(list_bars_all,1)
-        print("index", len(list_bars_all), bar_index)
+        # bars_rnd    = random.sample(list_bars_all,1)
         bars_rnd    = [len(list_bars_all)+1]
         bars_rnd.append(bar_index)
 
-        
-
-        # check problem with rotation of vector
         vec_move = normalize_vector(b_struct.vertex[bar_index]["zdir"])
-        # print("vec_move", vec_move)
         vec_axis = normalize_vector(subtract_vectors(b_struct.vertex[bar_index]["axis_endpoints"][1], b_struct.vertex[bar_index]["axis_endpoints"][0]))
-        # print("vec_axis")
-        # cross_vec = cross_vectors(vec_move, vec_axis)
-        # ang_rnd = random.uniform(math.radians(0), math.radians(360))
         ang_rnd = math.radians(180)
         vec_new = scale_vector(rotate_points([vec_move], ang_rnd, vec_axis)[0], 30)
-        # print("vec_new", vec_new)
 
         rp          = (rp[0] + vec_new[0], rp[1] + vec_new[1], rp[2] + vec_new[2])
-
-        # rp          = (150,150,500)
-        # if i == 0: 
-        #     pt_test     = (150,150,500)
-        # else:
-        #     pt_test = (600, 250, 350)
-        # print("bars random", bars_rnd)
 
         bar1        = b_struct.vertex[bars_rnd[0]]["axis_endpoints"]
         bp1         = bar1[0]
