@@ -26,7 +26,90 @@ from compas.geometry.average import centroid_points
 from coop_assembly.help_functions.helpers_geometry import calculate_coord_sys, calculate_bar_z, dropped_perpendicular_points, update_bar_lengths
 from coop_assembly.help_functions.tangents import tangent_from_point, check_length_sol_one
 
-def generate_first_tri(o_struct, b_struct, r, points = None):
+def generate_first_tetra(o_struct, b_struct, r, points = None):
+
+    pt_0  = points[0]
+    pt_1  = points[1]
+    pt_2  = points[2]
+    pt_3  = points[3]
+
+    vec_0   = normalize_vector(vector_from_points(pt_0, pt_1))
+    vec_1   = normalize_vector(vector_from_points(pt_1, pt_2))
+    vec_2   = normalize_vector(vector_from_points(pt_2, pt_0))
+    vec_3   = normalize_vector(vector_from_points(pt_0, pt_3))
+    vec_4   = normalize_vector(vector_from_points(pt_1, pt_3))
+    vec_5   = normalize_vector(vector_from_points(pt_2, pt_3))
+    c_0     = scale_vector(normalize_vector(cross_vectors(vec_0, vec_1)), 2*r)
+    c_1     = scale_vector(normalize_vector(cross_vectors(vec_1, vec_2)), 2*r)
+    c_2     = scale_vector(normalize_vector(cross_vectors(vec_2, vec_0)), 2*r)
+    c_3     = scale_vector(normalize_vector(cross_vectors(vec_0, vec_3)), 2*r)
+    c_4     = scale_vector(normalize_vector(cross_vectors(vec_0, vec_5)), 2*r)
+    c_5     = scale_vector(normalize_vector(cross_vectors(vec_1, vec_3)), 2*r)
+    c_6     = scale_vector(normalize_vector(cross_vectors(vec_1, vec_4)), 2*r)
+    c_7     = scale_vector(normalize_vector(cross_vectors(vec_2, vec_4)), 2*r)
+    c_8     = scale_vector(normalize_vector(cross_vectors(vec_2, vec_5)), 2*r)
+
+    end_pts_0   = (pt_0, add_vectors(pt_1, c_0))
+    end_pts_1   = (pt_1, add_vectors(pt_2, c_1))
+    end_pts_2   = (pt_2, add_vectors(pt_0, c_2))
+    end_pts_3   = (pt_0, add_vectors(pt_3, c_3))
+    end_pts_4   = (pt_1, add_vectors(pt_3, c_6))
+    end_pts_5   = (pt_2, add_vectors(pt_3, c_8))
+
+    pt_int = centroid_points((end_pts_0[0], end_pts_0[1], end_pts_1[0], end_pts_1[1], end_pts_2[0], end_pts_2[1], end_pts_3[0], end_pts_3[1], end_pts_4[0], end_pts_4[1], end_pts_5[0], end_pts_5[1]))
+
+    vec_x_0, vec_y_0, vec_z_0 = calculate_coord_sys(end_pts_0, pt_int)
+    vec_x_1, vec_y_1, vec_z_1 = calculate_coord_sys(end_pts_1, pt_int)
+    vec_x_2, vec_y_2, vec_z_2 = calculate_coord_sys(end_pts_2, pt_int)
+    vec_x_3, vec_y_3, vec_z_3 = calculate_coord_sys(end_pts_3, pt_int)
+    vec_x_4, vec_y_4, vec_z_4 = calculate_coord_sys(end_pts_4, pt_int)
+    vec_x_5, vec_y_5, vec_z_5 = calculate_coord_sys(end_pts_5, pt_int)
+
+    vec_z_0     = calculate_bar_z(end_pts_0)
+    vec_z_1     = calculate_bar_z(end_pts_1)
+    vec_z_2     = calculate_bar_z(end_pts_2)
+    vec_z_3     = calculate_bar_z(end_pts_3)
+    vec_z_4     = calculate_bar_z(end_pts_4)
+    vec_z_5     = calculate_bar_z(end_pts_5)
+
+    b_v0    = b_struct.add_bar(0, end_pts_0, "tube", (25.0, 2.0), vec_z_0)
+    b_v1    = b_struct.add_bar(0, end_pts_1, "tube", (25.0, 2.0), vec_z_1)
+    b_v2    = b_struct.add_bar(0, end_pts_2, "tube", (25.0, 2.0), vec_z_2)
+    b_v3    = b_struct.add_bar(0, end_pts_3, "tube", (25.0, 2.0), vec_z_3)
+    b_v4    = b_struct.add_bar(0, end_pts_4, "tube", (25.0, 2.0), vec_z_4)
+    b_v5    = b_struct.add_bar(0, end_pts_5, "tube", (25.0, 2.0), vec_z_5)
+
+    b_struct.connect_bars(b_v0, b_v1)
+    b_struct.connect_bars(b_v0, b_v3)
+    b_struct.connect_bars(b_v0, b_v4)
+    b_struct.connect_bars(b_v1, b_v2)
+    b_struct.connect_bars(b_v1, b_v4)
+    b_struct.connect_bars(b_v1, b_v5)
+    b_struct.connect_bars(b_v2, b_v0)
+    b_struct.connect_bars(b_v2, b_v5)
+    b_struct.connect_bars(b_v2, b_v3)
+    b_struct.connect_bars(b_v3, b_v4)
+    b_struct.connect_bars(b_v4, b_v5)
+    b_struct.connect_bars(b_v5, b_v3)
+
+
+
+    # o_v0    = o_struct.add_node(pt_0, 0)
+    # o_v1    = o_struct.add_node(pt_1, 0)
+    # o_v2    = o_struct.add_node(pt_2, 0)
+
+    # o_struct.add_bar(o_v0, o_v1, b_v0)
+    # o_struct.add_bar(o_v1, o_v2, b_v1)
+    # o_struct.add_bar(o_v0, o_v2, b_v2)
+
+    # o_struct.calculate_point(o_v0)
+    # o_struct.calculate_point(o_v1)
+    # o_struct.calculate_point(o_v2)
+
+    return b_struct, o_struct
+
+
+# def generate_first_tri(o_struct, b_struct, r, points = None):
 
     #st_pt       = (10000, 5000, 500)
     #st_pt       = (15362.49, 6987.53, 310.10)
@@ -157,7 +240,7 @@ def generate_structure(o_struct, b_struct, bool_draw, r, points = None, supports
         bar_index   = add_tangent(b_struct, bp1, lv1, bp2, lv2, rp, dist1, dist2, bars_rnd)
 
         # bars_rnd    = random.sample(list_bars_all,1)
-        bars_rnd    = [len(list_bars_all)+1]
+        bars_rnd    = [len(list_bars_all)-1]
         bars_rnd.append(bar_index)
 
         vec_move = normalize_vector(b_struct.vertex[bar_index]["zdir"])
@@ -170,6 +253,7 @@ def generate_structure(o_struct, b_struct, bool_draw, r, points = None, supports
         bar1        = b_struct.vertex[bars_rnd[0]]["axis_endpoints"]
         bp1         = bar1[0]
         lv1         = subtract_vectors(bar1[1], bar1[0])
+
         bar2        = b_struct.vertex[bars_rnd[1]]["axis_endpoints"]
         bp2         = bar2[0]
         lv2         = subtract_vectors(bar2[1], bar2[0])
