@@ -69,9 +69,9 @@ def generate_first_tri(o_struct, b_struct, r, points = None):
     b_v1    = b_struct.add_bar(0, end_pts_1, "tube", (25.0, 2.0), vec_z_1)
     b_v2    = b_struct.add_bar(0, end_pts_2, "tube", (25.0, 2.0), vec_z_2)
 
-    pt_o_0  = centroid_points(end_pts_0)
-    pt_o_1  = centroid_points(end_pts_1)
-    pt_o_2  = centroid_points(end_pts_2)
+    # pt_o_0  = centroid_points(end_pts_0)
+    # pt_o_1  = centroid_points(end_pts_1)
+    # pt_o_2  = centroid_points(end_pts_2)
 
     # b_struct.vertex[b_v0].update({"gripping_plane_no_offset": (pt_o_0, vec_x_0, vec_y_0, vec_z_0)})
     # b_struct.vertex[b_v1].update({"gripping_plane_no_offset": (pt_o_1, vec_x_1, vec_y_1, vec_z_1)})
