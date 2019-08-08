@@ -109,7 +109,7 @@ def generate_first_tetra(o_struct, b_struct, r, points = None):
     return b_struct, o_struct
 
 
-# def generate_first_tri(o_struct, b_struct, r, points = None):
+def generate_first_tri(o_struct, b_struct, r, points = None):
 
     #st_pt       = (10000, 5000, 500)
     #st_pt       = (15362.49, 6987.53, 310.10)

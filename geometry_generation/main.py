@@ -25,7 +25,7 @@ import platform
 # else:
 #     reload(coop_assembly)
 #     reload(compas)
-
+import compas_fab
 from compas.utilities.xfunc import XFunc
 
 from coop_assembly.geometry_generation.execute import execute
@@ -38,7 +38,6 @@ from spatial_structures.bar_structure import Bar_Structure
 
 
 def main():
-    print("hmmmmm")
 
     run_python = True
     bool_draw = True
@@ -95,4 +94,26 @@ def main():
     return data
 
 
-main()
+def main_gh_simple(points, dict_nodes, sup_nodes, sup_bars, l_bars, load, check_col=False):
+    
+
+    save_struct_info = True
+
+    for i, s in enumerate(sup_nodes):
+        sup_nodes[i] = int(s)
+
+    # xfunc = XFunc(
+    #         'lws_geometry.geometry_generation.execute_compas.execute_from_points')
+    xfunc = XFunc(
+            'coop_assembly.geometry_generation.execute.execute_from_points')
+    xfunc(points, dict_nodes, support_nodes=sup_nodes,
+        support_bars=sup_bars, load_bars=l_bars, load=load, check_col=check_col)
+
+
+    
+    print xfunc.error
+    data = pickle.loads(xfunc.data)
+    return data
+
+
+# main()
