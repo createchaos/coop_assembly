@@ -26,8 +26,6 @@ def draw(b_struct, o_struct, j, colors_b=(None, None), colors_o=(None, None)):
     import Rhino
     import time
 
-    print("yuhuuuuuuuu")
-
     bool_export = False
     bool_debug = False
 
@@ -233,10 +231,12 @@ def draw_network_inv_gh(network):
             dpp = network.edge[u][v]["endpoints"][0]
         else:
             dpp = network.edge[v][u]["endpoints"][0]
-        lines_c.append({
-            "start": dpp[0],
-            "end": dpp[1]
-        })
+        
+        if dpp != []:
+            lines_c.append({
+                "start": dpp[0],
+                "end": dpp[1]
+            })
 
     lines_n = []
     for v in network.vertex:

@@ -94,13 +94,14 @@ def main():
     return data
 
 
-def main_gh_simple(points, dict_nodes, sup_nodes, sup_bars, l_bars, load, check_col=False):
+def main_gh_simple(points, dict_nodes, sup_nodes=None, sup_bars=None, l_bars=None, load=None, check_col=False):
     
 
     save_struct_info = True
 
-    for i, s in enumerate(sup_nodes):
-        sup_nodes[i] = int(s)
+    if sup_nodes:
+        for i, s in enumerate(sup_nodes):
+            sup_nodes[i] = int(s)
 
     # xfunc = XFunc(
     #         'lws_geometry.geometry_generation.execute_compas.execute_from_points')
@@ -111,7 +112,7 @@ def main_gh_simple(points, dict_nodes, sup_nodes, sup_bars, l_bars, load, check_
 
 
     
-    print xfunc.error
+    print(xfunc.error)
     data = pickle.loads(xfunc.data)
     return data
 
