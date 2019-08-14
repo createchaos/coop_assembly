@@ -19,6 +19,7 @@ from compas.geometry.distance import distance_point_point, distance_point_line
 from compas.geometry.queries import is_point_on_segment
 from compas.geometry.angles import angle_vectors
 from compas.geometry.average import centroid_points
+from compas.geometry.transformations import project_points_plane
 
 from coop_assembly.help_functions.helpers_geometry import dropped_perpendicular_points, find_points_extreme, check_dir, calculate_coord_sys
 
@@ -47,6 +48,26 @@ def tangent_from_point_one(base_point1, line_vect1, base_point2, line_vect2, ref
     return [solution]
 
 
+def tangent_through_two_points(base_point1, line_vect1, ref_point1, base_point2, line_vect2, ref_point2, dist1, dist2, ind1, ind2):
+
+    ret_p1 = p_planes_tangent_to_cylinder(base_point1, line_vect1, ref_point2, dist1 + dist2 + dist1 + dist2)
+    ret1 = ret_p1[ind1]
+    z_vec = cross_vectors(line_vect1, ret1[2])
+    plane1 = (ret1[0], z_vec)
+    print("plane1", plane1)
+    pp1 = project_points_plane([ref_point1], plane1)[0]
+    vec_move = scale_vector(subtract_vectors(ref_point1, pp1), 0.5)
+    pt1 = add_vectors(pp1, vec_move)
+    
+    ret_p2 = p_planes_tangent_to_cylinder(base_point2, line_vect2, ref_point1, dist1 + dist2 + dist1 + dist2)
+    ret2 = ret_p2[ind2]
+    z_vec = cross_vectors(line_vect2, ret2[2])
+    plane2 = (ret2[0], z_vec)
+    pp2 = project_points_plane([ref_point2], plane2)[0]
+    vec_move = scale_vector(subtract_vectors(ref_point2, pp2), 0.5)
+    pt2 = add_vectors(pp2, vec_move)
+
+    return pt1, pt2, plane1, plane2
 
 
 def lines_tangent_to_two_cylinder(base_point1, line_vect1, base_point2, line_vect2, ref_point, dist1, dist2):
