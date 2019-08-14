@@ -67,7 +67,7 @@ def tangent_through_two_points(base_point1, line_vect1, ref_point1, base_point2,
     vec_move = scale_vector(subtract_vectors(ref_point2, pp2), 0.5)
     pt2 = add_vectors(pp2, vec_move)
 
-    return pt1, pt2, plane1, plane2
+    return pt1, pt2
 
 
 def lines_tangent_to_two_cylinder(base_point1, line_vect1, base_point2, line_vect2, ref_point, dist1, dist2):

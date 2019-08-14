@@ -40,6 +40,7 @@ def generate_first_tetra(o_struct, b_struct, r, points = None):
     vec_3   = normalize_vector(vector_from_points(pt_0, pt_3))
     vec_4   = normalize_vector(vector_from_points(pt_1, pt_3))
     vec_5   = normalize_vector(vector_from_points(pt_2, pt_3))
+
     c_0     = scale_vector(normalize_vector(cross_vectors(vec_0, vec_1)), 2*r)
     c_1     = scale_vector(normalize_vector(cross_vectors(vec_1, vec_2)), 2*r)
     c_2     = scale_vector(normalize_vector(cross_vectors(vec_2, vec_0)), 2*r)
@@ -119,16 +120,13 @@ def generate_structure(o_struct, b_struct, bool_draw, r, points = None, supports
         iterations = 1
     print("iterations", iterations)
         
-
+    # repeat for each point
     for i in range(iterations):
 
-        list_bars_all = list(b_struct.vertices())
-        # bars_rnd    = random.sample(list_bars_all,2)
-        bars_rnd    = [i, i+1]
+        # pick two bars - ??
+        bars_rnd  = [i*2, i*2+1]
 
-        for b in bars_rnd:
-            list_bars_all.remove(b)
-
+        # identify input parameters for tangent generation function
         bar1        = b_struct.vertex[bars_rnd[0]]["axis_endpoints"]
         bp1         = bar1[0]
         lv1         = subtract_vectors(bar1[1], bar1[0])
@@ -138,22 +136,24 @@ def generate_structure(o_struct, b_struct, bool_draw, r, points = None, supports
         dist1       = r
         dist2       = r
 
-        if points:
-            pt_test = points[i]
-        else:
-            if i == 0: 
-                pt_test     = (300,300,1000)
-            else:
-                pt_test = (1200, 500, 700)
+        # if points:
+        pt_test = points[i]
+        # else:
+        #     if i == 0: 
+        #         pt_test     = (300,300,1000)
+        #     else:
+        #         pt_test = (1200, 500, 700)
 
         rp          = pt_test
 
+        # calculate tangent
         bar_index   = add_tangent(b_struct, bp1, lv1, bp2, lv2, rp, dist1, dist2, bars_rnd)
 
-        # bars_rnd    = random.sample(list_bars_all,1)
-        bars_rnd    = [len(list_bars_all)-1]
-        bars_rnd.append(bar_index)
+        # pick 2 new bars - last one added and another one
+        bars_rnd = [bar_index]
+        bars_rnd.append(bar_index-1)
 
+        # move input point outside of the last bar's volume
         vec_move = normalize_vector(b_struct.vertex[bar_index]["zdir"])
         vec_axis = normalize_vector(subtract_vectors(b_struct.vertex[bar_index]["axis_endpoints"][1], b_struct.vertex[bar_index]["axis_endpoints"][0]))
         ang_rnd = math.radians(180)
@@ -161,6 +161,7 @@ def generate_structure(o_struct, b_struct, bool_draw, r, points = None, supports
 
         rp          = (rp[0] + vec_new[0], rp[1] + vec_new[1], rp[2] + vec_new[2])
 
+        # identify input parameters for tangent generation
         bar1        = b_struct.vertex[bars_rnd[0]]["axis_endpoints"]
         bp1         = bar1[0]
         lv1         = subtract_vectors(bar1[1], bar1[0])
@@ -171,12 +172,22 @@ def generate_structure(o_struct, b_struct, bool_draw, r, points = None, supports
         dist1       = r
         dist2       = r
 
+        # calculate second tangent
         bar_index   = add_tangent(b_struct, bp1, lv1, bp2, lv2, rp, dist1, dist2, bars_rnd)
 
+        # update lengths of bars of entire structure
         update_bar_lengths(b_struct)
         
 
     return b_struct
+
+
+def generate_structure_no_points(o_struct, b_struct, bool_draw, r, supports=None, loads=None, correct=True):
+    pass
+    # for a fixed number of iterations do the following:
+    # pick two bars - ??
+    # identify input parameters for tangent generation function
+    # calculate tangent
 
 
 def add_tangent(b_struct, bp1, lv1, bp2, lv2, rp, dist1, dist2, bars_rnd):
