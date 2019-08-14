@@ -185,10 +185,36 @@ def generate_structure(o_struct, b_struct, bool_draw, r, points = None, supports
 def generate_structure_no_points(o_struct, b_struct, bool_draw, r, supports=None, loads=None, correct=True):
     pass
     # for a fixed number of iterations do the following:
-    # pick two bars - ??
-    # identify input parameters for tangent generation function
-    # calculate tangent
+    # pick first bar (previous bar) 
+    #   returns bar vertex key in b_struct
+    #   bars_ind = bar vertex keys
+    # pick point on first bar rp1
+    # pick second bar (random for now)
+    #   returns bar vertex key in b_struct 
+    #   add vertex key to bars_ind
+    # pick point on second bar rp2
+    # identify input parameters for add_tangent_no_points(b_struct, bp1, lv1, bp2, lv2, rp1, rp2, radius1, radius2, bars_ind)
+        # bar1        = b_struct.vertex[bars_rnd[0]]["axis_endpoints"]
+        # bp1         = bar1[0]
+        # lv1         = subtract_vectors(bar1[1], bar1[0])
+        # bar2        = b_struct.vertex[bars_rnd[1]]["axis_endpoints"]
+        # bp2         = bar2[0]
+        # lv2         = subtract_vectors(bar2[1], bar2[0])
+    #   radius1, radius2 = 12.5
+    # call add_tangent_no_points
 
+def add_tangent_no_points(b_struct, bp1, lv1, bp2, lv2, rp1, rp2, radius1, radius2, bars_ind):
+    pass
+    # find inputs to tangent_through_two_points(base_point1, line_vect1, ref_point1, base_point2, line_vect2, ref_point2, radius1, radius2, ind1, ind2)
+    #   to do: decide which solutions to return out of 4
+    # call tangent_through_two_points (returns 2 points)
+    # add new bar to structure b_struct (add_bar(self, _bar_type, _axis_endpoints, _crosec_type, _crosec_values, _zdir, _bar_parameters)
+    #   get end_pts from tangent_through_two_points
+    #   vec_x, vec_y, vec_z = calculate_coord_sys(end_pts, (500,500,500))
+    #   b_new_bar = b_struct.add_bar(0, end_pts, "tube", (25.0, 2.0), vec_z)
+    #   b_struct.connect_bars(b_new_bar, bars_ind[0])
+    #   b_struct.connect_bars(b_new_bar, bars_ind[1])
+    #   call update_bar_lengths
 
 def add_tangent(b_struct, bp1, lv1, bp2, lv2, rp, dist1, dist2, bars_rnd):
     
