@@ -12,7 +12,6 @@ created on 28.06.2019
 author: stefanaparascho
 '''
 
-print("start")
 import pickle
 # import coop_assembly
 import compas
@@ -28,17 +27,17 @@ import platform
 import compas_fab
 from compas.utilities.xfunc import XFunc
 
+from compas.rpc import Proxy
+geo_gen_execute = Proxy('coop_assembly.geometry_generation.execute')
+
 from coop_assembly.geometry_generation.execute import execute
 from coop_assembly.help_functions.drawing import draw
 from coop_assembly.data_structure.data_structure_compas import Overall_Structure
 
 from spatial_structures.bar_structure import Bar_Structure
 
-# import coop_assembly
-
 
 def main():
-
     run_python = True
     bool_draw = True
     draw_meshes = False
@@ -52,15 +51,14 @@ def main():
 
     if run_python:
         print("calling function in python")
-        xfunc = XFunc(
-            'coop_assembly.geometry_generation.execute.execute', python=r'C:\Users\Stefana\Anaconda2\envs\py36\python')
+
         # xfunc = XFunc(
-        #     'coop_assembly.geometry_generation.execute.execute', python=r'C:\Users\parascho\AppData\Local\Continuum\anaconda3\envs\env_python3\python')
-                         
-        xfunc()
-        print("error", xfunc.error)
-        
-        data = xfunc.data
+        #     'coop_assembly.geometry_generation.execute.execute', python=r'C:\Users\Stefana\Anaconda2\envs\py36\python')
+        # xfun()
+        # print("error", xfunc.error)
+        # data = xfunc.data
+
+        geo_gen_execute.execute()
     else:
         data = pickle.loads(execute())
 
@@ -95,8 +93,6 @@ def main():
 
 
 def main_gh_simple(points, dict_nodes, sup_nodes=None, sup_bars=None, l_bars=None, load=None, check_col=False):
-    
-
     save_struct_info = True
 
     if sup_nodes:
@@ -104,17 +100,15 @@ def main_gh_simple(points, dict_nodes, sup_nodes=None, sup_bars=None, l_bars=Non
             sup_nodes[i] = int(s)
 
     # xfunc = XFunc(
-    #         'lws_geometry.geometry_generation.execute_compas.execute_from_points')
-    xfunc = XFunc(
-            'coop_assembly.geometry_generation.execute.execute_from_points')
-    xfunc(points, dict_nodes, support_nodes=sup_nodes,
-        support_bars=sup_bars, load_bars=l_bars, load=load, check_col=check_col)
+    #         'coop_assembly.geometry_generation.execute.execute_from_points')
+    # xfunc(points, dict_nodes, support_nodes=sup_nodes,
+    #     support_bars=sup_bars, load_bars=l_bars, load=load, check_col=check_col)
+    # print(xfunc.error)
+    # data = pickle.loads(xfunc.data)
 
+    b_struct, o_struct = geo_gen_execute.execute_from_points(
+        points, dict_nodes, support_nodes=sup_nodes, 
+        support_bars=sup_bars, load_bars=l_bars, 
+        load=load, check_col=check_col)
 
-    
-    print(xfunc.error)
-    data = pickle.loads(xfunc.data)
-    return data
-
-
-# main()
+    return b_struct, o_struct

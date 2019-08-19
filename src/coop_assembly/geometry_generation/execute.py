@@ -12,8 +12,6 @@ created on 28.06.2019
 author: stefanaparascho
 '''
 
-
-
 import pickle
 import time 
 
@@ -44,7 +42,7 @@ def execute():
     load_bars = [(3,4)]
     # load_bars = None
 
-    t1      = time.time()
+    t1 = time.time()
 
     generate_first_tri(o_struct, b_struct, r)
 
@@ -56,7 +54,8 @@ def execute():
     return (b_struct.data, o_struct.data)
 
 
-def execute_from_points(points, dict_nodes, support_nodes=None, support_bars=None, load_bars=None, load=None, check_col=False):
+def execute_from_points(points, dict_nodes, support_nodes=None, support_bars=None, 
+                        load_bars=None, load=None, check_col=False, pickle_output=False):
     print("executing")
     r = 12.5
     # r = 2.0
@@ -67,5 +66,7 @@ def execute_from_points(points, dict_nodes, support_nodes=None, support_bars=Non
     generate_structure_from_points(o_struct, b_struct, r, points, dict_nodes, support_bars,
                          load_bars, correct=True, load=load, check_col=check_col)
 
-
-    return pickle.dumps((b_struct, o_struct))
+    if pickle_output:
+        return pickle.dumps((b_struct, o_struct))
+    else:
+        return b_struct, o_struct
