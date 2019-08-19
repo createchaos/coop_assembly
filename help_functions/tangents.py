@@ -20,7 +20,9 @@ from compas.geometry.queries import is_point_on_segment
 from compas.geometry.angles import angle_vectors
 from compas.geometry.average import centroid_points
 from compas.geometry.transformations import project_points_plane
+from compas.utilities import XFunc
 
+import coop_assembly
 from coop_assembly.help_functions.helpers_geometry import dropped_perpendicular_points, find_points_extreme, check_dir, calculate_coord_sys
 
 
@@ -350,7 +352,10 @@ def second_tangent(b2_1, b2_2, pt_mean_2, b_v2_1, b_v2_2, b_struct, b_v_old, pt1
             return None
 
         args    = ptM, ex, ey, r, pt_b_1, l_1, pt_b_2, l_2, 2*r, 2*r, ind
-        ret_sst = solve_second_tangent(*args)
+        xfunc = XFunc('coop_assembly.help_functions.tangents.solve_second_tangent', r'C:\Users\ChaseGalis\Desktop\ECL\GITRepository')
+        xfunc(ptM, ex, ey, r, pt_b_1, l_1, pt_b_2, l_2, 2*r, 2*r, ind)
+        ret_sst = xfunc.data
+        # ret_sst = solve_second_tangent(*args)
         if ret_sst:
             pt2, vec_l = ret_sst
         else:
@@ -493,7 +498,11 @@ def third_tangent(b_struct, b_v_old, b_v1, b3_1, b3_2, pt_mean_3, max_len, b_v3_
 
 
         args = pt_mid, ex, ey, r, pt_b_1, l_1, pt_b_2, l_2, pt_b_3, l_3, pt_b_4, l_4, bounds, ind_1, ind_2
-        ret_stt = solve_third_tangent(*args)
+
+        xfunc = XFunc('coop_assembly.help_functions.tangents.solve_third_tangent', r'C:\Users\ChaseGalis\Desktop\ECL\GITRepository')
+        xfunc(pt_mid, ex, ey, r, pt_b_1, l_1, pt_b_2, l_2, pt_b_3, l_3, pt_b_4, l_4, bounds, ind_1, ind_2)
+        ret_stt = xfunc.data
+        # ret_stt = solve_third_tangent(*args)
 
         # if max(b_struct.vertex.keys()) == 67: print("args", args)
         
@@ -646,7 +655,7 @@ def solve_third_tangent(*args):
 
     res_opt = scipy.optimize.fmin(f_tangent_point_3, [0.0, 0.0], args, full_output=True, disp=0)
     if res_opt[1] > 0.1: return None
-    ret_fp3 = find_point_3(map(float, res_opt[0]), *args)
+    ret_fp3 = find_point_3(list(map(float, res_opt[0])), *args)
     if not ret_fp3:
         return None
     else:

@@ -354,7 +354,7 @@ def add_tetra_old(o_struct, b_struct, nodes, comb_bars_1, comb_bars_2, comb_bars
     return o_struct, b_struct
 
 
-def add_tetra(o_struct, b_struct, nodes, bars1, bars2, bars3, dir_factor, pt_new_input, r, b_v0 = None, b_v1 = None, b_v2 = None, bool_add = True, o_v_key=None, correct=True, check_col=False):
+def add_tetra(o_struct, b_struct, bars1, bars2, bars3, pt_new_input, r, b_v0 = None, b_v1 = None, b_v2 = None, bool_add = True, o_v_key=None, correct=True, check_col=False):
     
     """ adds a new point and tetrahedron to the structure
     input: nodes, bars from o_struct as vertex_key_integer and edge_vertex_key_tuples """
@@ -368,28 +368,28 @@ def add_tetra(o_struct, b_struct, nodes, bars1, bars2, bars3, dir_factor, pt_new
     max_len         = 1500
     
 
-    b1_1    = b_struct.vertex[o_struct.edge[bars1[0][0]][bars1[0][1]]["vertex_bar"]]
-    b_v1_1  = o_struct.edge[bars1[0][0]][bars1[0][1]]["vertex_bar"]
-    b1_2    = b_struct.vertex[o_struct.edge[bars1[1][0]][bars1[1][1]]["vertex_bar"]]
-    b_v1_2  = o_struct.edge[bars1[1][0]][bars1[1][1]]["vertex_bar"]
-    b2_1    = b_struct.vertex[o_struct.edge[bars2[0][0]][bars2[0][1]]["vertex_bar"]]
-    b_v2_1  = o_struct.edge[bars2[0][0]][bars2[0][1]]["vertex_bar"]
-    b2_2    = b_struct.vertex[o_struct.edge[bars2[1][0]][bars2[1][1]]["vertex_bar"]]
-    b_v2_2  = o_struct.edge[bars2[1][0]][bars2[1][1]]["vertex_bar"]
-    b3_1    = b_struct.vertex[o_struct.edge[bars3[0][0]][bars3[0][1]]["vertex_bar"]]
-    b_v3_1  = o_struct.edge[bars3[0][0]][bars3[0][1]]["vertex_bar"]
-    b3_2    = b_struct.vertex[o_struct.edge[bars3[1][0]][bars3[1][1]]["vertex_bar"]]
-    b_v3_2  = o_struct.edge[bars3[1][0]][bars3[1][1]]["vertex_bar"]
+    b_v1_1  = bars1[0]
+    b1_1    = b_struct.vertex[b_v1_1]
+    b_v1_2  = bars1[1]
+    b1_2    = b_struct.vertex[b_v1_2]
+    b_v2_1  = bars2[0]
+    b2_1    = b_struct.vertex[b_v2_1]
+    b_v2_2  = bars2[1]
+    b2_2    = b_struct.vertex[b_v2_2]
+    b_v3_1  = bars3[0]
+    b3_1    = b_struct.vertex[b_v3_1]
+    b_v3_2  = bars3[1]
+    b3_2    = b_struct.vertex[b_v3_2]
     
     
     dpp1        = dropped_perpendicular_points(b1_1["axis_endpoints"][0], b1_1["axis_endpoints"][1], b1_2["axis_endpoints"][0], b1_2["axis_endpoints"][1])
-    pt_mean_1   = point_mean(dpp1)
+    pt_mean_1   = centroid_points(dpp1)
     dpp2        = dropped_perpendicular_points(b2_1["axis_endpoints"][0], b2_1["axis_endpoints"][1], b2_2["axis_endpoints"][0], b2_2["axis_endpoints"][1])
-    pt_mean_2   = point_mean(dpp2)
+    pt_mean_2   = centroid_points(dpp2)
     dpp3        = dropped_perpendicular_points(b3_1["axis_endpoints"][0], b3_1["axis_endpoints"][1], b3_2["axis_endpoints"][0], b3_2["axis_endpoints"][1])
-    pt_mean_3   = point_mean(dpp3)
+    pt_mean_3   = centroid_points(dpp3)
     
-    pt_mean     = point_mean([pt_mean_1, pt_mean_2, pt_mean_3])
+    pt_mean     = centroid_points([pt_mean_1, pt_mean_2, pt_mean_3])
     
     if bool_add == True:
         vec1    = subtract_vectors(pt_mean_1, pt_mean_2)
@@ -399,7 +399,7 @@ def add_tetra(o_struct, b_struct, nodes, bars1, bars2, bars3, dir_factor, pt_new
     
         #dir_factor  = random.sample((1, -1), 1)[0]
         #dir_factor = 1
-        vec_n       = scale_vector(vec_n, dir_factor)
+        # vec_n       = scale_vector(vec_n, dir_factor)
     
         pt_new = add_vectors(pt_mean, vec_n)
         
@@ -426,10 +426,10 @@ def add_tetra(o_struct, b_struct, nodes, bars1, bars2, bars3, dir_factor, pt_new
     # find_bar_ends(b_struct, b_struct.vertex[b_v3_2], b_v3_2)
     
     if bool_add:
-        ret_ft = first_tangent_two(pt1, b1_1, b1_2, pt_mean_1, max_len,
+        ret_ft = first_tangent(pt1, b1_1, b1_2, pt_mean_1, max_len,
                                b_v1_1, b_v1_2, b_struct, pt_mean, r, check_col=check_col)
     else:
-        ret_ft = first_tangent_two(pt1, b1_1, b1_2, pt_mean_1, max_len,
+        ret_ft = first_tangent(pt1, b1_1, b1_2, pt_mean_1, max_len,
                                b_v1_1, b_v1_2, b_struct, pt_mean, r, b_v0, check_col=check_col)
     if ret_ft:
         b_v0, end_pts_0        = ret_ft
@@ -447,10 +447,10 @@ def add_tetra(o_struct, b_struct, nodes, bars1, bars2, bars3, dir_factor, pt_new
     # find_bar_ends(b_struct, b_struct.vertex[b_v3_1], b_v3_1)
     # find_bar_ends(b_struct, b_struct.vertex[b_v3_2], b_v3_2)
     if bool_add:
-        ret_st = second_tangent_two(b2_1, b2_2, pt_mean_2, b_v2_1, b_v2_2,
+        ret_st = second_tangent(b2_1, b2_2, pt_mean_2, b_v2_1, b_v2_2,
                                 b_struct, b_v0, pt1, r, max_len, pt_mean, check_col=check_col)
     else:
-        ret_st = second_tangent_two(b2_1, b2_2, pt_mean_2, b_v2_1, b_v2_2,
+        ret_st = second_tangent(b2_1, b2_2, pt_mean_2, b_v2_1, b_v2_2,
                                 b_struct, b_v0, pt1, r, max_len, pt_mean, b_v1, check_col=check_col)
     if ret_st:
         b_v1, pt2, end_pts_1    = ret_st
@@ -465,10 +465,10 @@ def add_tetra(o_struct, b_struct, nodes, bars1, bars2, bars3, dir_factor, pt_new
     # find_bar_ends(b_struct, b_struct.vertex[b_v3_1], b_v3_1)
     # find_bar_ends(b_struct, b_struct.vertex[b_v3_2], b_v3_2)
     if bool_add:
-        ret_tt = third_tangent_two(b_struct, b_v0, b_v1, b3_1, b3_2, pt_mean_3,
+        ret_tt = third_tangent(b_struct, b_v0, b_v1, b3_1, b3_2, pt_mean_3,
                                max_len, b_v3_1, b_v3_2, pt_mean, r, check_col=check_col)
     else:
-        ret_tt = third_tangent_two(b_struct, b_v0, b_v1, b3_1, b3_2, pt_mean_3,
+        ret_tt = third_tangent(b_struct, b_v0, b_v1, b3_1, b3_2, pt_mean_3,
                                max_len, b_v3_1, b_v3_2, pt_mean, r, b_v2, check_col=check_col)
     if ret_tt:
         b_v2, pt3, end_pts_2    = ret_tt
@@ -506,24 +506,24 @@ def add_tetra(o_struct, b_struct, nodes, bars1, bars2, bars3, dir_factor, pt_new
     adjust_gripping_plane(pt_bar_3, pt_new, b_struct, b_v2)
     ### ###
     
-    if bool_add:
-        o_n1    = nodes[0]
-        o_n2    = nodes[1]
-        o_n3    = nodes[2]
-        o_struct.add_bar(o_n_new, o_n1, b_v0)
-        o_struct.add_bar(o_n_new, o_n2, b_v1)
-        o_struct.add_bar(o_n_new, o_n3, b_v2)
+    # if bool_add:
+    #     o_n1    = nodes[0]
+    #     o_n2    = nodes[1]
+    #     o_n3    = nodes[2]
+    #     o_struct.add_bar(o_n_new, o_n1, b_v0)
+    #     o_struct.add_bar(o_n_new, o_n2, b_v1)
+    #     o_struct.add_bar(o_n_new, o_n3, b_v2)
     
     #draw(b_struct, o_struct, 0)
     
     #### dummy definition of alternationg robot numbers - to be changed in path planning calculation
-        rob_num_0 = "21" if b_v0 % 2 == 0 else "22"
-        rob_num_1 = "21" if b_v1 % 2 == 0 else "22"
-        rob_num_2 = "21" if b_v2 % 2 == 0 else "22"
+        # rob_num_0 = "21" if b_v0 % 2 == 0 else "22"
+        # rob_num_1 = "21" if b_v1 % 2 == 0 else "22"
+        # rob_num_2 = "21" if b_v2 % 2 == 0 else "22"
         
-        b_struct.vertex[b_v0].update({"rob_num":rob_num_0})
-        b_struct.vertex[b_v1].update({"rob_num":rob_num_1})
-        b_struct.vertex[b_v2].update({"rob_num":rob_num_2})
+        # b_struct.vertex[b_v0].update({"rob_num":rob_num_0})
+        # b_struct.vertex[b_v1].update({"rob_num":rob_num_1})
+        # b_struct.vertex[b_v2].update({"rob_num":rob_num_2})
     
     find_bar_ends(b_struct, b_struct.vertex[b_v0], b_v0)
     find_bar_ends(b_struct, b_struct.vertex[b_v1], b_v1)

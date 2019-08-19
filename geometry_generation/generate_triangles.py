@@ -25,6 +25,7 @@ from compas.geometry.average import centroid_points
 
 from coop_assembly.help_functions.helpers_geometry import calculate_coord_sys, calculate_bar_z, dropped_perpendicular_points, update_bar_lengths
 from coop_assembly.help_functions.tangents import tangent_from_point, check_length_sol_one
+from coop_assembly.geometry_generation.generate_tetrahedra import add_tetra
 
 
 def generate_first_tetra(o_struct, b_struct, r, points = None):
@@ -62,95 +63,38 @@ def generate_first_tetra(o_struct, b_struct, r, points = None):
     vec_1   = normalize_vector(vector_from_points(end_pts_1[0], end_pts_1[1]))
     vec_2   = normalize_vector(vector_from_points(end_pts_2[0], end_pts_2[1]))
 
-    vec_3   = tangent_from_point(end_pts_2[0], vec_2, end_pts_0[0], vec_0, pt_3, 2*r, 2*r)
-    vec_4   = tangent_from_point(end_pts_0[0], vec_0, end_pts_1[0], vec_1, pt_3, 2*r, 2*r)
-    vec_5   = tangent_from_point(end_pts_1[0], vec_1, end_pts_2[0], vec_2, pt_3, 2*r, 2*r)
-
-    # c_9     = scale_vector(normalize_vector(cross_vectors(vec_3, vec_4)), 2*r)
-    # c_10    = scale_vector(normalize_vector(cross_vectors(vec_4, vec_5)), 2*r)
-    # c_11    = scale_vector(normalize_vector(cross_vectors(vec_5, vec_3)), 2*r)
-
-    # pt_3_shifted = add_vectors(pt_3, c_9)
-
-    # vec_4   = tangent_from_point(end_pts_0[0], vec_0, end_pts_1[0], vec_1, pt_3_shifted, 2*r, 2*r)
+    # vec_3   = tangent_from_point(end_pts_2[0], vec_2, end_pts_0[0], vec_0, pt_3, 2*r, 2*r)
+    # vec_4   = tangent_from_point(end_pts_0[0], vec_0, end_pts_1[0], vec_1, pt_3, 2*r, 2*r)
+    # vec_5   = tangent_from_point(end_pts_1[0], vec_1, end_pts_2[0], vec_2, pt_3, 2*r, 2*r)
     
-    end_pts_3 = (pt_3, add_vectors(pt_3, vec_3[0]))
-    end_pts_4 = (pt_3, add_vectors(pt_3, vec_4[0]))
-    end_pts_5 = (pt_3, add_vectors(pt_3, vec_5[0]))
+    # end_pts_3 = (pt_3, add_vectors(pt_3, vec_3[0]))
+    # end_pts_4 = (pt_3, add_vectors(pt_3, vec_4[0]))
+    # end_pts_5 = (pt_3, add_vectors(pt_3, vec_5[0]))
 
-
-    # c_1     = scale_vector(normalize_vector(cross_vectors(vec_0, vec_3)), 2*r)
-    # c_2     = scale_vector(normalize_vector(cross_vectors(vec_2, vec_3)), 2*r)
-
-    # shift_0     = add_vectors(c_1, c_2)
-    # shift_1     = add_vectors(c_4, c_5)
-    # Shift_2     = add_vectors(c_7, c_8)
-
-    # shift_0     = add_vectors(c_1, scale_vector(normalize_vector(vec_0), 2*r))
-    # shift_1     = add_vectors(c_4, c_5)
-    # Shift_2     = add_vectors(c_7, c_8)
-
-    # end_pts_3   = (pt_3, add_vectors(pt_0, shift_0))
-    # end_pts_4   = (pt_3, add_vectors(pt_1, shift_1))
-    # end_pts_5   = (pt_3, add_vectors(pt_2, Shift_2))
-
-
-    # end_pts_0   = (pt_0, add_vectors(c_1, add_vectors(pt_1, c_3))
-    # end_pts_1   = (pt_1, add_vectors(c_8, add_vectors(pt_2, c_6))
-    # end_pts_2   = (pt_2, add_vectors(c_2, add_vectors(pt_0, c_0))
-    # end_pts_3   = (add_vectors(pt_1, c_5), pt_3)
-    # end_pts_4   = (add_vectors(pt_0, c_2), add_vectors(c_9, add_vectors(pt_3, c_11))
-    # end_pts_5   = (add_Vectors(pt_2, c_7), add_vectors(pt_3, c_11))
-
-    pt_int = centroid_points((end_pts_0[0], end_pts_0[1], end_pts_1[0], end_pts_1[1], end_pts_2[0], end_pts_2[1], end_pts_3[0], end_pts_3[1], end_pts_4[0], end_pts_4[1], end_pts_5[0], end_pts_5[1]))
+    pt_int = centroid_points((end_pts_0[0], end_pts_0[1], end_pts_1[0], end_pts_1[1], end_pts_2[0], end_pts_2[1]))
 
     vec_x_0, vec_y_0, vec_z_0 = calculate_coord_sys(end_pts_0, pt_int)
     vec_x_1, vec_y_1, vec_z_1 = calculate_coord_sys(end_pts_1, pt_int)
     vec_x_2, vec_y_2, vec_z_2 = calculate_coord_sys(end_pts_2, pt_int)
-    vec_x_3, vec_y_3, vec_z_3 = calculate_coord_sys(end_pts_3, pt_int)
-    vec_x_4, vec_y_4, vec_z_4 = calculate_coord_sys(end_pts_4, pt_int)
-    vec_x_5, vec_y_5, vec_z_5 = calculate_coord_sys(end_pts_5, pt_int)
+
 
     vec_z_0     = calculate_bar_z(end_pts_0)
     vec_z_1     = calculate_bar_z(end_pts_1)
     vec_z_2     = calculate_bar_z(end_pts_2)
-    vec_z_3     = calculate_bar_z(end_pts_3)
-    vec_z_4     = calculate_bar_z(end_pts_4)
-    vec_z_5     = calculate_bar_z(end_pts_5)
+
 
     b_v0    = b_struct.add_bar(0, end_pts_0, "tube", (25.0, 2.0), vec_z_0)
     b_v1    = b_struct.add_bar(0, end_pts_1, "tube", (25.0, 2.0), vec_z_1)
     b_v2    = b_struct.add_bar(0, end_pts_2, "tube", (25.0, 2.0), vec_z_2)
-    b_v3    = b_struct.add_bar(0, end_pts_3, "tube", (25.0, 2.0), vec_z_3)
-    b_v4    = b_struct.add_bar(0, end_pts_4, "tube", (25.0, 2.0), vec_z_4)
-    b_v5    = b_struct.add_bar(0, end_pts_5, "tube", (25.0, 2.0), vec_z_5)
 
     b_struct.connect_bars(b_v0, b_v1)
-    b_struct.connect_bars(b_v0, b_v3)
-    b_struct.connect_bars(b_v0, b_v4)
     b_struct.connect_bars(b_v1, b_v2)
-    b_struct.connect_bars(b_v1, b_v4)
-    b_struct.connect_bars(b_v1, b_v5)
     b_struct.connect_bars(b_v2, b_v0)
-    b_struct.connect_bars(b_v2, b_v5)
-    b_struct.connect_bars(b_v2, b_v3)
-    b_struct.connect_bars(b_v3, b_v4)
-    b_struct.connect_bars(b_v4, b_v5)
-    b_struct.connect_bars(b_v5, b_v3)
 
 
+    add_tetra(o_struct, b_struct, (b_v0, b_v1), (b_v1, b_v2), (b_v2, b_v0), pt_3, r)
 
-    # o_v0    = o_struct.add_node(pt_0, 0)
-    # o_v1    = o_struct.add_node(pt_1, 0)
-    # o_v2    = o_struct.add_node(pt_2, 0)
 
-    # o_struct.add_bar(o_v0, o_v1, b_v0)
-    # o_struct.add_bar(o_v1, o_v2, b_v1)
-    # o_struct.add_bar(o_v0, o_v2, b_v2)
-
-    # o_struct.calculate_point(o_v0)
-    # o_struct.calculate_point(o_v1)
-    # o_struct.calculate_point(o_v2)
 
     return b_struct, o_struct
 
