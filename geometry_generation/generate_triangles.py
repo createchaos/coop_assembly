@@ -22,9 +22,10 @@ from compas.geometry.distance import distance_point_point
 from compas.geometry.transformations import rotate_points
 from compas.geometry.angles import angle_vectors
 from compas.geometry.average import centroid_points
+from compas.geometry import translate_points
 
 from coop_assembly.help_functions.helpers_geometry import calculate_coord_sys, calculate_bar_z, dropped_perpendicular_points, update_bar_lengths
-from coop_assembly.help_functions.tangents import tangent_from_point, check_length_sol_one
+from coop_assembly.help_functions.tangents import tangent_from_point, check_length_sol_one, tangent_through_two_points
 from coop_assembly.geometry_generation.generate_tetrahedra import add_tetra
 
 
@@ -38,38 +39,18 @@ def generate_first_tetra(o_struct, b_struct, r, points = None):
     vec_0   = normalize_vector(vector_from_points(pt_0, pt_1))
     vec_1   = normalize_vector(vector_from_points(pt_1, pt_2))
     vec_2   = normalize_vector(vector_from_points(pt_2, pt_0))
-    # vec_3   = normalize_vector(vector_from_points(pt_0, pt_3))
-    # vec_4   = normalize_vector(vector_from_points(pt_1, pt_3))
-    # vec_5   = normalize_vector(vector_from_points(pt_2, pt_3))
 
     c_0     = scale_vector(normalize_vector(cross_vectors(vec_0, vec_2)), 2*r)
-    # c_1     = scale_vector(normalize_vector(cross_vectors(vec_0, vec_3)), 2*r)
-    # c_2     = scale_vector(normalize_vector(cross_vectors(vec_2, vec_3)), 2*r)
-    c_3     = scale_vector(normalize_vector(cross_vectors(vec_1, vec_0)), 2*r)
-    # c_4     = scale_vector(normalize_vector(cross_vectors(vec_1, vec_4)), 2*r)
-    # c_5     = scale_vector(normalize_vector(cross_vectors(vec_0, vec_4)), 2*r)
-    c_6     = scale_vector(normalize_vector(cross_vectors(vec_2, vec_1)), 2*r)
-    # c_7     = scale_vector(normalize_vector(cross_vectors(vec_2, vec_5)), 2*r)
-    # c_8     = scale_vector(normalize_vector(cross_vectors(vec_1, vec_5)), 2*r)
-    # c_9     = scale_vector(normalize_vector(cross_vectors(vec_3, vec_4)), 2*r)
-    # c_10    = scale_vector(normalize_vector(cross_vectors(vec_4, vec_5)), 2*r)
-    # c_11    = scale_vector(normalize_vector(cross_vectors(vec_5, vec_3)), 2*r)
+    c_1     = scale_vector(normalize_vector(cross_vectors(vec_1, vec_0)), 2*r)
+    c_2     = scale_vector(normalize_vector(cross_vectors(vec_2, vec_1)), 2*r)
 
-    end_pts_0   = (pt_0, add_vectors(pt_1, c_3))
-    end_pts_1   = (pt_1, add_vectors(pt_2, c_6))
+    end_pts_0   = (pt_0, add_vectors(pt_1, c_1))
+    end_pts_1   = (pt_1, add_vectors(pt_2, c_2))
     end_pts_2   = (pt_2, add_vectors(pt_0, c_0))
 
     vec_0   = normalize_vector(vector_from_points(end_pts_0[0], end_pts_0[1]))
     vec_1   = normalize_vector(vector_from_points(end_pts_1[0], end_pts_1[1]))
     vec_2   = normalize_vector(vector_from_points(end_pts_2[0], end_pts_2[1]))
-
-    # vec_3   = tangent_from_point(end_pts_2[0], vec_2, end_pts_0[0], vec_0, pt_3, 2*r, 2*r)
-    # vec_4   = tangent_from_point(end_pts_0[0], vec_0, end_pts_1[0], vec_1, pt_3, 2*r, 2*r)
-    # vec_5   = tangent_from_point(end_pts_1[0], vec_1, end_pts_2[0], vec_2, pt_3, 2*r, 2*r)
-    
-    # end_pts_3 = (pt_3, add_vectors(pt_3, vec_3[0]))
-    # end_pts_4 = (pt_3, add_vectors(pt_3, vec_4[0]))
-    # end_pts_5 = (pt_3, add_vectors(pt_3, vec_5[0]))
 
     pt_int = centroid_points((end_pts_0[0], end_pts_0[1], end_pts_1[0], end_pts_1[1], end_pts_2[0], end_pts_2[1]))
 
@@ -170,87 +151,61 @@ def generate_structure(o_struct, b_struct, bool_draw, r, points = None, supports
     return b_struct
 
 
-def generate_structure_no_points(o_struct, b_struct, bool_draw, r, supports=None, loads=None, correct=True):
-    pass
-    # for a fixed number of iterations do the following:
 
-    interations = 10
+def generate_structure_no_points(o_struct, b_struct, bool_draw, r, iterations, supports=None, loads=None, correct=True):
 
-    for i in range[interations]:
+    for i in range(iterations):
         
         bars_ind = []
         bars_ind.append(i+5)
         bar1 = b_struct.vertex[bars_ind[0]]["axis_endpoints"]
         bp1  = bar1[0]
         lv1  = subtract_vectors(bar1[1], bar1[0])
-        rp1  = reference_point(lv1, bar1)
+        rp1  = point_on_bar(bar1, lv1, 0, 1200)
 
-        # rp1 & rp2 should consider the connction points of the bar it is on
-
-        bars_ind.append(second_bar_rnd(bars_ind))
+        second_bar_key = second_bar_rnd(bars_ind[0])
+        bars_ind.append(second_bar_key)
         bar2 = b_struct.vertex[bars_ind[1]]["axis_endpoints"]
         bp2  = bar2[0]
         lv2  = subtract_vectors(bar2[1], bar2[0])
-        rp2  = reference_point(lv2, bar2)
+        rp2  = point_on_bar(bar2, lv2, 0, 1200)
 
-        radius1, radius2 = r
+        radius1 = r
+        radius2 = r
 
         add_tangent_no_points(b_struct, bp1, lv1, bp2, lv2, rp1, rp2, radius1, radius2, bars_ind)
 
     return b_struct
 
-         # pick first bar (previous bar) 
-         #   returns bar vertex key in b_struct
-         #   bars_ind = bar vertex keys
-         # pick point on first bar rp1
-         # pick second bar (random for now)
-         #   returns bar vertex key in b_struct 
-         #   add vertex key to bars_ind
-         # pick point on second bar rp2
 
-    # identify input parameters for add_tangent_no_points(b_struct, bp1, lv1, bp2, lv2, rp1, rp2, radius1, radius2, bars_ind)
-        # bar1        = b_struct.vertex[bars_rnd[0]]["axis_endpoints"]
-        # bp1         = bar1[0]
-        # lv1         = subtract_vectors(bar1[1], bar1[0])
-        # bar2        = b_struct.vertex[bars_rnd[1]]["axis_endpoints"]
-        # bp2         = bar2[0]
-        # lv2         = subtract_vectors(bar2[1], bar2[0])
-    #   radius1, radius2 = 12.5
-    # call add_tangent_no_points
+def point_on_bar(bar_keys, line_vector, min, max):
+    cp  = centroid_points(bar_keys)
+    sv  = scale_vector(normalize_vector(line_vector), random.randrange(min, max))
+    rp  = add_vectors(cp, sv)
 
-def second_bar_rnd(bars_ind):
-    bar_2_key = random.randint(0, bars_ind[0]-1)
+    return rp
+
+def second_bar_rnd(end):
+    start = 0
+    bar_2_key = random.randrange(start, end)
 
     return bar_2_key
 
 
-
 def add_tangent_no_points(b_struct, bp1, lv1, bp2, lv2, rp1, rp2, radius1, radius2, bars_ind):
-    pass
-
-   # find inputs to tangent_through_two_points(base_point1, line_vect1, ref_point1, base_point2, line_vect2, ref_point2, radius1, radius2, ind1, ind2)
-    ind1 = 0
-    ind2 = 1
-    #   to do: decide which solutions to return out of 4
-    sol_two_points     = tangent_through_two_points(b1, lv1, rp1, bp2, lv2, rp2, radius1, radius2, ind1, ind2)
-    # call tangent_through_two_points (returns 2 points)
-    vec_x, vec_y, vec_z = calculate_coord_sys(sol_two_points, (500,500,500))
-
-    b_new_bar = b_struct.add_bar(0, sol_two_points, "tube", (25.0, 2.0), vec_z)
+   
+    sols_two_points     = tangent_through_two_points(bp1, lv1, rp1, bp2, lv2, rp2, radius1, radius2)
+    # list of possible solutions in vectors
+    sol = find_sol_interlock(b_struct, bars_ind[0], bars_ind[1], sols_two_points)
+    
+    vec_x, vec_y, vec_z = calculate_coord_sys(sol, (500,500,500))
+    b_new_bar = b_struct.add_bar(0, sol, "tube", (25.0, 2.0), vec_z)
     b_struct.connect_bars(b_new_bar, bars_ind[0])
     b_struct.connect_bars(b_new_bar, bars_ind[1])
 
     update_bar_lengths(b_struct)
 
-# to consider: how to specify the bar length beyond the two connections, maybe there is a way to store the connection points in addition to the endpoints since they are not the same
 
-    # add new bar to structure b_struct (add_bar(self, _bar_type, _axis_endpoints, _crosec_type, _crosec_values, _zdir, _bar_parameters)
-    #   get end_pts from tangent_through_two_points
-    #   vec_x, vec_y, vec_z = calculate_coord_sys(end_pts, (500,500,500))
-    #   b_new_bar = b_struct.add_bar(0, end_pts, "tube", (25.0, 2.0), vec_z)
-    #   b_struct.connect_bars(b_new_bar, bars_ind[0])
-    #   b_struct.connect_bars(b_new_bar, bars_ind[1])
-    #   call update_bar_lengths
 
 def add_tangent(b_struct, bp1, lv1, bp2, lv2, rp, dist1, dist2, bars_rnd):
     
@@ -310,16 +265,16 @@ def add_tangent(b_struct, bp1, lv1, bp2, lv2, rp, dist1, dist2, bars_rnd):
     return b_v0
 
 
-def find_sol_interlock(b_struct, b1_key, b2_key, sol, rp):
+def find_sol_interlock(b_struct, b1_key, b2_key, sol):
 
     angles = []
-    for vec in sol:
+    for pts in sol:
         pts_b1 = b_struct.vertex[b1_key]["axis_endpoints"] 
         dpp1 = dropped_perpendicular_points(
-            pts_b1[0], pts_b1[1], rp, add_vectors(rp, vec))
+            pts_b1[0], pts_b1[1], sol[0][0], sol[0][1])
         pts_b2 = b_struct.vertex[b2_key]["axis_endpoints"]
         dpp2 = dropped_perpendicular_points(
-            pts_b2[0], pts_b2[1], rp, add_vectors(rp, vec))
+            pts_b2[0], pts_b2[1], sol[0][0], sol[0][1])
         vec_1 = (subtract_vectors(dpp1[0], dpp1[1]))
         vec_2 = (subtract_vectors(dpp2[0], dpp2[1]))
 
@@ -329,5 +284,5 @@ def find_sol_interlock(b_struct, b1_key, b2_key, sol, rp):
     ang_max = max(angles)
     ind = angles.index(ang_max)
     print("index max angle", ind, ang_max)
-
-    return ind
+    solution = sol[ind]
+    return solution
