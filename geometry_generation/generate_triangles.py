@@ -17,8 +17,8 @@ import random
 import itertools
 import math
 
-from compas.geometry.basic import add_vectors, normalize_vector, vector_from_points, scale_vector, cross_vectors, subtract_vectors
-from compas.geometry.distance import distance_point_point
+from compas.geometry.basic import add_vectors, normalize_vector, vector_from_points, scale_vector, cross_vectors, subtract_vectors, length_vector
+from compas.geometry.distance import distance_point_point, distance_point_line, distance_line_line
 from compas.geometry.transformations import rotate_points
 from compas.geometry.angles import angle_vectors
 from compas.geometry.average import centroid_points
@@ -153,43 +153,129 @@ def generate_structure(o_struct, b_struct, bool_draw, r, points = None, supports
 
 
 def generate_structure_no_points(o_struct, b_struct, bool_draw, r, iterations, supports=None, loads=None, correct=True):
+    
+    max_bar_length = 1200
+    
+    radius1 = r
+    radius2 = r
 
     for i in range(iterations):
         
+
         bars_ind = []
-        bars_ind.append(i+5)
+        if i == 0:
+            bar_added = 5
+        bars_ind.append(bar_added)
         bar1 = b_struct.vertex[bars_ind[0]]["axis_endpoints"]
         bp1  = bar1[0]
         lv1  = subtract_vectors(bar1[1], bar1[0])
-        rp1  = point_on_bar(bar1, lv1, 0, 1200)
-
         second_bar_key = second_bar_rnd(bars_ind[0])
         bars_ind.append(second_bar_key)
         bar2 = b_struct.vertex[bars_ind[1]]["axis_endpoints"]
+        
+        dll = distance_line_line(bar1, bar2)
+
+        while dll > max_bar_length-200:
+            bars_ind[1] = second_bar_rnd(bars_ind[0])
+            bar2 = b_struct.vertex[bars_ind[1]]["axis_endpoints"]
+            dll =  distance_line_line(bar1, bar2)
+
         bp2  = bar2[0]
         lv2  = subtract_vectors(bar2[1], bar2[0])
-        rp2  = point_on_bar(bar2, lv2, 0, 1200)
 
-        radius1 = r
-        radius2 = r
+        if i == 0:
+            rp1  = point_on_bar_2(bar1, lv1)
+        else:
+            rp1  = point_on_bar_1(bar1, lv1, max_bar_length)  
+        rp2  = point_on_bar_2(bar2, lv2)
 
-        add_tangent_no_points(b_struct, bp1, lv1, bp2, lv2, rp1, rp2, radius1, radius2, bars_ind)
+        dpl_1 = distance_point_line(rp1, bar2)
+        dpl_2 = distance_point_line(rp2, bar1)
+        dpp = distance_point_point(rp1, rp2)
+
+        print("dpp", dpp)
+
+        rp1, rp2 = bar_checker(i, bar1, lv1, rp1, bar2, lv2, rp2, max_bar_length, r)
+
+        bar_added = add_tangent_no_points(b_struct, bp1, lv1, bp2, lv2, rp1, rp2, radius1, radius2, bars_ind)
+
+        # We need to: be able to re-choose bar 2 and re-process its points based on results of bar checker (None or rp1,rp2)
+        # Bar addedd check needs to be able to also re-choose bar 2
+        # move things into second bar random generator to more easily assign 
+
+        while bar_added is None:
+            if i == 0:
+                rp1  = point_on_bar_2(bar1, lv1)
+            else:
+                rp1  = point_on_bar_1(bar1, lv1, max_bar_length)
+            rp2  = point_on_bar_2(bar2, lv2)
+            rp1, rp2 = bar_checker(i, bar1, lv1, rp1, bar2, lv2, rp2, max_bar_length, r)
+            
+            print("dpl", dpl_1, dpl_2)
+            print("dpp2", dpp)
+            bar_added = add_tangent_no_points(b_struct, bp1, lv1, bp2, lv2, rp1, rp2, radius1, radius2, bars_ind)
+
 
     return b_struct
 
 
-def point_on_bar(bar_keys, line_vector, min, max):
-    cp  = centroid_points(bar_keys)
-    sv  = scale_vector(normalize_vector(line_vector), random.randrange(min, max))
-    rp  = add_vectors(cp, sv)
+
+        # while bar_added == None:
+        #     rp1  = point_on_bar_1(bar1, lv1, max_bar_length)
+        #     rp2  = point_on_bar_2(bar2, lv2)
+        #     bar_added = add_tangent_no_points(b_struct, bp1, lv1, bp2, lv2, rp1, rp2, radius1, radius2, bars_ind)
+
+
+def point_on_bar_1(bar_end_points, line_vector, max_bar_length):
+    cp      = centroid_points(bar_end_points)
+    bar_len = distance_point_point(bar_end_points[0], bar_end_points[1])    
+    max_len = max_bar_length - (bar_len/2)
+    print("length check", bar_len, max_len)
+    sv      = scale_vector(normalize_vector(line_vector), random.randrange(bar_len/2, max_len, step=1, _int=float))
+    rand_direction = 1 if random.random() < 0.5 else -1
+    sv_rand_direction = scale_vector(sv, rand_direction)
+    rp      = add_vectors(cp, sv_rand_direction)
+
+    return rp
+
+def point_on_bar_2(bar_end_points, line_vector):
+    cp  = centroid_points(bar_end_points)
+    vec_len = length_vector(line_vector)
+    sv  = scale_vector(normalize_vector(line_vector), random.randrange((-vec_len/3), (vec_len/3), step=1, _int=float))
+    rp = add_vectors(cp, sv)
 
     return rp
 
 def second_bar_rnd(end):
-    start = 0
+    if end < 10:
+        start = 3
+    else:
+        start = end - 6
     bar_2_key = random.randrange(start, end)
+    print("bar_2_key", bar_2_key)
+    print("end", end)
 
     return bar_2_key
+
+def bar_checker(i, bar1, lv1, rp1, bar2, lv2, rp2, max_bar_length, r):
+    dpl_1 = distance_point_line(rp1, bar2)
+    dpl_2 = distance_point_line(rp2, bar1)
+    dpp = distance_point_point(rp1, rp2)
+    for i in range(20):
+        if dpl_1 < 5*r or dpl_2 < 5*r or dpp > max_bar_length-200:
+            if i == 0:
+                rp1  = point_on_bar_2(bar1, lv1)
+            else:
+                rp1  = point_on_bar_1(bar1, lv1, max_bar_length)
+            dpl_1 = distance_point_line(rp1, bar2)
+            rp2  = point_on_bar_2(bar2, lv2)
+            dpl_2 = distance_point_line(rp2, bar1)
+            dpp = distance_point_point(rp1, rp2)
+            if dpl_1 >= 5*r and dpl_2 >= 5*r and dpp <= max_bar_length-200:
+                return rp1, rp2
+        
+    
+    return None
 
 
 def add_tangent_no_points(b_struct, bp1, lv1, bp2, lv2, rp1, rp2, radius1, radius2, bars_ind):
@@ -197,13 +283,17 @@ def add_tangent_no_points(b_struct, bp1, lv1, bp2, lv2, rp1, rp2, radius1, radiu
     sols_two_points     = tangent_through_two_points(bp1, lv1, rp1, bp2, lv2, rp2, radius1, radius2)
     # list of possible solutions in vectors
     sol = find_sol_interlock(b_struct, bars_ind[0], bars_ind[1], sols_two_points)
-    
-    vec_x, vec_y, vec_z = calculate_coord_sys(sol, (500,500,500))
-    b_new_bar = b_struct.add_bar(0, sol, "tube", (25.0, 2.0), vec_z)
-    b_struct.connect_bars(b_new_bar, bars_ind[0])
-    b_struct.connect_bars(b_new_bar, bars_ind[1])
 
-    update_bar_lengths(b_struct)
+    if sol is not None:
+        ec_x, vec_y, vec_z = calculate_coord_sys(sol, (500,500,500))
+        b_new_bar = b_struct.add_bar(0, sol, "tube", (25.0, 2.0), vec_z)
+        b_struct.connect_bars(b_new_bar, bars_ind[0])
+        b_struct.connect_bars(b_new_bar, bars_ind[1])
+
+        update_bar_lengths(b_struct)
+        return b_new_bar      
+    else:
+        return None
 
 
 
@@ -278,11 +368,14 @@ def find_sol_interlock(b_struct, b1_key, b2_key, sol):
         vec_1 = (subtract_vectors(dpp1[0], dpp1[1]))
         vec_2 = (subtract_vectors(dpp2[0], dpp2[1]))
 
-        ang_vec = angle_vectors(vec_1, vec_2, deg=True)
+        ang_vec = angle_vectors(vec_1, vec_2, deg=True) 
         angles.append(ang_vec)
     print("all angles", angles)
     ang_max = max(angles)
     ind = angles.index(ang_max)
     print("index max angle", ind, ang_max)
     solution = sol[ind]
-    return solution
+    if 120 < ang_max < 180:
+        return solution
+    else:
+        return None

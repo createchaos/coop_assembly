@@ -230,9 +230,9 @@ def add_tetra_old(o_struct, b_struct, nodes, comb_bars_1, comb_bars_2, comb_bars
             b_v0, end_pts_0        = ret_ft
             break
         else:
-            print "tangent 1 not found"
+            print("tangent 1 not found")
             if j == len(comb_bars_1)-1:
-                print "no point found for first tangent calculation - 430, add_tetra"
+                print ("no point found for first tangent calculation - 430, add_tetra")
                 return None
             
     for j, bar_jnd_2 in enumerate(comb_bars_2):
@@ -257,9 +257,9 @@ def add_tetra_old(o_struct, b_struct, nodes, comb_bars_1, comb_bars_2, comb_bars
             b_v1, pt2, end_pts_1    = ret_st
             break
         else:
-            print "tangent 2 not found"
+            print ("tangent 2 not found")
             if j == len(comb_bars_2) - 1:
-                print "no point found for second tangent calculation - 430, add_tetra"
+                print ("no point found for second tangent calculation - 430, add_tetra")
                 return None
     
 
@@ -286,9 +286,9 @@ def add_tetra_old(o_struct, b_struct, nodes, comb_bars_1, comb_bars_2, comb_bars
             b_v2, pt3, end_pts_2    = ret_tt
             break
         else:
-            print "tangent 3 not found"
+            print ("tangent 3 not found")
             if j == len(comb_bars_3) - 1:
-                print "no point found for third tangent calculation - 430, add_tetra"
+                print ("no point found for third tangent calculation - 430, add_tetra")
                 return None
 
     
@@ -437,7 +437,7 @@ def add_tetra(o_struct, b_struct, bars1, bars2, bars3, pt_new_input, r, b_v0 = N
     else:
         pt_1 = correct_point(b_struct, o_struct, o_v_key, pt_new,
                     (b_v1_1, b_v1_2), (b_v2_1, b_v2_2), (b_v3_1, b_v3_2))
-        print "no point found for first tangent calculation - 430, add_tetra"
+        print ("no point found for first tangent calculation - 430, add_tetra")
         return None
 
     # find_bar_ends(b_struct, b_struct.vertex[b_v1_1], b_v1_1)
@@ -455,7 +455,7 @@ def add_tetra(o_struct, b_struct, bars1, bars2, bars3, pt_new_input, r, b_v0 = N
     if ret_st:
         b_v1, pt2, end_pts_1    = ret_st
     else:
-        print "no point found for second tangent calculation - 430, add_tetra"
+        print ("no point found for second tangent calculation - 430, add_tetra")
         return None
     
     # find_bar_ends(b_struct, b_struct.vertex[b_v1_1], b_v1_1)
@@ -473,7 +473,7 @@ def add_tetra(o_struct, b_struct, bars1, bars2, bars3, pt_new_input, r, b_v0 = N
     if ret_tt:
         b_v2, pt3, end_pts_2    = ret_tt
     else:
-        print "no point found for third tangent calculation - 430, add_tetra"
+        print ("no point found for third tangent calculation - 430, add_tetra")
         return None
 
     

@@ -57,8 +57,10 @@ def tangent_through_two_points(base_point1, line_vect1, ref_point1, base_point2,
     sols_vec = []
     sols_pts = []
 
+    print("tangent_through_two_points", base_point1, line_vect1, ref_point1, base_point2, line_vect2, ref_point2, dist1, dist2)
+
     for i in ind:
-        ret_p1 = p_planes_tangent_to_cylinder(base_point1, line_vect1, ref_point2, dist1 + dist2)
+        ret_p1 = p_planes_tangent_to_cylinder(base_point1, line_vect1, ref_point2, dist1 + dist2 + dist1 + dist2)
         print(ret_p1)
         ret1 = ret_p1[i]
         z_vec = cross_vectors(line_vect1, ret1[2])
@@ -68,9 +70,9 @@ def tangent_through_two_points(base_point1, line_vect1, ref_point1, base_point2,
         vec_move = scale_vector(subtract_vectors(ref_point1, pp1), 0.5)
         pt1 = add_vectors(pp1, vec_move)
         
-        for i in ind:
-            ret_p2 = p_planes_tangent_to_cylinder(base_point2, line_vect2, ref_point1, dist1 + dist2)
-            ret2 = ret_p2[i]
+        for j in ind:
+            ret_p2 = p_planes_tangent_to_cylinder(base_point2, line_vect2, ref_point1, dist1 + dist2 + dist1 + dist2)
+            ret2 = ret_p2[j]
             z_vec = cross_vectors(line_vect2, ret2[2])
             plane2 = (ret2[0], z_vec)
             pp2 = project_points_plane([ref_point2], plane2)[0]
@@ -159,6 +161,7 @@ def lines_tangent_to_cylinder(base_point, line_vect, ref_point, dist):
     l_vect      = normalize_vector(l_vect)
     ppol        = add_vectors(base_point, scale_vector(l_vect, dot_vectors(subtract_vectors(ref_point, base_point), l_vect)))
     ppolr_vect  = subtract_vectors(ref_point, ppol)
+    # print("reference points", ref_point)
     # print(length_vector(ppolr_vect))
     e1          = ppolr_vect
     e1          = normalize_vector(e1)
