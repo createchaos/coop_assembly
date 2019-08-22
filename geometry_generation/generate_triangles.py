@@ -150,80 +150,72 @@ def generate_structure(o_struct, b_struct, bool_draw, r, points = None, supports
 
     return b_struct
 
-
-
 def generate_structure_no_points(o_struct, b_struct, bool_draw, r, iterations, supports=None, loads=None, correct=True):
     
     max_bar_length = 1200
     
     radius1 = r
     radius2 = r
-
+    
     for i in range(iterations):
-        
-
-        bars_ind = []
-        if i == 0:
-            bar_added = 5
-        bars_ind.append(bar_added)
-        bar1 = b_struct.vertex[bars_ind[0]]["axis_endpoints"]
-        bp1  = bar1[0]
-        lv1  = subtract_vectors(bar1[1], bar1[0])
-        second_bar_key = second_bar_rnd(bars_ind[0])
-        bars_ind.append(second_bar_key)
-        bar2 = b_struct.vertex[bars_ind[1]]["axis_endpoints"]
-        
-        dll = distance_line_line(bar1, bar2)
-
-        while dll > max_bar_length-200:
-            bars_ind[1] = second_bar_rnd(bars_ind[0])
+        rp1 = None
+        while rp1 is None:
+            bars_ind = []
+            if i == 0:
+                bar_added = 5
+            bars_ind.append(i+5)
+            print("bars_ind2", bars_ind)
+            bar1 = b_struct.vertex[bars_ind[0]]["axis_endpoints"]
+            bp1  = bar1[0]
+            lv1  = subtract_vectors(bar1[1], bar1[0])
+            second_bar_key = second_bar_rnd(bars_ind[0])
+            bars_ind.append(second_bar_key)
             bar2 = b_struct.vertex[bars_ind[1]]["axis_endpoints"]
-            dll =  distance_line_line(bar1, bar2)
+            
+            print("bars_ind", bars_ind)
 
-        bp2  = bar2[0]
-        lv2  = subtract_vectors(bar2[1], bar2[0])
+            dll = distance_line_line(bar1, bar2)
 
-        if i == 0:
-            rp1  = point_on_bar_2(bar1, lv1)
-        else:
-            rp1  = point_on_bar_1(bar1, lv1, max_bar_length)  
-        rp2  = point_on_bar_2(bar2, lv2)
+            while dll > max_bar_length-200:
+                bars_ind[1] = second_bar_rnd(bars_ind[0])
+                bar2 = b_struct.vertex[bars_ind[1]]["axis_endpoints"]
+                dll =  distance_line_line(bar1, bar2)
 
-        dpl_1 = distance_point_line(rp1, bar2)
-        dpl_2 = distance_point_line(rp2, bar1)
-        dpp = distance_point_point(rp1, rp2)
+            bp2  = bar2[0]
+            lv2  = subtract_vectors(bar2[1], bar2[0])
 
-        print("dpp", dpp)
-
-        rp1, rp2 = bar_checker(i, bar1, lv1, rp1, bar2, lv2, rp2, max_bar_length, r)
-
-        bar_added = add_tangent_no_points(b_struct, bp1, lv1, bp2, lv2, rp1, rp2, radius1, radius2, bars_ind)
-
-        # We need to: be able to re-choose bar 2 and re-process its points based on results of bar checker (None or rp1,rp2)
-        # Bar addedd check needs to be able to also re-choose bar 2
-        # move things into second bar random generator to more easily assign 
-
-        while bar_added is None:
             if i == 0:
                 rp1  = point_on_bar_2(bar1, lv1)
             else:
-                rp1  = point_on_bar_1(bar1, lv1, max_bar_length)
+                rp1  = point_on_bar_1(bar1, lv1, max_bar_length)  
             rp2  = point_on_bar_2(bar2, lv2)
-            rp1, rp2 = bar_checker(i, bar1, lv1, rp1, bar2, lv2, rp2, max_bar_length, r)
-            
-            print("dpl", dpl_1, dpl_2)
-            print("dpp2", dpp)
-            bar_added = add_tangent_no_points(b_struct, bp1, lv1, bp2, lv2, rp1, rp2, radius1, radius2, bars_ind)
+
+            print("rp1", rp1)
+
+            rp1, rp2= bar_checker(i, bar1, lv1, rp1, bar2, lv2, rp2, max_bar_length, r)
+
+            print("rp1.1", rp1)
+
+
+            if rp1 is not None:
+
+                bar_added = add_tangent_no_points(b_struct, bp1, lv1, bp2, lv2, rp1, rp2, radius1, radius2, bars_ind)
+                j = 0
+                while bar_added is None and j < 10:
+                    j += 1    
+                    if i == 0:
+                        rp1  = point_on_bar_2(bar1, lv1)
+                    else:
+                        rp1  = point_on_bar_1(bar1, lv1, max_bar_length)
+                    rp2  = point_on_bar_2(bar2, lv2)
+                    rp1, rp2 = bar_checker(i, bar1, lv1, rp1, bar2, lv2, rp2, max_bar_length, r)
+                    if rp1 is not None:
+                            bar_added = add_tangent_no_points(b_struct, bp1, lv1, bp2, lv2, rp1, rp2, radius1, radius2, bars_ind)
+            if bar_added is None:
+                rp1 = None
 
 
     return b_struct
-
-
-
-        # while bar_added == None:
-        #     rp1  = point_on_bar_1(bar1, lv1, max_bar_length)
-        #     rp2  = point_on_bar_2(bar2, lv2)
-        #     bar_added = add_tangent_no_points(b_struct, bp1, lv1, bp2, lv2, rp1, rp2, radius1, radius2, bars_ind)
 
 
 def point_on_bar_1(bar_end_points, line_vector, max_bar_length):
@@ -232,9 +224,19 @@ def point_on_bar_1(bar_end_points, line_vector, max_bar_length):
     max_len = max_bar_length - (bar_len/2)
     print("length check", bar_len, max_len)
     sv      = scale_vector(normalize_vector(line_vector), random.randrange(bar_len/2, max_len, step=1, _int=float))
+
+    # random direction
     rand_direction = 1 if random.random() < 0.5 else -1
     sv_rand_direction = scale_vector(sv, rand_direction)
     rp      = add_vectors(cp, sv_rand_direction)
+
+    # upward trending: too few solutions
+    # rp_pos  = add_vectors(cp, sv)
+    # rp_neg  = add_vectors(cp, scale_vector(sv, -1))
+    # if rp_pos[2] > rp_neg[2]:
+    #     rp = rp_pos
+    # else:
+    #     rp = rp_neg
 
     return rp
 
@@ -261,8 +263,14 @@ def bar_checker(i, bar1, lv1, rp1, bar2, lv2, rp2, max_bar_length, r):
     dpl_1 = distance_point_line(rp1, bar2)
     dpl_2 = distance_point_line(rp2, bar1)
     dpp = distance_point_point(rp1, rp2)
-    for i in range(20):
-        if dpl_1 < 5*r or dpl_2 < 5*r or dpp > max_bar_length-200:
+    if dpl_1 >= 5*r and dpl_2 >= 5*r and dpp <= max_bar_length-200:
+        print("checker", dpp)
+        return rp1, rp2
+    else:
+        print("this is not working", rp1)
+        for j in range(20):
+            print("this is not working2", rp1)
+
             if i == 0:
                 rp1  = point_on_bar_2(bar1, lv1)
             else:
@@ -271,11 +279,12 @@ def bar_checker(i, bar1, lv1, rp1, bar2, lv2, rp2, max_bar_length, r):
             rp2  = point_on_bar_2(bar2, lv2)
             dpl_2 = distance_point_line(rp2, bar1)
             dpp = distance_point_point(rp1, rp2)
+            
             if dpl_1 >= 5*r and dpl_2 >= 5*r and dpp <= max_bar_length-200:
                 return rp1, rp2
+        print("else", rp1)
         
-    
-    return None
+        return None
 
 
 def add_tangent_no_points(b_struct, bp1, lv1, bp2, lv2, rp1, rp2, radius1, radius2, bars_ind):
@@ -285,6 +294,7 @@ def add_tangent_no_points(b_struct, bp1, lv1, bp2, lv2, rp1, rp2, radius1, radiu
     sol = find_sol_interlock(b_struct, bars_ind[0], bars_ind[1], sols_two_points)
 
     if sol is not None:
+        print("print here")
         ec_x, vec_y, vec_z = calculate_coord_sys(sol, (500,500,500))
         b_new_bar = b_struct.add_bar(0, sol, "tube", (25.0, 2.0), vec_z)
         b_struct.connect_bars(b_new_bar, bars_ind[0])
