@@ -156,10 +156,12 @@ def generate_structure_no_points(o_struct, b_struct, bool_draw, r, iterations, s
     
     radius1 = r
     radius2 = r
+
+    adj_con = []
     
     for i in range(iterations):
-        rp1 = None
-        while rp1 is None:
+        rps = None
+        while rps is None:
             bars_ind = []
             if i == 0:
                 bar_added = 5
@@ -191,15 +193,14 @@ def generate_structure_no_points(o_struct, b_struct, bool_draw, r, iterations, s
             rp2  = point_on_bar_2(bar2, lv2)
 
             print("rp1", rp1)
-
-            rp1, rp2= bar_checker(i, bar1, lv1, rp1, bar2, lv2, rp2, max_bar_length, r)
+            rps = bar_checker(i, bar1, lv1, rp1, bar2, lv2, rp2, max_bar_length, r)
 
             print("rp1.1", rp1)
 
-
-            if rp1 is not None:
-
-                bar_added = add_tangent_no_points(b_struct, bp1, lv1, bp2, lv2, rp1, rp2, radius1, radius2, bars_ind)
+            if rps is not None:
+                rp1 = rps[0]
+                rp2 = rps[1]
+                bar_added = add_tangent_no_points(b_struct, bp1, lv1, bp2, lv2, rp1, rp2, radius1, radius2, bars_ind, adj_con, i)
                 j = 0
                 while bar_added is None and j < 10:
                     j += 1    
@@ -208,11 +209,15 @@ def generate_structure_no_points(o_struct, b_struct, bool_draw, r, iterations, s
                     else:
                         rp1  = point_on_bar_1(bar1, lv1, max_bar_length)
                     rp2  = point_on_bar_2(bar2, lv2)
-                    rp1, rp2 = bar_checker(i, bar1, lv1, rp1, bar2, lv2, rp2, max_bar_length, r)
-                    if rp1 is not None:
-                            bar_added = add_tangent_no_points(b_struct, bp1, lv1, bp2, lv2, rp1, rp2, radius1, radius2, bars_ind)
+
+                    rps = bar_checker(i, bar1, lv1, rp1, bar2, lv2, rp2, max_bar_length, r)
+                    print("list", adj_con)
+                    if rps is not None:
+                        rp1 = rps[0]
+                        rp2 = rps[1]
+                        bar_added = add_tangent_no_points(b_struct, bp1, lv1, bp2, lv2, rp1, rp2, radius1, radius2, bars_ind, adj_con, i)
             if bar_added is None:
-                rp1 = None
+                rps = None
 
 
     return b_struct
@@ -265,7 +270,7 @@ def bar_checker(i, bar1, lv1, rp1, bar2, lv2, rp2, max_bar_length, r):
     dpp = distance_point_point(rp1, rp2)
     if dpl_1 >= 5*r and dpl_2 >= 5*r and dpp <= max_bar_length-200:
         print("checker", dpp)
-        return rp1, rp2
+        return [rp1, rp2]
     else:
         print("this is not working", rp1)
         for j in range(20):
@@ -281,17 +286,17 @@ def bar_checker(i, bar1, lv1, rp1, bar2, lv2, rp2, max_bar_length, r):
             dpp = distance_point_point(rp1, rp2)
             
             if dpl_1 >= 5*r and dpl_2 >= 5*r and dpp <= max_bar_length-200:
-                return rp1, rp2
+                return [rp1, rp2]
         print("else", rp1)
         
         return None
 
 
-def add_tangent_no_points(b_struct, bp1, lv1, bp2, lv2, rp1, rp2, radius1, radius2, bars_ind):
+def add_tangent_no_points(b_struct, bp1, lv1, bp2, lv2, rp1, rp2, radius1, radius2, bars_ind, adj_con, i):
    
     sols_two_points     = tangent_through_two_points(bp1, lv1, rp1, bp2, lv2, rp2, radius1, radius2)
     # list of possible solutions in vectors
-    sol = find_sol_interlock(b_struct, bars_ind[0], bars_ind[1], sols_two_points)
+    sol = find_sol_interlock(b_struct, bars_ind[0], bars_ind[1], sols_two_points, adj_con, rp1, i)
 
     if sol is not None:
         print("print here")
@@ -365,27 +370,87 @@ def add_tangent(b_struct, bp1, lv1, bp2, lv2, rp, dist1, dist2, bars_rnd):
     return b_v0
 
 
-def find_sol_interlock(b_struct, b1_key, b2_key, sol):
+def find_sol_interlock(b_struct, b1_key, b2_key, sol, adj_con, rp1, i):
 
     angles = []
-    for pts in sol:
-        pts_b1 = b_struct.vertex[b1_key]["axis_endpoints"] 
-        dpp1 = dropped_perpendicular_points(
-            pts_b1[0], pts_b1[1], sol[0][0], sol[0][1])
-        pts_b2 = b_struct.vertex[b2_key]["axis_endpoints"]
-        dpp2 = dropped_perpendicular_points(
-            pts_b2[0], pts_b2[1], sol[0][0], sol[0][1])
-        vec_1 = (subtract_vectors(dpp1[0], dpp1[1]))
-        vec_2 = (subtract_vectors(dpp2[0], dpp2[1]))
+    vec_1s = []
+    vec_2s = []
+    angles_previous = []
+    if i == 0:
+        for pts in sol:
+            pts_b1 = b_struct.vertex[b1_key]["axis_endpoints"] 
+            dpp1 = dropped_perpendicular_points(
+                pts_b1[0], pts_b1[1], sol[0][0], sol[0][1])
+            pts_b2 = b_struct.vertex[b2_key]["axis_endpoints"]
+            dpp2 = dropped_perpendicular_points(
+                pts_b2[0], pts_b2[1], sol[0][0], sol[0][1])
+            vec_1 = (subtract_vectors(dpp1[0], dpp1[1]))
+            vec_2 = (subtract_vectors(dpp2[0], dpp2[1]))
 
-        ang_vec = angle_vectors(vec_1, vec_2, deg=True) 
-        angles.append(ang_vec)
-    print("all angles", angles)
-    ang_max = max(angles)
-    ind = angles.index(ang_max)
-    print("index max angle", ind, ang_max)
-    solution = sol[ind]
-    if 120 < ang_max < 180:
-        return solution
+            ang_vec = angle_vectors(vec_1, vec_2, deg=True) 
+            angles.append(ang_vec)
+
+            vec_1s.append(vec_1)
+            vec_2s.append(vec_2)
+        ang_max = max(angles)
+        ind = angles.index(ang_max)  
+        if 120 < ang_max < 180:
+            adj_con.append([vec_1s[ind], vec_2s[ind]])
+            solution = sol[ind]
+            return solution
+        else:
+            return None
+
     else:
-        return None
+        for pts in sol:
+            pts_b1 = b_struct.vertex[b1_key]["axis_endpoints"] 
+            dpp1 = dropped_perpendicular_points(
+                pts_b1[0], pts_b1[1], sol[0][0], sol[0][1])
+            pts_b2 = b_struct.vertex[b2_key]["axis_endpoints"]
+            dpp2 = dropped_perpendicular_points(
+                pts_b2[0], pts_b2[1], sol[0][0], sol[0][1])
+            vec_1 = (subtract_vectors(dpp1[0], dpp1[1]))
+            vec_2 = (subtract_vectors(dpp2[0], dpp2[1]))
+            vec_previous = adj_con[-1]
+
+            distance_1= distance_point_point(pts_b1[1], rp1)
+            distance_2= distance_point_point(pts_b1[0], rp1)
+            if distance_1 < distance_2:
+                vec_previous = adj_con[-1][0]
+            else:
+                vec_previous = adj_con[-1][1]
+
+            ang_vec = angle_vectors(vec_1, vec_2, deg=True) 
+            angles.append(ang_vec)
+
+            ang_previous = angle_vectors(vec_1, vec_previous, deg=True)
+            angles_previous.append(ang_previous)
+
+            vec_2s.append(vec_2)
+            vec_1s.append(vec_1)
+
+        angles_average = []
+        for m in range(len(angles)):
+            angles_average.append((angles_previous[m] + angles[m]) / 2)
+        ang_av_max = max(angles_average)
+        ind = angles_average.index(ang_av_max)
+        print("ang_max", angles_previous[ind])
+        if 120 < angles[ind] < 180 and 120 < angles_previous[ind] < 180:
+            adj_con.append([vec_1s[ind], vec_2s[ind]])
+            solution = sol[ind]
+            return solution
+        else:
+            return None
+
+    #     ang_previous_max = max(angles_previous)
+    #     ind  = angles_previous.index(ang_previous_max)
+    #     if 120 < ang_previous_max < 180:
+    #         # ang_max = max(angles)
+    #         # ind = angles.index(ang_max)
+    #         # print("index max angle", ind, ang_max)
+    #         solution = sol[ind]
+    #         if 120 < angles[ind] < 180:
+    #             adj_con.append(vec_2s[ind])
+    #             return solution
+    #         else:
+    #             return None
