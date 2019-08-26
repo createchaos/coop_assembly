@@ -161,7 +161,13 @@ def generate_structure_no_points(o_struct, b_struct, bool_draw, r, iterations, s
     
     for i in range(iterations):
         rps = None
+        breaker = 0
         while rps is None:
+            breaker += 1
+            if breaker >= 50:
+                print("break_1")
+                break
+
             bars_ind = []
             if i == 0:
                 bar_added = 5
@@ -178,7 +184,11 @@ def generate_structure_no_points(o_struct, b_struct, bool_draw, r, iterations, s
 
             dll = distance_line_line(bar1, bar2)
 
+            breaker_2 = 0
             while dll > max_bar_length-200:
+                if breaker_2 >= 20:
+                    print("break_2")
+                    break
                 bars_ind[1] = second_bar_rnd(bars_ind[0])
                 bar2 = b_struct.vertex[bars_ind[1]]["axis_endpoints"]
                 dll =  distance_line_line(bar1, bar2)
@@ -254,11 +264,14 @@ def point_on_bar_2(bar_end_points, line_vector):
     return rp
 
 def second_bar_rnd(end):
-    if end < 10:
-        start = 3
+    if end <= 7:
+        bar_2_key = end-2
     else:
-        start = end - 6
-    bar_2_key = random.randrange(start, end)
+        if end < 100:
+            start = 3
+        else:
+            start = end - 6
+        bar_2_key = random.randrange(start, end)
     print("bar_2_key", bar_2_key)
     print("end", end)
 
@@ -297,7 +310,7 @@ def add_tangent_no_points(b_struct, bp1, lv1, bp2, lv2, rp1, rp2, radius1, radiu
     sols_two_points     = tangent_through_two_points(bp1, lv1, rp1, bp2, lv2, rp2, radius1, radius2)
     # list of possible solutions in vectors
     sol = find_sol_interlock(b_struct, bars_ind[0], bars_ind[1], sols_two_points, adj_con, rp1, i)
-
+    # sol= sols_two_points[2]
     if sol is not None:
         print("print here")
         ec_x, vec_y, vec_z = calculate_coord_sys(sol, (500,500,500))
@@ -380,10 +393,10 @@ def find_sol_interlock(b_struct, b1_key, b2_key, sol, adj_con, rp1, i):
         for pts in sol:
             pts_b1 = b_struct.vertex[b1_key]["axis_endpoints"] 
             dpp1 = dropped_perpendicular_points(
-                pts_b1[0], pts_b1[1], sol[0][0], sol[0][1])
+                pts_b1[0], pts_b1[1], pts[0], pts[1])
             pts_b2 = b_struct.vertex[b2_key]["axis_endpoints"]
             dpp2 = dropped_perpendicular_points(
-                pts_b2[0], pts_b2[1], sol[0][0], sol[0][1])
+                pts_b2[0], pts_b2[1], pts[0], pts[1])
             vec_1 = (subtract_vectors(dpp1[0], dpp1[1]))
             vec_2 = (subtract_vectors(dpp2[0], dpp2[1]))
 
@@ -405,16 +418,16 @@ def find_sol_interlock(b_struct, b1_key, b2_key, sol, adj_con, rp1, i):
         for pts in sol:
             pts_b1 = b_struct.vertex[b1_key]["axis_endpoints"] 
             dpp1 = dropped_perpendicular_points(
-                pts_b1[0], pts_b1[1], sol[0][0], sol[0][1])
+                pts_b1[0], pts_b1[1], pts[0], pts[1])
             pts_b2 = b_struct.vertex[b2_key]["axis_endpoints"]
             dpp2 = dropped_perpendicular_points(
-                pts_b2[0], pts_b2[1], sol[0][0], sol[0][1])
+                pts_b2[0], pts_b2[1], pts[0], pts[1])
             vec_1 = (subtract_vectors(dpp1[0], dpp1[1]))
             vec_2 = (subtract_vectors(dpp2[0], dpp2[1]))
             vec_previous = adj_con[-1]
 
-            distance_1= distance_point_point(pts_b1[1], rp1)
-            distance_2= distance_point_point(pts_b1[0], rp1)
+            distance_1= distance_point_point(pts_b1[0], rp1)
+            distance_2= distance_point_point(pts_b1[1], rp1)
             if distance_1 < distance_2:
                 vec_previous = adj_con[-1][0]
             else:
@@ -431,10 +444,11 @@ def find_sol_interlock(b_struct, b1_key, b2_key, sol, adj_con, rp1, i):
 
         angles_average = []
         for m in range(len(angles)):
+            print("all solutions", angles[m], angles_previous[m])
             angles_average.append((angles_previous[m] + angles[m]) / 2)
         ang_av_max = max(angles_average)
         ind = angles_average.index(ang_av_max)
-        print("ang_max", angles_previous[ind])
+        print("ang_previous_max", angles_previous[ind], "ang_max", angles[ind])
         if 120 < angles[ind] < 180 and 120 < angles_previous[ind] < 180:
             adj_con.append([vec_1s[ind], vec_2s[ind]])
             solution = sol[ind]
