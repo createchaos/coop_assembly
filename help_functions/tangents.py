@@ -759,4 +759,34 @@ def find_point_3(x, *args):
     return ang, ref_point, vec_l1, vec_l2
 
 
+def check_colisions(b_struct, pts, r, bar_nb=None, bar_checking=None):
+
+    # print "bar_checking", bar_checking
+    for b in b_struct.vertex:
+        if not bar_nb: bar_nb = 100000000000000
+        if bar_checking != None and b < 3: continue
+        if b < bar_nb and b != bar_checking:
+            pts_b = b_struct.vertex[b]["axis_endpoints"]
+            dpp = dropped_perpendicular_points(pts[0], pts[1], pts_b[0], pts_b[1])
+            try:
+                dist = distance_point_point(dpp[0], dpp[1])
+            except:
+                return False
+                # dist = 100
+            #print "distance check", dist
+            if round(dist, 1) < round(2*r, 1):
+                # print "b", b
+                # print "possible collision"
+                test = is_point_on_segment(dpp[0], pts, tol=50)
+                if test:
+                    test2 = is_point_on_segment(dpp[1], pts_b, tol=50)
+                    if test2:
+                        print("COLLISION", len(b_struct.vertex))
+
+                        return False
+                # return False
+
+    return True
+
+
 
