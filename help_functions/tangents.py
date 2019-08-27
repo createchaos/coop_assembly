@@ -57,7 +57,7 @@ def tangent_through_two_points(base_point1, line_vect1, ref_point1, base_point2,
     sols_vec = []
     sols_pts = []
 
-    print("tangent_through_two_points", base_point1, line_vect1, ref_point1, base_point2, line_vect2, ref_point2, dist1, dist2)
+    # print("tangent_through_two_points", base_point1, line_vect1, ref_point1, base_point2, line_vect2, ref_point2, dist1, dist2)
 
     for i in ind:
         ret_p1 = p_planes_tangent_to_cylinder(base_point1, line_vect1, ref_point2, dist1 + dist2 + dist1 + dist2)
@@ -65,7 +65,7 @@ def tangent_through_two_points(base_point1, line_vect1, ref_point1, base_point2,
         ret1 = ret_p1[i]
         z_vec = cross_vectors(line_vect1, ret1[2])
         plane1 = (ret1[0], z_vec)
-        print("plane1", plane1)
+        # print("plane1", plane1)
         pp1 = project_points_plane([ref_point1], plane1)[0]
         vec_move = scale_vector(subtract_vectors(ref_point1, pp1), 0.5)
         pt1 = add_vectors(pp1, vec_move)
@@ -114,8 +114,8 @@ def lines_tangent_to_two_cylinder(base_point1, line_vect1, base_point2, line_vec
     planes1     = p_planes_tangent_to_cylinder(base_point1, line_vect1, ref_point, dist1)
     planes2     = c_planes_tangent_to_cylinder(base_point2, line_vect2, ref_point, dist2)
     if planes1 == None or planes2 == None:
-        print("planes1", planes1)
-        print("planes2", planes2)
+        # print("planes1", planes1)
+        # print("planes2", planes2)
         return None
 
     s1  = intersect_plane_plane_u(planes1[0][1], planes1[0][2], planes2[0][0])
@@ -136,8 +136,8 @@ def lines_tangent_to_two_cylinder_one(base_point1, line_vect1, base_point2, line
     planes2 = c_planes_tangent_to_cylinder(
         base_point2, line_vect2, ref_point, dist2)
     if planes1 == None or planes2 == None:
-        print("planes1", planes1)
-        print("planes2", planes2)
+        # print("planes1", planes1)
+        # print("planes2", planes2)
         return None
 
     if nb == 0:

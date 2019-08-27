@@ -25,12 +25,12 @@ from compas.geometry.average import centroid_points
 from compas.geometry import translate_points
 
 from coop_assembly.help_functions.helpers_geometry import calculate_coord_sys, calculate_bar_z, dropped_perpendicular_points, update_bar_lengths
-from coop_assembly.help_functions.tangents import tangent_from_point, check_length_sol_one, tangent_through_two_points
+from coop_assembly.help_functions.tangents import tangent_from_point, check_length_sol_one, tangent_through_two_points, check_colisions
 from coop_assembly.geometry_generation.generate_tetrahedra import add_tetra
 
 
 def generate_first_tetra(o_struct, b_struct, r, points = None):
-
+# generates tetrahedron base structure
     pt_0  = points[0]
     pt_1  = points[1]
     pt_2  = points[2]
@@ -159,73 +159,52 @@ def generate_structure_no_points(o_struct, b_struct, bool_draw, r, iterations, s
 
     adj_con = []
     
+    # repeat for each bar added to structure
     for i in range(iterations):
         rps = None
         breaker = 0
         while rps is None:
             breaker += 1
-            if breaker >= 50:
+            if breaker >= 30:
                 print("break_1")
                 break
 
-            bars_ind = []
-            if i == 0:
-                bar_added = 5
-            bars_ind.append(i+5)
-            print("bars_ind2", bars_ind)
-            bar1 = b_struct.vertex[bars_ind[0]]["axis_endpoints"]
-            bp1  = bar1[0]
-            lv1  = subtract_vectors(bar1[1], bar1[0])
-            second_bar_key = second_bar_rnd(bars_ind[0])
-            bars_ind.append(second_bar_key)
-            bar2 = b_struct.vertex[bars_ind[1]]["axis_endpoints"]
-            
-            print("bars_ind", bars_ind)
+            rp1, rp2, lv1, lv2, bp1, bp2, bar1, bar2, bars_ind = bar_selection(b_struct, max_bar_length, i)
 
+            #  if random bar selected is too far from bar 1, repick random bar
             dll = distance_line_line(bar1, bar2)
-
             breaker_2 = 0
             while dll > max_bar_length-200:
-                if breaker_2 >= 20:
+                breaker_2 +=1
+                if breaker_2 > 20:
                     print("break_2")
                     break
-                bars_ind[1] = second_bar_rnd(bars_ind[0])
-                bar2 = b_struct.vertex[bars_ind[1]]["axis_endpoints"]
+                rp1, rp2, lv1, lv2, bp1, bp2, bar1, bar2, bars_ind = bar_selection(b_struct, max_bar_length, i)
                 dll =  distance_line_line(bar1, bar2)
 
-            bp2  = bar2[0]
-            lv2  = subtract_vectors(bar2[1], bar2[0])
+            #  checks to make sure the angle between the axis of two connecting bars satisfies a given condition and for tangency issues, repicks points to try for solution
+            rps = master_checker(lv1, lv2, rp1, rp2, bar1, bar2, max_bar_length, i, r)
+            print("rps1", rps)
 
-            if i == 0:
-                rp1  = point_on_bar_2(bar1, lv1)
-            else:
-                rp1  = point_on_bar_1(bar1, lv1, max_bar_length)  
-            rp2  = point_on_bar_2(bar2, lv2)
-
-            print("rp1", rp1)
-            rps = bar_checker(i, bar1, lv1, rp1, bar2, lv2, rp2, max_bar_length, r)
-
-            print("rp1.1", rp1)
 
             if rps is not None:
                 rp1 = rps[0]
                 rp2 = rps[1]
+                print("test")
                 bar_added = add_tangent_no_points(b_struct, bp1, lv1, bp2, lv2, rp1, rp2, radius1, radius2, bars_ind, adj_con, i)
                 j = 0
-                while bar_added is None and j < 10:
-                    j += 1    
-                    if i == 0:
-                        rp1  = point_on_bar_2(bar1, lv1)
+                while bar_added is None:
+                    print("bar_added_is_none")
+                    j += 1
+                    if j == 40:
+                        break
                     else:
-                        rp1  = point_on_bar_1(bar1, lv1, max_bar_length)
-                    rp2  = point_on_bar_2(bar2, lv2)
-
-                    rps = bar_checker(i, bar1, lv1, rp1, bar2, lv2, rp2, max_bar_length, r)
-                    print("list", adj_con)
-                    if rps is not None:
-                        rp1 = rps[0]
-                        rp2 = rps[1]
-                        bar_added = add_tangent_no_points(b_struct, bp1, lv1, bp2, lv2, rp1, rp2, radius1, radius2, bars_ind, adj_con, i)
+                        rp1, rp2 = point_selection(bar1, lv1, bar2, lv2, max_bar_length, i)
+                        rps = master_checker(lv1, lv2, rp1, rp2, bar1, bar2, max_bar_length, i, r)
+                        if rps is not None:
+                            rp1 = rps[0]
+                            rp2 = rps[1]
+                            bar_added = add_tangent_no_points(b_struct, bp1, lv1, bp2, lv2, rp1, rp2, radius1, radius2, bars_ind, adj_con, i)
             if bar_added is None:
                 rps = None
 
@@ -233,11 +212,75 @@ def generate_structure_no_points(o_struct, b_struct, bool_draw, r, iterations, s
     return b_struct
 
 
+def bar_selection(b_struct, max_bar_length, i):
+# selects previous bar added, random second bar, and reference points on each
+    bars_ind = []
+    if i == 0:
+        bar_added = 5
+    bars_ind.append(i+5)
+    print("bars_ind2", bars_ind)
+    bar1 = b_struct.vertex[bars_ind[0]]["axis_endpoints"]
+    bp1  = bar1[0]
+    lv1  = subtract_vectors(bar1[1], bar1[0])
+    second_bar_key = second_bar_rnd(bars_ind[0])
+    bars_ind.append(second_bar_key)
+    bar2 = b_struct.vertex[bars_ind[1]]["axis_endpoints"]
+    bp2  = bar2[0]
+    lv2  = subtract_vectors(bar2[1], bar2[0])
+
+    rp1, rp2 = point_selection(bar1, lv1, bar2, lv2, max_bar_length, i)
+
+    return rp1, rp2, lv1, lv2, bp1, bp2, bar1, bar2, bars_ind
+
+def point_selection(bar1, lv1, bar2, lv2, max_bar_length, i):
+# select reference points on bar1 and bar2
+    if i == 0:
+        rp1  = point_on_bar_2(bar1, lv1)
+    else:
+        rp1  = point_on_bar_1(bar1, lv1, max_bar_length)
+    rp2  = point_on_bar_2(bar2, lv2)
+    print("repick points")
+    return rp1, rp2
+
+def master_checker(lv1, lv2, rp1, rp2, bar1, bar2, max_bar_length, i, r):
+# completes all required checks and re-tries with new reference points a fixed number of times
+    bca = bar_connection_angle(lv1, lv2, rp1, rp2, bar1, bar2, max_bar_length, i)
+    b_ckr = bar_checker(i, bar1, lv1, rp1, bar2, lv2, rp2, max_bar_length, r)
+    h = 0
+    print(bca, b_ckr)    
+    while bca is False or b_ckr is False:
+        h += 1
+        if h > 10:
+            return None
+        else:
+            rp1, rp2 = point_selection(bar1, lv1, bar2, lv2, max_bar_length, i)
+            print("rp11111", rp1)
+            bca = bar_connection_angle(lv1, lv2, rp1, rp2, bar1, bar2, max_bar_length, i)
+            b_ckr = bar_checker(i, bar1, lv1, rp1, bar2, lv2, rp2, max_bar_length, r)
+            print("checker", bca, b_ckr)
+            if bca is True and b_ckr is True:
+                return [rp1, rp2]
+    print("checker success")
+    return [rp1, rp2]
+
+def bar_connection_angle(lv1, lv2, rp1, rp2, bar1, bar2, max_bar_length, i):
+# checks to make sure the angle between the axis of two connecting bars satisfies a given condition, repicks points  
+    bar_new = subtract_vectors(rp2, rp1)
+    connection_angle_1 = angle_vectors(bar_new, lv1, deg=True)
+    connection_angle_2 = angle_vectors(bar_new, lv2, deg=True)
+    print("connection_angle_1-2", connection_angle_1, connection_angle_2)
+
+    if 150 > connection_angle_1 > 30 and 150 > connection_angle_2 > 30:
+        return True
+    else:
+        print("bad connection angleS")
+        return False
+
 def point_on_bar_1(bar_end_points, line_vector, max_bar_length):
+# selects a reference point on the previous bar added to the structre
     cp      = centroid_points(bar_end_points)
     bar_len = distance_point_point(bar_end_points[0], bar_end_points[1])    
     max_len = max_bar_length - (bar_len/2)
-    print("length check", bar_len, max_len)
     sv      = scale_vector(normalize_vector(line_vector), random.randrange(bar_len/2, max_len, step=1, _int=float))
 
     # random direction
@@ -245,7 +288,7 @@ def point_on_bar_1(bar_end_points, line_vector, max_bar_length):
     sv_rand_direction = scale_vector(sv, rand_direction)
     rp      = add_vectors(cp, sv_rand_direction)
 
-    # upward trending: too few solutions
+    # upward trending: too few solutions, feathering pattern
     # rp_pos  = add_vectors(cp, sv)
     # rp_neg  = add_vectors(cp, scale_vector(sv, -1))
     # if rp_pos[2] > rp_neg[2]:
@@ -256,6 +299,7 @@ def point_on_bar_1(bar_end_points, line_vector, max_bar_length):
     return rp
 
 def point_on_bar_2(bar_end_points, line_vector):
+# selects a reference point on a second, randomly chosen bar
     cp  = centroid_points(bar_end_points)
     vec_len = length_vector(line_vector)
     sv  = scale_vector(normalize_vector(line_vector), random.randrange((-vec_len/3), (vec_len/3), step=1, _int=float))
@@ -264,55 +308,40 @@ def point_on_bar_2(bar_end_points, line_vector):
     return rp
 
 def second_bar_rnd(end):
-    if end <= 7:
-        bar_2_key = end-2
+# randomly selects a second bar
+
+    # use to utilize all three tetrahedron bars
+    # if end <= 7:
+    #     bar_2_key = end-2
+    # else:
+
+
+    if end < 100:
+        start = 3
     else:
-        if end < 100:
-            start = 3
-        else:
-            start = end - 6
-        bar_2_key = random.randrange(start, end)
+        start = end - 6
+    bar_2_key = random.randrange(start, end)
     print("bar_2_key", bar_2_key)
-    print("end", end)
 
     return bar_2_key
 
 def bar_checker(i, bar1, lv1, rp1, bar2, lv2, rp2, max_bar_length, r):
+# checks to make sure there is a solution that satisfies tangency issues and is less than the maximum bar length
     dpl_1 = distance_point_line(rp1, bar2)
     dpl_2 = distance_point_line(rp2, bar1)
     dpp = distance_point_point(rp1, rp2)
     if dpl_1 >= 5*r and dpl_2 >= 5*r and dpp <= max_bar_length-200:
-        print("checker", dpp)
-        return [rp1, rp2]
-    else:
-        print("this is not working", rp1)
-        for j in range(20):
-            print("this is not working2", rp1)
-
-            if i == 0:
-                rp1  = point_on_bar_2(bar1, lv1)
-            else:
-                rp1  = point_on_bar_1(bar1, lv1, max_bar_length)
-            dpl_1 = distance_point_line(rp1, bar2)
-            rp2  = point_on_bar_2(bar2, lv2)
-            dpl_2 = distance_point_line(rp2, bar1)
-            dpp = distance_point_point(rp1, rp2)
-            
-            if dpl_1 >= 5*r and dpl_2 >= 5*r and dpp <= max_bar_length-200:
-                return [rp1, rp2]
-        print("else", rp1)
-        
-        return None
-
+        return True
+    else:        
+        return False
 
 def add_tangent_no_points(b_struct, bp1, lv1, bp2, lv2, rp1, rp2, radius1, radius2, bars_ind, adj_con, i):
-   
+#   adds an acceptable solution to b_struct 
     sols_two_points     = tangent_through_two_points(bp1, lv1, rp1, bp2, lv2, rp2, radius1, radius2)
-    # list of possible solutions in vectors
-    sol = find_sol_interlock(b_struct, bars_ind[0], bars_ind[1], sols_two_points, adj_con, rp1, i)
-    # sol= sols_two_points[2]
+    sol = find_sol_interlock(b_struct, bars_ind[0], bars_ind[1], sols_two_points, adj_con, rp1, i, radius1)
+
     if sol is not None:
-        print("print here")
+        print("bar was added here")
         ec_x, vec_y, vec_z = calculate_coord_sys(sol, (500,500,500))
         b_new_bar = b_struct.add_bar(0, sol, "tube", (25.0, 2.0), vec_z)
         b_struct.connect_bars(b_new_bar, bars_ind[0])
@@ -322,8 +351,6 @@ def add_tangent_no_points(b_struct, bp1, lv1, bp2, lv2, rp1, rp2, radius1, radiu
         return b_new_bar      
     else:
         return None
-
-
 
 def add_tangent(b_struct, bp1, lv1, bp2, lv2, rp, dist1, dist2, bars_rnd):
     
@@ -382,9 +409,8 @@ def add_tangent(b_struct, bp1, lv1, bp2, lv2, rp, dist1, dist2, bars_rnd):
 
     return b_v0
 
-
-def find_sol_interlock(b_struct, b1_key, b2_key, sol, adj_con, rp1, i):
-
+def find_sol_interlock(b_struct, b1_key, b2_key, sol, adj_con, rp1, i, r):
+# selects a solution that satisfies connection conditons
     angles = []
     vec_1s = []
     vec_2s = []
@@ -406,7 +432,8 @@ def find_sol_interlock(b_struct, b1_key, b2_key, sol, adj_con, rp1, i):
             vec_1s.append(vec_1)
             vec_2s.append(vec_2)
         ang_max = max(angles)
-        ind = angles.index(ang_max)  
+        ind = angles.index(ang_max)
+        # selects the best solution (if one is available) that satisfies connection directions  
         if 120 < ang_max < 180:
             adj_con.append([vec_1s[ind], vec_2s[ind]])
             solution = sol[ind]
@@ -426,6 +453,7 @@ def find_sol_interlock(b_struct, b1_key, b2_key, sol, adj_con, rp1, i):
             vec_2 = (subtract_vectors(dpp2[0], dpp2[1]))
             vec_previous = adj_con[-1]
 
+            # checks which connection on the previous bar is the closest to rp1
             distance_1= distance_point_point(pts_b1[0], rp1)
             distance_2= distance_point_point(pts_b1[1], rp1)
             if distance_1 < distance_2:
@@ -436,25 +464,48 @@ def find_sol_interlock(b_struct, b1_key, b2_key, sol, adj_con, rp1, i):
             ang_vec = angle_vectors(vec_1, vec_2, deg=True) 
             angles.append(ang_vec)
 
+            # this is calculating angles incorrectly, or recieving wrong vectors
             ang_previous = angle_vectors(vec_1, vec_previous, deg=True)
             angles_previous.append(ang_previous)
 
             vec_2s.append(vec_2)
             vec_1s.append(vec_1)
+        
+        # creates a list of possible solutions
+        possible_sol = []
+        for w in range(len(angles)):
+            if 120 < angles[w] < 180 and 120 < angles_previous[w] < 180:
+                print("anglesw", w, angles[w], angles_previous[w], sol[w])
+                possible_sol.append(sol[w])
 
-        angles_average = []
-        for m in range(len(angles)):
-            print("all solutions", angles[m], angles_previous[m])
-            angles_average.append((angles_previous[m] + angles[m]) / 2)
-        ang_av_max = max(angles_average)
-        ind = angles_average.index(ang_av_max)
-        print("ang_previous_max", angles_previous[ind], "ang_max", angles[ind])
-        if 120 < angles[ind] < 180 and 120 < angles_previous[ind] < 180:
-            adj_con.append([vec_1s[ind], vec_2s[ind]])
-            solution = sol[ind]
-            return solution
-        else:
-            return None
+        print("possible sol", possible_sol)
+
+        # selects a possible solution that has no collisions
+        for solution in possible_sol:
+            no_collision = check_colisions(b_struct, solution, r)
+            if no_collision is True:
+                ind = sol.index(solution)
+                print("ind", ind)
+                adj_con.append([vec_1s[ind], vec_2s[ind]])
+                return solution
+            
+        return None
+
+
+
+        # angles_average = []
+        # for m in range(len(angles)):
+        #     print("all solutions", angles[m], angles_previous[m])
+        #     angles_average.append((angles_previous[m] + angles[m]) / 2)
+        # ang_av_max = max(angles_average)
+        # ind = angles_average.index(ang_av_max)
+        # print("ang_previous_max", angles_previous[ind], "ang_max", angles[ind])
+        # if 120 < angles[ind] < 180 and 120 < angles_previous[ind] < 180:
+        #     adj_con.append([vec_1s[ind], vec_2s[ind]])
+        #     solution = sol[ind]
+        #     return solution
+        # else:
+        #     return None
 
     #     ang_previous_max = max(angles_previous)
     #     ind  = angles_previous.index(ang_previous_max)
