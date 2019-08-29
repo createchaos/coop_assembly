@@ -368,6 +368,7 @@ def add_tangent_no_points(b_struct, bp1, lv1, bp2, lv2, rp1, rp2, radius1, radiu
             pts_b2[0], pts_b2[1], sol[0], sol[1])
         b_new_bar = b_struct.add_bar(0, sol, "tube", (25.0, 2.0), vec_z)
         b_struct.vertex[b_new_bar].update({"connection_vectors":[dpp1, dpp2]})
+        b_struct.vertex[b_new_bar].update({"connected_bars":[bars_ind[0], bars_ind[1]]})
         b_struct.connect_bars(b_new_bar, bars_ind[0])
         b_struct.connect_bars(b_new_bar, bars_ind[1])
 
