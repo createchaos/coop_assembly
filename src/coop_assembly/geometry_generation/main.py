@@ -27,8 +27,8 @@ import platform
 import compas_fab
 from compas.utilities.xfunc import XFunc
 
-from compas.rpc import Proxy
-geo_gen_execute = Proxy('coop_assembly.geometry_generation.execute')
+# from compas.rpc import Proxy
+# geo_gen_execute = Proxy('coop_assembly.geometry_generation.execute')
 
 from coop_assembly.geometry_generation.execute import execute
 from coop_assembly.help_functions.drawing import draw
@@ -52,13 +52,13 @@ def main():
     if run_python:
         print("calling function in python")
 
-        # xfunc = XFunc(
-        #     'coop_assembly.geometry_generation.execute.execute', python=r'C:\Users\Stefana\Anaconda2\envs\py36\python')
-        # xfun()
-        # print("error", xfunc.error)
-        # data = xfunc.data
+        xfunc = XFunc(
+            'coop_assembly.geometry_generation.execute.execute') #, python=r'C:\Users\Stefana\Anaconda2\envs\py36\python'
+        xfun()
+        print("error", xfunc.error)
+        data = xfunc.data
 
-        geo_gen_execute.execute()
+        # geo_gen_execute.execute()
     else:
         data = pickle.loads(execute())
 
@@ -99,16 +99,16 @@ def main_gh_simple(points, dict_nodes, sup_nodes=None, sup_bars=None, l_bars=Non
         for i, s in enumerate(sup_nodes):
             sup_nodes[i] = int(s)
 
-    # xfunc = XFunc(
-    #         'coop_assembly.geometry_generation.execute.execute_from_points')
-    # xfunc(points, dict_nodes, support_nodes=sup_nodes,
-    #     support_bars=sup_bars, load_bars=l_bars, load=load, check_col=check_col)
-    # print(xfunc.error)
-    # data = pickle.loads(xfunc.data)
+    xfunc = XFunc(
+            'coop_assembly.geometry_generation.execute.execute_from_points')
+    xfunc(points, dict_nodes, support_nodes=sup_nodes,
+        support_bars=sup_bars, load_bars=l_bars, load=load, check_col=check_col)
+    print(xfunc.error)
+    b_struct, o_struct = pickle.loads(xfunc.data)
 
-    b_struct, o_struct = geo_gen_execute.execute_from_points(
-        points, dict_nodes, support_nodes=sup_nodes, 
-        support_bars=sup_bars, load_bars=l_bars, 
-        load=load, check_col=check_col)
+    # b_struct, o_struct = geo_gen_execute.execute_from_points(
+    #     points, dict_nodes, support_nodes=sup_nodes, 
+    #     support_bars=sup_bars, load_bars=l_bars, 
+    #     load=load, check_col=check_col)
 
     return b_struct, o_struct
