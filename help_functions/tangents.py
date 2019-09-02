@@ -391,8 +391,8 @@ def second_tangent(b2_1, b2_2, pt_mean_2, b_v2_1, b_v2_2, b_struct, b_v_old, pt1
             return None
 
         args    = ptM, ex, ey, r, pt_b_1, l_1, pt_b_2, l_2, 2*r, 2*r, ind
-        #xfunc = XFunc('coop_assembly.help_functions.tangents.solve_second_tangent', r'C:\Users\ChaseGalis\Desktop\ECL\GITRepository')
-        xfunc = XFunc('coop_assembly.help_functions.tangents.solve_second_tangent', r'C:\Users\Stefana\Documents\git_repos\projects')
+        xfunc = XFunc('coop_assembly.help_functions.tangents.solve_second_tangent', r'C:\Users\ChaseGalis\Desktop\ECL\GITRepository')
+        # xfunc = XFunc('coop_assembly.help_functions.tangents.solve_second_tangent', r'C:\Users\Stefana\Documents\git_repos\projects')
         xfunc(ptM, ex, ey, r, pt_b_1, l_1, pt_b_2, l_2, 2*r, 2*r, ind)
         ret_sst = xfunc.data
         # ret_sst = solve_second_tangent(*args)
@@ -539,8 +539,8 @@ def third_tangent(b_struct, b_v_old, b_v1, b3_1, b3_2, pt_mean_3, max_len, b_v3_
 
         args = pt_mid, ex, ey, r, pt_b_1, l_1, pt_b_2, l_2, pt_b_3, l_3, pt_b_4, l_4, bounds, ind_1, ind_2
 
-        # xfunc = XFunc('coop_assembly.help_functions.tangents.solve_third_tangent', r'C:\Users\ChaseGalis\Desktop\ECL\GITRepository')
-        xfunc = XFunc('coop_assembly.help_functions.tangents.solve_third_tangent', r'C:\Users\Stefana\Documents\git_repos\projects')
+        xfunc = XFunc('coop_assembly.help_functions.tangents.solve_third_tangent', r'C:\Users\ChaseGalis\Desktop\ECL\GITRepository')
+        # xfunc = XFunc('coop_assembly.help_functions.tangents.solve_third_tangent', r'C:\Users\Stefana\Documents\git_repos\projects')
         
         xfunc(pt_mid, ex, ey, r, pt_b_1, l_1, pt_b_2, l_2, pt_b_3, l_3, pt_b_4, l_4, bounds, ind_1, ind_2)
         ret_stt = xfunc.data
