@@ -365,7 +365,7 @@ def add_tetra(o_struct, b_struct, bars1, bars2, bars3, pt_new_input, r, b_v0 = N
     len_vec_min     = 950
     len_vec_max     = 950
     len_vec         = (random.random()*(len_vec_max - len_vec_min))+len_vec_min
-    max_len         = 1500
+    max_len         = 500
     
 
     b_v1_1  = bars1[0]

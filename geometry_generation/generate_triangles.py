@@ -73,7 +73,7 @@ def generate_first_tetra(o_struct, b_struct, r, points = None):
     b_struct.connect_bars(b_v2, b_v0)
 
 
-    add_tetra(o_struct, b_struct, (b_v0, b_v1), (b_v1, b_v2), (b_v2, b_v0), pt_3, r)
+    add_tetra(o_struct, b_struct, (b_v0, b_v1), (b_v1, b_v2), (b_v2, b_v0), pt_3, r, correct=False)
 
 
 
@@ -235,10 +235,10 @@ def bar_selection(b_struct, max_bar_length, i, r):
 def point_selection(b_struct, bar1, lv1, bar2, lv2, max_bar_length, i, r):
 # select reference points on bar1 and bar2
     if i == 0:
-        rp1  = point_on_bar_2(bar1, lv1)
+        rp1  = point_on_bar_2(bar1, lv1, i+5)
     else:
         rp1  = point_on_bar_1(b_struct, bar1, lv1, max_bar_length, r)
-    rp2  = point_on_bar_2(bar2, lv2)
+    rp2  = point_on_bar_2(bar2, lv2, i+5)
     print("repick points")
     return rp1, rp2
 
@@ -287,7 +287,9 @@ def point_on_bar_1(b_struct, bar_end_points, line_vector, max_bar_length, r):
         cp      = centroid_points(bar_end_points)
         bar_len = distance_point_point(bar_end_points[0], bar_end_points[1])    
         max_len = max_bar_length - (bar_len/2)
-        sv      = scale_vector(normalize_vector(line_vector), random.randrange(bar_len/2, max_len, step=1, _int=float))
+        # sv      = scale_vector(normalize_vector(line_vector), random.randrange(bar_len/2, max_len, step=1, _int=float))
+        # sv      = scale_vector(normalize_vector(line_vector), random.randrange(round(bar_len/2), round(max_len), step=1))
+        sv      = scale_vector(normalize_vector(line_vector), random.randrange(round(max_len - 200), round(max_len), step=1))
 
         # random direction
         rand_direction = 1 if random.random() < 0.5 else -1
@@ -315,11 +317,14 @@ def point_on_bar_1(b_struct, bar_end_points, line_vector, max_bar_length, r):
 
     return rp
 
-def point_on_bar_2(bar_end_points, line_vector):
+def point_on_bar_2(bar_end_points, line_vector, end):
 # selects a reference point on a second, randomly chosen bar
     cp  = centroid_points(bar_end_points)
     vec_len = length_vector(line_vector)
-    sv  = scale_vector(normalize_vector(line_vector), random.randrange((-vec_len/3), (vec_len/3), step=1, _int=float))
+    # sv  = scale_vector(normalize_vector(line_vector), random.randrange((-vec_len/3), (vec_len/3), step=1, _int=float))
+    sv  = scale_vector(normalize_vector(line_vector), random.randrange(round(-vec_len/3), round(vec_len/3), step=1))
+    # if end <=7:
+    #     sv  = scale_vector(normalize_vector(line_vector), random.randrange(round(-vec_len/10), round(vec_len/10), step=1))
     rp = add_vectors(cp, sv)
 
     return rp
@@ -331,8 +336,6 @@ def second_bar_rnd(end):
     # if end <= 7:
     #     bar_2_key = end-2
     # else:
-
-
     if end < 100:
         start = 3
     else:
