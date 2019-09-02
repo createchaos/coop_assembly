@@ -165,7 +165,7 @@ def generate_structure_no_points(o_struct, b_struct, bool_draw, r, iterations, b
                 print("break_1")
                 break
 
-            rp1, rp2, lv1, lv2, bp1, bp2, bar1, bar2, bars_ind = bar_selection(b_struct, bar_len_min, bar_len_max, i, r)
+            rp1, rp2, lv1, lv2, bp1, bp2, bar1, bar2, bars_ind = bar_selection(b_struct, bar_len_min, bar_len_max, breaker_num, i, r)
 
             #  if random bar selected is too far from bar 1, repick random bar
             dll = distance_line_line(bar1, bar2)
@@ -175,7 +175,7 @@ def generate_structure_no_points(o_struct, b_struct, bool_draw, r, iterations, b
                 if breaker_2 > breaker_num:
                     print("break_2")
                     break
-                rp1, rp2, lv1, lv2, bp1, bp2, bar1, bar2, bars_ind = bar_selection(b_struct, bar_len_min, bar_len_max, i, r)
+                rp1, rp2, lv1, lv2, bp1, bp2, bar1, bar2, bars_ind = bar_selection(b_struct, bar_len_min, bar_len_max, breaker_num, i, r)
                 dll =  distance_line_line(bar1, bar2)
 
             #  checks to make sure the angle between the axis of two connecting bars satisfies a given condition and for tangency issues, repicks points to try for solution
@@ -242,19 +242,21 @@ def master_checker(b_struct, lv1, lv2, rp1, rp2, bar1, bar2, bar_len_min, bar_le
 # completes all required checks and re-tries with new reference points a fixed number of times
     bca = bar_connection_angle(lv1, lv2, rp1, rp2, bar1, bar2, bar_len_max, i)
     b_ckr = bar_checker(i, bar1, lv1, rp1, bar2, lv2, rp2, bar_len_max, r)
+    bb = below_base(rp1, rp2, r)
     h = 0
     print(bca, b_ckr)    
-    while bca is False or b_ckr is False:
+    while bca is False or b_ckr or bb is False:
         h += 1
         if h > breaker_num:
             return None
         else:
-            rp1, rp2 = point_selection(b_struct, bar1, lv1, bar2, lv2, bar_len_min, bar_len_max, i, r)
+            rp1, rp2 = point_selection(b_struct, bar1, lv1, bar2, lv2, bar_len_min, bar_len_max, breaker_num, i, r)
             print("rp11111", rp1)
             bca = bar_connection_angle(lv1, lv2, rp1, rp2, bar1, bar2, bar_len_max, i)
             b_ckr = bar_checker(i, bar1, lv1, rp1, bar2, lv2, rp2, bar_len_max, r)
+            bb= below_base(rp1, rp2, r)
             print("checker", bca, b_ckr)
-            if bca is True and b_ckr is True:
+            if bca is True and b_ckr and bb is True:
                 return [rp1, rp2]
     print("checker success")
     return [rp1, rp2]
@@ -271,6 +273,14 @@ def bar_connection_angle(lv1, lv2, rp1, rp2, bar1, bar2, bar_len_max, i):
     else:
         print("bad connection angleS")
         return False
+
+def below_base(rp1, rp2, r):
+# checks to make sure bars do not go below the base
+# possibly adapt this to direct connections?
+    if rp1[2] <= r*2 or rp2[2] <= r*2:
+        return False
+    else:
+        return True
 
 def point_on_bar_1(b_struct, bar_end_points, line_vector, bar_len_min, bar_len_max, breaker_num, r):
 # selects a reference point on the previous bar added to the structre, checks extension for collisions
