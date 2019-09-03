@@ -150,7 +150,7 @@ def generate_structure(o_struct, b_struct, bool_draw, r, points = None, supports
 
     return b_struct
 
-def generate_structure_no_points(o_struct, b_struct, bool_draw, r, iterations, bar_len_min, bar_len_max, breaker_num, supports=None, loads=None, correct=True):
+def generate_structure_no_points(o_struct, b_struct, bool_draw, r, iterations, bar_len_min, bar_len_max, breaker_num, supports=None, loads=None, correct=True, attr=None):
     
     radius1 = r
     radius2 = r
@@ -159,13 +159,14 @@ def generate_structure_no_points(o_struct, b_struct, bool_draw, r, iterations, b
     for i in range(iterations):
         rps = None
         breaker = 0
+        test_num = 20
         while rps is None:
             breaker += 1
             if breaker >= breaker_num:
                 print("break_1")
                 break
 
-            rp1, rp2, lv1, lv2, bp1, bp2, bar1, bar2, bars_ind = bar_selection(b_struct, bar_len_min, bar_len_max, breaker_num, i, r)
+            rp1, rp2, lv1, lv2, bp1, bp2, bar1, bar2, bars_ind = bar_selection(b_struct, bar_len_min, bar_len_max, breaker_num, i, r, attr)
 
             #  if random bar selected is too far from bar 1, repick random bar
             dll = distance_line_line(bar1, bar2)
@@ -175,11 +176,11 @@ def generate_structure_no_points(o_struct, b_struct, bool_draw, r, iterations, b
                 if breaker_2 > breaker_num:
                     print("break_2")
                     break
-                rp1, rp2, lv1, lv2, bp1, bp2, bar1, bar2, bars_ind = bar_selection(b_struct, bar_len_min, bar_len_max, breaker_num, i, r)
+                rp1, rp2, lv1, lv2, bp1, bp2, bar1, bar2, bars_ind = bar_selection(b_struct, bar_len_min, bar_len_max, breaker_num, i, r, attr)
                 dll =  distance_line_line(bar1, bar2)
 
             #  checks to make sure the angle between the axis of two connecting bars satisfies a given condition and for tangency issues, repicks points to try for solution
-            rps = master_checker(b_struct, lv1, lv2, rp1, rp2, bar1, bar2, bar_len_min, bar_len_max, breaker_num, i, r)
+            rps = master_checker(b_struct, lv1, lv2, rp1, rp2, bar1, bar2, bar_len_min, bar_len_max, breaker_num, i, r, attr)
             print("rps1", rps)
 
 
@@ -195,8 +196,9 @@ def generate_structure_no_points(o_struct, b_struct, bool_draw, r, iterations, b
                     if j == breaker_num:
                         break
                     else:
-                        rp1, rp2 = point_selection(b_struct, bar1, lv1, bar2, lv2, bar_len_min, bar_len_max, breaker_num, i, r)
-                        rps = master_checker(b_struct, lv1, lv2, rp1, rp2, bar1, bar2, bar_len_min, bar_len_max, breaker_num, i, r)
+                        attr_dir = False if j > test_num else True
+                        rp1, rp2 = point_selection(b_struct, bar1, lv1, bar2, lv2, bar_len_min, bar_len_max, breaker_num, i, r, attr, attr_dir)
+                        rps = master_checker(b_struct, lv1, lv2, rp1, rp2, bar1, bar2, bar_len_min, bar_len_max, breaker_num, i, r, attr)
                         if rps is not None:
                             rp1 = rps[0]
                             rp2 = rps[1]
@@ -208,7 +210,7 @@ def generate_structure_no_points(o_struct, b_struct, bool_draw, r, iterations, b
     return b_struct
 
 
-def bar_selection(b_struct, bar_len_min, bar_len_max, breaker_num, i, r):
+def bar_selection(b_struct, bar_len_min, bar_len_max, breaker_num, i, r, pt_attr):
 # selects previous bar added, random second bar, and reference points on each
     bars_ind = []
     if i == 0:
@@ -224,22 +226,23 @@ def bar_selection(b_struct, bar_len_min, bar_len_max, breaker_num, i, r):
     bp2  = bar2[0]
     lv2  = subtract_vectors(bar2[1], bar2[0])
 
-    rp1, rp2 = point_selection(b_struct, bar1, lv1, bar2, lv2, bar_len_min, bar_len_max, breaker_num, i, r)
+    rp1, rp2 = point_selection(b_struct, bar1, lv1, bar2, lv2, bar_len_min, bar_len_max, breaker_num, i, r, pt_attr, False)
 
     return rp1, rp2, lv1, lv2, bp1, bp2, bar1, bar2, bars_ind
 
-def point_selection(b_struct, bar1, lv1, bar2, lv2, bar_len_min, bar_len_max, breaker_num, i, r):
+def point_selection(b_struct, bar1, lv1, bar2, lv2, bar_len_min, bar_len_max, breaker_num, i, r, pt_attr, attr_dir = False):
 # select reference points on bar1 and bar2
     if i == 0:
         rp1  = point_on_bar_2(bar1, lv1, i+5)
     else:
-        rp1  = point_on_bar_1(b_struct, bar1, lv1, bar_len_min, bar_len_max, breaker_num, r)
+        rp1  = point_on_bar_1(b_struct, bar1, lv1, bar_len_min, bar_len_max, breaker_num, r, pt_attr, attr_dir)
     rp2  = point_on_bar_2(bar2, lv2, i+5)
     print("repick points")
     return rp1, rp2
 
-def master_checker(b_struct, lv1, lv2, rp1, rp2, bar1, bar2, bar_len_min, bar_len_max, breaker_num, i, r):
+def master_checker(b_struct, lv1, lv2, rp1, rp2, bar1, bar2, bar_len_min, bar_len_max, breaker_num, i, r, pt_attr):
 # completes all required checks and re-tries with new reference points a fixed number of times
+    test_num = 20
     bca = bar_connection_angle(lv1, lv2, rp1, rp2, bar1, bar2, bar_len_max, i)
     b_ckr = bar_checker(i, bar1, lv1, rp1, bar2, lv2, rp2, bar_len_max, r)
     bb = below_base(rp1, rp2, r)
@@ -250,7 +253,8 @@ def master_checker(b_struct, lv1, lv2, rp1, rp2, bar1, bar2, bar_len_min, bar_le
         if h > breaker_num:
             return None
         else:
-            rp1, rp2 = point_selection(b_struct, bar1, lv1, bar2, lv2, bar_len_min, bar_len_max, breaker_num, i, r)
+            attr_dir = False if breaker_num > test_num else True
+            rp1, rp2 = point_selection(b_struct, bar1, lv1, bar2, lv2, bar_len_min, bar_len_max, breaker_num, i, r, pt_attr, attr_dir)
             print("rp11111", rp1)
             bca = bar_connection_angle(lv1, lv2, rp1, rp2, bar1, bar2, bar_len_max, i)
             b_ckr = bar_checker(i, bar1, lv1, rp1, bar2, lv2, rp2, bar_len_max, r)
@@ -282,7 +286,7 @@ def below_base(rp1, rp2, r):
     else:
         return True
 
-def point_on_bar_1(b_struct, bar_end_points, line_vector, bar_len_min, bar_len_max, breaker_num, r):
+def point_on_bar_1(b_struct, bar_end_points, line_vector, bar_len_min, bar_len_max, breaker_num, r, pt_attr, attr_dir):
 # selects a reference point on the previous bar added to the structre, checks extension for collisions
     y = 0
     no_collision = False
@@ -298,10 +302,20 @@ def point_on_bar_1(b_struct, bar_end_points, line_vector, bar_len_min, bar_len_m
         # sv      = scale_vector(normalize_vector(line_vector), random.randrange(round(bar_len/2), round(max_len), step=1))
         sv      = scale_vector(normalize_vector(line_vector), random.randrange(round(min_len), round(max_len), step=1))
 
+        #check which direction is closer to attractor
+        print("pt_attr", pt_attr)
+        dist_cp = distance_point_point(cp, pt_attr)
+
         # random direction
         rand_direction = 1 if random.random() < 0.5 else -1
         sv_rand_direction = scale_vector(sv, rand_direction)
         rp      = add_vectors(cp, sv_rand_direction)
+        dist_n = distance_point_point(rp, pt_attr)
+        if attr_dir == True:
+            if dist_n > dist_cp:
+                rand_direction = -1 if rand_direction == 1 else 1
+                sv_rand_direction = scale_vector(sv, rand_direction)
+                rp      = add_vectors(cp, sv_rand_direction)
 
         # upward trending: too few solutions, feathering pattern
         # rp_pos  = add_vectors(cp, sv)
