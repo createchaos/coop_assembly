@@ -196,7 +196,8 @@ def generate_structure_no_points(o_struct, b_struct, bool_draw, r, iterations, b
                     if j == breaker_num:
                         break
                     else:
-                        attr_dir = False if j > test_num else True
+                        # attr_dir = False if j > test_num else True
+                        attr_dir = True
                         rp1, rp2 = point_selection(b_struct, bar1, lv1, bar2, lv2, bar_len_min, bar_len_max, breaker_num, i, r, attr, attr_dir)
                         rps = master_checker(b_struct, lv1, lv2, rp1, rp2, bar1, bar2, bar_len_min, bar_len_max, breaker_num, i, r, attr)
                         if rps is not None:
@@ -226,7 +227,7 @@ def bar_selection(b_struct, bar_len_min, bar_len_max, breaker_num, i, r, pt_attr
     bp2  = bar2[0]
     lv2  = subtract_vectors(bar2[1], bar2[0])
 
-    rp1, rp2 = point_selection(b_struct, bar1, lv1, bar2, lv2, bar_len_min, bar_len_max, breaker_num, i, r, pt_attr, False)
+    rp1, rp2 = point_selection(b_struct, bar1, lv1, bar2, lv2, bar_len_min, bar_len_max, breaker_num, i, r, pt_attr, True)
 
     return rp1, rp2, lv1, lv2, bp1, bp2, bar1, bar2, bars_ind
 
@@ -253,7 +254,8 @@ def master_checker(b_struct, lv1, lv2, rp1, rp2, bar1, bar2, bar_len_min, bar_le
         if h > breaker_num:
             return None
         else:
-            attr_dir = False if breaker_num > test_num else True
+            # attr_dir = False if breaker_num > test_num else True
+            attr_dir = True
             rp1, rp2 = point_selection(b_struct, bar1, lv1, bar2, lv2, bar_len_min, bar_len_max, breaker_num, i, r, pt_attr, attr_dir)
             print("rp11111", rp1)
             bca = bar_connection_angle(lv1, lv2, rp1, rp2, bar1, bar2, bar_len_max, i)
