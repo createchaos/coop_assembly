@@ -36,6 +36,7 @@ def tangent_from_point(base_point1, line_vect1, base_point2, line_vect2, ref_poi
 
     return [sol_0, sol_1, sol_2, sol_3]
 
+
 def tangent_from_point_one(base_point1, line_vect1, base_point2, line_vect2, ref_point, dist1, dist2, nb):
 
     solution = lines_tangent_to_two_cylinder_one(
@@ -45,8 +46,6 @@ def tangent_from_point_one(base_point1, line_vect1, base_point2, line_vect2, ref
         return None
 
     return [solution]
-
-
 
 
 def lines_tangent_to_two_cylinder(base_point1, line_vect1, base_point2, line_vect2, ref_point, dist1, dist2):
@@ -207,9 +206,8 @@ def check_length_sol_one(solution, pt_mean, pt, b1, b2, b1_key, b2_key, b_struct
     return sol
 
 
-def first_tangent(pt1, b1_1, b1_2, pt_mean_1, max_len, b_v1_1, b_v1_2, b_struct, pt_mean, r, b_v0_n=None, check_col=False):
-
-
+def first_tangent(pt1, b1_1, b1_2, pt_mean_1, max_len, b_v1_1, b_v1_2, b_struct, pt_mean, r, 
+    b_v0_n=None, check_col=False):
     if check_col==False:
         if b_v0_n:
             ind = b_struct.vertex[b_v0_n]["index_sol"][0]
@@ -269,12 +267,14 @@ def first_tangent(pt1, b1_1, b1_2, pt_mean_1, max_len, b_v1_1, b_v1_2, b_struct,
             if ind == 3 and bool_col == False:
                 print("NO TANGENT 1 FOUND IN ONE BAR COMBINATION")
                 return None
+
     ####################################################################
     # end_pts_0 = (pt1, add_vectors(pt1, solutions_1[0]))
     ##################################################################
+
     end_pts_0 = [map(float, p) for p in end_pts_0]
     vec_x, vec_y, vec_z = calculate_coord_sys(end_pts_0, pt_mean)
-    pt_o        = centroid_points(end_pts_0)
+    pt_o = centroid_points(end_pts_0)
     if not b_v0_n:
         # pts_e = [map(float, p) for p in end_pts_0]
         b_v0 = b_struct.add_bar(0, end_pts_0, "tube", (25.0, 2.0), vec_z)

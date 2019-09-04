@@ -23,13 +23,12 @@ from coop_assembly.help_functions.helpers_geometry import update_bar_lengths
 
 
 def execute():
-
-    a = "hello world"
     print("execute")
     bool_draw = True
     try:
         import compas_rhino
-    except: bool_draw = False
+    except: 
+        bool_draw = False
 
     b_struct    = Bar_Structure()
     o_struct    = Overall_Structure(b_struct)
@@ -56,11 +55,12 @@ def execute():
 
 def execute_from_points(points, dict_nodes, support_nodes=None, support_bars=None, 
                         load_bars=None, load=None, check_col=False, pickle_output=False):
-    print("executing")
+    print("execute from points")
     r = 12.5
     # r = 2.0
     # r = 30.0
     # check_col = True
+
     b_struct    = Bar_Structure()
     o_struct    = Overall_Structure(b_struct)
     generate_structure_from_points(o_struct, b_struct, r, points, dict_nodes, support_bars,

@@ -22,12 +22,14 @@ from compas.geometry.transformations import project_point_plane, translate_point
 
 
 def calculate_coord_sys(end_pts, pt_mean):
+    print('end points', end_pts)
+    print('centroid', centroid_points(end_pts))
+    print('pt mean', pt_mean)
 
     vec_x = normalize_vector(subtract_vectors(end_pts[1], end_pts[0]))
     vec_n = normalize_vector(subtract_vectors(pt_mean, centroid_points(end_pts)))
     vec_y = normalize_vector(cross_vectors(vec_n, vec_x))
     vec_z = normalize_vector(cross_vectors(vec_x, vec_y))
-
     return tuple(vec_x), tuple(vec_y), tuple(vec_z)
 
 

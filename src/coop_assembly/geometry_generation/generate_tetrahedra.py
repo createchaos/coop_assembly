@@ -28,8 +28,6 @@ from coop_assembly.help_functions.helpers_geometry import calculate_coord_sys, c
 from coop_assembly.help_functions.tangents import tangent_from_point, check_length_sol_one, first_tangent, second_tangent, third_tangent
 
 
-
-
 def generate_first_tri(o_struct, b_struct, r, points = None):
 
     if points == None:
@@ -140,8 +138,8 @@ def generate_structure_from_points(o_struct, b_struct, r, points, dict_nodes, su
                       1, n, r, correct=correct, check_col=check_col)
 
 
-def add_tetra(o_struct, b_struct, nodes, comb_bars_1, comb_bars_2, comb_bars_3, dir_factor, pt_new_input, r, b_v0=None, b_v1=None, b_v2=None, bool_add=True, o_v_key=None, correct=True, check_col=False):
-    
+def add_tetra(o_struct, b_struct, nodes, comb_bars_1, comb_bars_2, comb_bars_3, dir_factor, pt_new_input, r, 
+    b_v0=None, b_v1=None, b_v2=None, bool_add=True, o_v_key=None, correct=True, check_col=False):
     # adds a new point and tetrahedron to the structure
     # input: nodes, bars from o_struct as vertex_key_integer and edge_vertex_key_tuples 
     
@@ -228,7 +226,7 @@ def add_tetra(o_struct, b_struct, nodes, comb_bars_1, comb_bars_2, comb_bars_3, 
                                 b_v1_1, b_v1_2, b_struct, pt_mean, r, b_v0, check_col=check_col)
         
         if ret_ft:
-            b_v0, end_pts_0        = ret_ft
+            b_v0, end_pts_0 = ret_ft
             break
         else:
             print("tangent 1 not found")

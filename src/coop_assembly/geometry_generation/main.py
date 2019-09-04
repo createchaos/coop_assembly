@@ -24,6 +24,7 @@ import platform
 # else:
 #     reload(coop_assembly)
 #     reload(compas)
+
 import compas_fab
 from compas.utilities.xfunc import XFunc
 
@@ -93,6 +94,30 @@ def main():
 
 
 def main_gh_simple(points, dict_nodes, sup_nodes=None, sup_bars=None, l_bars=None, load=None, check_col=False):
+    """ghpython entry point, xfunc or rpc call is made here.
+    
+    Parameters
+    ----------
+    points : [type]
+        [description]
+    dict_nodes : dict
+        [description]
+    sup_nodes : [type], optional
+        [description], by default None
+    sup_bars : [type], optional
+        support bars, by default None
+    l_bars : [type], optional
+        [description], by default None
+    load : list of float, optional
+        [description], by default None
+    check_col : bool, optional
+        [description], by default False
+    
+    Returns
+    -------
+    [type]
+        [description]
+    """
     save_struct_info = True
 
     if sup_nodes:
@@ -103,7 +128,7 @@ def main_gh_simple(points, dict_nodes, sup_nodes=None, sup_bars=None, l_bars=Non
             'coop_assembly.geometry_generation.execute.execute_from_points')
     xfunc(points, dict_nodes, support_nodes=sup_nodes,
         support_bars=sup_bars, load_bars=l_bars, load=load, check_col=check_col)
-    print(xfunc.error)
+    print('main_gh_simple, xfnc error: ', xfunc.error)
     b_struct, o_struct = pickle.loads(xfunc.data)
 
     # b_struct, o_struct = geo_gen_execute.execute_from_points(
