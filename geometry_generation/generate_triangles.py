@@ -299,7 +299,10 @@ def point_on_bar_1(b_struct, bar_end_points, line_vector, bar_len_min, bar_len_m
         cp      = centroid_points(bar_end_points)
         bar_len = distance_point_point(bar_end_points[0], bar_end_points[1])    
         max_len = bar_len_max - (bar_len/2)
-        min_len = bar_len_min - (bar_len/2)
+        if bar_len > bar_len_min:
+            min_len = bar_len/2
+        else:
+            min_len = bar_len_min - (bar_len/2)
         # sv      = scale_vector(normalize_vector(line_vector), random.randrange(bar_len/2, max_len, step=1, _int=float))
         # sv      = scale_vector(normalize_vector(line_vector), random.randrange(round(bar_len/2), round(max_len), step=1))
         sv      = scale_vector(normalize_vector(line_vector), random.randrange(round(min_len), round(max_len), step=1))
