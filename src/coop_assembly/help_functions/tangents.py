@@ -271,7 +271,7 @@ def first_tangent(pt1, b1_1, b1_2, pt_mean_1, max_len, b_v1_1, b_v1_2, b_struct,
     ####################################################################
     # end_pts_0 = (pt1, add_vectors(pt1, solutions_1[0]))
     ##################################################################
-
+    print('end pts 0: ', end_pts_0)
     end_pts_0 = [map(float, p) for p in end_pts_0]
     vec_x, vec_y, vec_z = calculate_coord_sys(end_pts_0, pt_mean)
     pt_o = centroid_points(end_pts_0)

@@ -15,7 +15,6 @@ author: stefanaparascho
 
 
 from compas.datastructures.network import Network
-from compas.geometry import KDTree 
 from compas.geometry.basic import add_vectors, scale_vector, cross_vectors, subtract_vectors, vector_from_points
 from compas.geometry.distance import distance_point_point, closest_point_on_plane
 from compas.geometry.average import centroid_points
@@ -24,8 +23,17 @@ from coop_assembly.help_functions.helpers_geometry import dropped_perpendicular_
 
 
 class Overall_Structure(Network):
-    # class defining the overall structure in which a node is represented by a network.vertex and a bar by a network.edge 
-    # does not include connectors - these are referenced through the additional bar_structure class
+    """class defining the overall structure in which a node is represented 
+    by a network.vertex and a bar by a network.edge does not include 
+    connectors - these are referenced through the additional bar_structure class
+    
+    The Overall_Structure is a second Network structure in which bars are 
+    modelled as edges and nodes (points where multiple bars would ideally 
+    come together) as vertices. This does not include the geometric information 
+    about the bars' actual position or endpoints, but only an idealised 
+    point where tetrahedra edges would be located.
+
+    """
     
     def __init__(self, struct_bar):
         super(Overall_Structure, self).__init__()

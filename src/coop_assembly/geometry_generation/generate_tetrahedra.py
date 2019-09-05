@@ -29,7 +29,6 @@ from coop_assembly.help_functions.tangents import tangent_from_point, check_leng
 
 
 def generate_first_tri(o_struct, b_struct, r, points = None):
-
     if points == None:
         st_pt       = (0.,0.,0.)
         end_pts_0   = (add_vectors(st_pt,(0.0,0.0,0.0)),add_vectors(st_pt,(1000.0,0.0,2*r)))
@@ -61,7 +60,7 @@ def generate_first_tri(o_struct, b_struct, r, points = None):
     vec_z_1     = calculate_bar_z(end_pts_1)
     vec_z_2     = calculate_bar_z(end_pts_2)
 
-
+    # bar_structure vertex keys
     b_v0    = b_struct.add_bar(0, end_pts_0, "tube", (25.0, 2.0), vec_z_0)
     b_v1    = b_struct.add_bar(0, end_pts_1, "tube", (25.0, 2.0), vec_z_1)
     b_v2    = b_struct.add_bar(0, end_pts_2, "tube", (25.0, 2.0), vec_z_2)
@@ -85,6 +84,7 @@ def generate_first_tri(o_struct, b_struct, r, points = None):
         o_v1    = o_struct.add_node(add_vectors(st_pt,[900.0,0.0,0.0]), 0)
         o_v2    = o_struct.add_node(add_vectors(st_pt,[450.0,750,0.0]), 0)
     else:
+        # three node points corresponds to the same vertex in Overall_Structure
         o_v0    = o_struct.add_node(pt_0, 0)
         o_v1    = o_struct.add_node(pt_1, 0)
         o_v2    = o_struct.add_node(pt_2, 0)
@@ -114,10 +114,35 @@ def generate_first_tri(o_struct, b_struct, r, points = None):
 
 
 def generate_structure_from_points(o_struct, b_struct, r, points, dict_nodes, supports = None, loads = None, correct=True, load=None, check_col=False):
-
+    """Generate structure from points. This function will modify `o_struct` and `b_struct` accordingly.
+    
+    Parameters
+    ----------
+    o_struct : Overall_Structure
+        [description]
+    b_struct : Bar_Structure
+        [description]
+    r : float
+        radius of the bar cross section?
+    points : list
+        [[x, y, z], [x, y, z] ...], where x, y, z are floats
+    dict_nodes : dict
+        {tri_id : [n_ids]}
+    supports : list of int, optional
+        support node ids, list of int, by default None
+    loads : list of int-tuple, optional
+        loaded_bar ids, by default None
+    correct : bool, optional
+        [description], by default True
+    load : [type], optional
+        [description], by default None
+    check_col : bool, optional
+        [description], by default False
+    """
     generate_first_tri(o_struct, b_struct, r, points)
     # generate_structure_points(o_struct, b_struct, points, dict_nodes, r, correct=correct, check_col=check_col)
-    for i,n in enumerate(points):
+
+    for i, pt in enumerate(points):
         if i > 2:
             nodes   = dict_nodes[str(i)]
             #b1_1    = b_struct.vertex[o_struct.edge[bars1[0][0]][bars1[0][1]]["vertex_bar"]]
@@ -135,7 +160,7 @@ def generate_structure_from_points(o_struct, b_struct, r, points, dict_nodes, su
             comb_3.reverse()
 
             add_tetra(o_struct, b_struct, nodes, comb_1, comb_2, comb_3,
-                      1, n, r, correct=correct, check_col=check_col)
+                      1, pt, r, correct=correct, check_col=check_col)
 
 
 def add_tetra(o_struct, b_struct, nodes, comb_bars_1, comb_bars_2, comb_bars_3, dir_factor, pt_new_input, r, 

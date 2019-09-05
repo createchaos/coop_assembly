@@ -56,10 +56,8 @@ def execute():
 def execute_from_points(points, dict_nodes, support_nodes=None, support_bars=None, 
                         load_bars=None, load=None, check_col=False, pickle_output=False):
     print("execute from points")
-    r = 12.5
-    # r = 2.0
-    # r = 30.0
-    # check_col = True
+    # in millimeter?
+    r = 12.5 # 2.0 | 30.0
 
     b_struct    = Bar_Structure()
     o_struct    = Overall_Structure(b_struct)
@@ -67,6 +65,7 @@ def execute_from_points(points, dict_nodes, support_nodes=None, support_bars=Non
                          load_bars, correct=True, load=load, check_col=check_col)
 
     if pickle_output:
+        # better to have a to_data json output...
         return pickle.dumps((b_struct, o_struct))
     else:
         return b_struct, o_struct
