@@ -1,5 +1,7 @@
 import pytest
 
+from spatial_structures.bar_structure import Bar_Structure
+from coop_assembly.data_structure import Overall_Structure
 from coop_assembly.geometry_generation import execute_from_points
 
 def test_generate_from_points():
@@ -16,6 +18,11 @@ def test_generate_from_points():
     load_bars = [(4,5)]
     load = (0, 0, -2000)
 
-    b_struct, o_struct = execute_from_points(
+    b_struct_data, o_struct_data = execute_from_points(
         points, dict_nodes, support_nodes=supports_nodes, 
         support_bars=supports_bars, load_bars=load_bars, load=load)
+    
+    print(b_struct_data)
+
+    b_struct = Bar_Structure.from_data(b_struct_data)
+    o_struct = Overall_Structure.from_data(o_struct_data)

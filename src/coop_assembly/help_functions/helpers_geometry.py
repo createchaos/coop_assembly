@@ -22,7 +22,6 @@ from compas.geometry.transformations import project_point_plane, translate_point
 
 
 def calculate_coord_sys(end_pts, pt_mean):
-
     vec_x = normalize_vector(subtract_vectors(end_pts[1], end_pts[0]))
     vec_n = normalize_vector(subtract_vectors(pt_mean, centroid_points(end_pts)))
     vec_y = normalize_vector(cross_vectors(vec_n, vec_x))
