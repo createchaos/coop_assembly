@@ -25,6 +25,7 @@ from compas.geometry.average import centroid_points
 
 from coop_assembly.help_functions.helpers_geometry import calculate_coord_sys, calculate_bar_z, dropped_perpendicular_points, update_bar_lengths, correct_point, adjust_gripping_plane, find_bar_ends
 from coop_assembly.help_functions.tangents import tangent_from_point, check_length_sol_one, first_tangent, second_tangent, third_tangent
+from coop_assembly.geometry_generation.fabrication_planes import calculate_gripping_plane
 
 
 
@@ -71,9 +72,17 @@ def generate_first_tri(o_struct, b_struct, r, points = None):
     pt_o_1  = centroid_points(end_pts_1)
     pt_o_2  = centroid_points(end_pts_2)
 
-    b_struct.vertex[b_v0].update({"gripping_plane_no_offset": (pt_o_0, vec_x_0, vec_y_0, vec_z_0)})
-    b_struct.vertex[b_v1].update({"gripping_plane_no_offset": (pt_o_1, vec_x_1, vec_y_1, vec_z_1)})
-    b_struct.vertex[b_v2].update({"gripping_plane_no_offset": (pt_o_2, vec_x_2, vec_y_2, vec_z_2)})
+    # b_struct.vertex[b_v0].update({"gripping_plane": (pt_o_0, vec_x_0, vec_y_0, vec_z_0)})
+    # b_struct.vertex[b_v1].update({"gripping_plane": (pt_o_1, vec_x_1, vec_y_1, vec_z_1)})
+    # b_struct.vertex[b_v2].update({"gripping_plane": (pt_o_2, vec_x_2, vec_y_2, vec_z_2)})
+    pt_m = [0,0,-10000000000000]
+    # calculate_gripping_plane(b_struct, b_v0, pt_m)
+    # calculate_gripping_plane(b_struct, b_v1, pt_m)
+    # calculate_gripping_plane(b_struct, b_v2, pt_m)
+
+    b_struct.vertex[b_v0].update({"mean_point":pt_m})
+    b_struct.vertex[b_v1].update({"mean_point":pt_m})
+    b_struct.vertex[b_v2].update({"mean_point":pt_m})
 
     epts_0  = dropped_perpendicular_points(b_struct.vertex[b_v0]["axis_endpoints"][0], b_struct.vertex[b_v0]["axis_endpoints"][1], b_struct.vertex[b_v1]["axis_endpoints"][0], b_struct.vertex[b_v1]["axis_endpoints"][1]) 
     epts_1  = dropped_perpendicular_points(b_struct.vertex[b_v1]["axis_endpoints"][0], b_struct.vertex[b_v1]["axis_endpoints"][1], b_struct.vertex[b_v2]["axis_endpoints"][0], b_struct.vertex[b_v2]["axis_endpoints"][1]) 

@@ -7,15 +7,14 @@ import random
 import itertools
 import math
 
-from compas.geometry.basic import add_vectors, normalize_vector, vector_from_points, scale_vector, cross_vectors, subtract_vectors, length_vector
+from compas.geometry.basic import add_vectors, normalize_vector, vector_from_points, scale_vector, cross_vectors, subtract_vectors, length_vector, length_vector
 from compas.geometry.distance import distance_point_point, distance_point_line, distance_line_line
 from compas.geometry.transformations import rotate_points
 from compas.geometry.angles import angle_vectors
 from compas.geometry.average import centroid_points
 from compas.geometry import translate_points, rotate_points_xy, Frame
 
-from coop_assembly.geometry_generation.generate_triangles import generate_structure_no_points
-from coop_assembly.help_functions.helpers_geometry import calculate_bar_z
+from coop_assembly.help_functions.helpers_geometry import calculate_bar_z, calculate_coord_sys
 
 def generate_planes_no_glue(b_struct, r, iterations, pickup_station_0, mill_station_0, start_position, end_position):
 
@@ -145,8 +144,64 @@ def gripping_planes(b_struct, index, r, iterations, two_robots=False):
 
     return gripping_frame
 
+
+def calculate_gripping_plane(b_struct, v, pt_mean, nb_rot=8, nb_trans=8, planes_rot=True, planes_trans=True, planes_flip=True):
+
+    end_pts_0 = b_struct.vertex[v]["axis_endpoints"]
+    vec_x, vec_y, vec_z = calculate_coord_sys(end_pts_0, pt_mean)
+    pt_o        = centroid_points(end_pts_0)
+
+    b_struct.vertex[v].update({"gripping_plane":(pt_o, vec_x, vec_y, vec_z)})
+    gripping_plane = b_struct.vertex[v]["gripping_plane"]
+
+    frames_all = []
+    
+    if planes_trans == True:
+        vec_bar = scale_vector(normalize_vector(subtract_vectors(end_pts_0[1], end_pts_0[0])), 30)
+        pt1 = add_vectors(end_pts_0[0], vec_bar)
+        vec_bar = scale_vector(vec_bar, -1)
+        pt2 = add_vectors(end_pts_0[1], vec_bar)
+        vec_n = subtract_vectors(pt2, pt1)
+        len_vec = length_vector(vec_n)
+        len_new = len_vec/(nb_trans-1)
+
+        for i in range(nb_trans):
+            origin = add_vectors(pt1, scale_vector(normalize_vector(vec_n), len_new*i))
+            frame_n = [origin, gripping_plane[1], gripping_plane[2]]
+            if planes_rot == False:
+                frames_all.append(frame_n)
+                if planes_flip == True:
+                    frame_n = [frame_n[0], scale_vector(frame_n[1], -1), scale_vector(frame_n[2], -1)]
+                    frames_all.append(frame_n)
+
+            if planes_rot == True:
+                ang = math.radians(360/nb_rot)
+                for n in range(nb_rot):
+                    gripping_plane = frame_n
+                    vecs_n = rotate_points([gripping_plane[1], gripping_plane[2]], angle=n*ang, axis=subtract_vectors(end_pts_0[1], end_pts_0[0]), origin=(0,0,0))
+                    frame_n = [gripping_plane[0], vecs_n[0], vecs_n[1]]
+                    frames_all.append(frame_n)
+                    
+                    if planes_flip == True:
+                        frame_n = [frame_n[0], scale_vector(frame_n[1], -1), scale_vector(frame_n[2], -1)]
+                        frames_all.append(frame_n)
+
+    elif planes_rot == True:
+        ang = math.radians(360/nb_rot)
+        for n in range(nb_rot):
+            vecs_n = rotate_points([gripping_plane[1], gripping_plane[2]], angle=n*ang, axis=subtract_vectors(end_pts_0[1], end_pts_0[0]), origin=(0,0,0))
+            frame_n = [gripping_plane[0], vecs_n[0], vecs_n[1]]
+            frames_all.append(frame_n)
+            
+            if planes_flip == True:
+                frame_n = [frame_n[0], scale_vector(frame_n[1], -1), scale_vector(frame_n[2], -1)]
+                frames_all.append(frame_n)
+    
+    b_struct.vertex[v].update({"gripping_planes_all":frames_all})
+
+
 def pickup_glue(b_struct, index, pickup_station_0, gripping_planes):
-#pickup position
+    #pickup position
     bar_endpoints = b_struct.vertex[index]["axis_endpoints"]
     pickup_position_distance = distance_point_point(bar_endpoints[0], gripping_planes[0])
     pickup_position_translation_vector = scale_vector(normalize_vector(subtract_vectors(pickup_station_0[0], pickup_station_0[1])), pickup_position_distance)
@@ -160,7 +215,7 @@ def pickup_glue(b_struct, index, pickup_station_0, gripping_planes):
     return offset_pickup_plane, pickup_position, offset_pickup_plane
     
 def pickup(b_struct, index, pickup_station_0):
-# pickup station
+    # pickup station
     bar_endpoints = b_struct.vertex[index]["axis_endpoints"]
     bar_notch = b_struct.vertex[index]["connection_vectors"]
     bar_notch_distance_1 = length_vector(subtract_vectors(bar_notch[0][0], bar_endpoints[0]))
@@ -236,7 +291,7 @@ def mill_path(b_struct, index, mill_station_0, bar_0_or_1, r):
     return mill_1, mill_2, mill_3, mill_4, mill_5, mill_6, mill_7
 
 def bar_regrip(b_struct, index, pickup_station_0):  
-# rotation and regrip for second notch
+    # rotation and regrip for second notch
     bar_connections = b_struct.vertex[index]["connection_vectors"]
     bc1 = subtract_vectors(bar_connections[0][1], bar_connections[0][0])
     bc2 = subtract_vectors(bar_connections[1][1], bar_connections[1][0])

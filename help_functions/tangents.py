@@ -24,6 +24,7 @@ from compas.utilities import XFunc
 
 import coop_assembly
 from coop_assembly.help_functions.helpers_geometry import dropped_perpendicular_points, find_points_extreme, check_dir, calculate_coord_sys
+from coop_assembly.geometry_generation.fabrication_planes import calculate_gripping_plane
 
 
 def tangent_from_point(base_point1, line_vect1, base_point2, line_vect2, ref_point, dist1, dist2):
@@ -336,7 +337,7 @@ def first_tangent(pt1, b1_1, b1_2, pt_mean_1, max_len, b_v1_1, b_v1_2, b_struct,
     ##################################################################
     # end_pts_0 = [map(float, p) for p in end_pts_0]
     vec_x, vec_y, vec_z = calculate_coord_sys(end_pts_0, pt_mean)
-    pt_o        = centroid_points(end_pts_0)
+    # pt_o        = centroid_points(end_pts_0)
     if not b_v0_n:
         # pts_e = [map(float, p) for p in end_pts_0]
         b_v0 = b_struct.add_bar(0, end_pts_0, "tube", (25.0, 2.0), vec_z)
@@ -346,7 +347,10 @@ def first_tangent(pt1, b1_1, b1_2, pt_mean_1, max_len, b_v1_1, b_v1_2, b_struct,
             {"axis_endpoints": end_pts_0})
 
     b_struct.vertex[b_v0].update({"index_sol":[ind]})
-    b_struct.vertex[b_v0].update({"gripping_plane_no_offset":(pt_o, vec_x, vec_y, vec_z)})
+    # b_struct.vertex[b_v0].update({"gripping_plane_no_offset":(pt_o, vec_x, vec_y, vec_z)})
+
+    # calculate_gripping_plane(b_struct, b_v0, pt_mean)
+    b_struct.vertex[b_v0].update({"mean_point":pt_mean})
 
     # b1_1.update({"axis_endpoints" :  pts_b1_1})
     # b1_2.update({"axis_endpoints" :  pts_b1_2})
@@ -466,7 +470,7 @@ def second_tangent(b2_1, b2_2, pt_mean_2, b_v2_1, b_v2_2, b_struct, b_v_old, pt1
     # end_pts_0 = [map(float, p) for p in end_pts_0]
 
     vec_x, vec_y, vec_z = calculate_coord_sys(end_pts_0, pt_mean)
-    pt_o        = centroid_points(end_pts_0)
+    # pt_o        = centroid_points(end_pts_0)
     if not b_v0_n:
         # b_v0    = b_struct.add_bar(0, end_pts_0, "tube", (2*r, 2.0), vec_z)
         b_v0    = b_struct.add_bar(0, end_pts_0, "tube", (25.0, 2.0), vec_z)
@@ -476,7 +480,10 @@ def second_tangent(b2_1, b2_2, pt_mean_2, b_v2_1, b_v2_2, b_struct, b_v_old, pt1
             {"axis_endpoints": end_pts_0})
 
     b_struct.vertex[b_v0].update({"index_sol": [ind]})
-    b_struct.vertex[b_v0].update({"gripping_plane_no_offset":(pt_o, vec_x, vec_y, vec_z)})
+    # b_struct.vertex[b_v0].update({"gripping_plane_no_offset":(pt_o, vec_x, vec_y, vec_z)})
+
+    # calculate_gripping_plane(b_struct, b_v0, pt_mean)
+    b_struct.vertex[b_v0].update({"mean_point":pt_mean})
 
     b2_1.update({"axis_endpoints" :  pts_b2_1})
     b2_2.update({"axis_endpoints" :  pts_b2_2})
@@ -645,7 +652,7 @@ def third_tangent(b_struct, b_v_old, b_v1, b3_1, b3_2, pt_mean_3, max_len, b_v3_
 
     # end_pts_0 = [map(float, p) for p in end_pts_0]
     vec_x, vec_y, vec_z = calculate_coord_sys(end_pts_0, pt_mean)
-    pt_o        = centroid_points(end_pts_0)
+    # pt_o        = centroid_points(end_pts_0)
     if not b_v0_n:
         # b_v0    = b_struct.add_bar(0, end_pts_0, "tube", (2*r, 2.0), vec_z)
         b_v0    = b_struct.add_bar(0, end_pts_0, "tube", (25.0, 2.0), vec_z)
@@ -655,7 +662,10 @@ def third_tangent(b_struct, b_v_old, b_v1, b3_1, b3_2, pt_mean_3, max_len, b_v3_
             {"axis_endpoints": end_pts_0})
 
     b_struct.vertex[b_v0].update({"index_sol": [ind_1, ind_2]})
-    b_struct.vertex[b_v0].update({"gripping_plane_no_offset":(pt_o, vec_x, vec_y, vec_z)})
+    # b_struct.vertex[b_v0].update({"gripping_plane_no_offset":(pt_o, vec_x, vec_y, vec_z)})
+
+    # calculate_gripping_plane(b_struct, b_v0, pt_mean)
+    b_struct.vertex[b_v0].update({"mean_point":pt_mean})
 
     b3_1.update({"axis_endpoints" :  pts_b3_11})
     b3_2.update({"axis_endpoints" :  pts_b3_21})
