@@ -334,7 +334,7 @@ def first_tangent(pt1, b1_1, b1_2, pt_mean_1, max_len, b_v1_1, b_v1_2, b_struct,
     ####################################################################
     # end_pts_0 = (pt1, add_vectors(pt1, solutions_1[0]))
     ##################################################################
-    end_pts_0 = [map(float, p) for p in end_pts_0]
+    # end_pts_0 = [map(float, p) for p in end_pts_0]
     vec_x, vec_y, vec_z = calculate_coord_sys(end_pts_0, pt_mean)
     pt_o        = centroid_points(end_pts_0)
     if not b_v0_n:
@@ -357,8 +357,8 @@ def first_tangent(pt1, b1_1, b1_2, pt_mean_1, max_len, b_v1_1, b_v1_2, b_struct,
     dpp_1   = dropped_perpendicular_points(b_struct.vertex[b_v0]["axis_endpoints"][0], b_struct.vertex[b_v0]["axis_endpoints"][1], b_struct.vertex[b_v1_1]["axis_endpoints"][0], b_struct.vertex[b_v1_1]["axis_endpoints"][1])
     dpp_2   = dropped_perpendicular_points(b_struct.vertex[b_v0]["axis_endpoints"][0], b_struct.vertex[b_v0]["axis_endpoints"][1], b_struct.vertex[b_v1_2]["axis_endpoints"][0], b_struct.vertex[b_v1_2]["axis_endpoints"][1])
 
-    k_1     = b_struct.edge[b_v0][b_v1_1]["endpoints"].keys()[0]
-    k_2     = b_struct.edge[b_v0][b_v1_2]["endpoints"].keys()[0]
+    k_1     = list(b_struct.edge[b_v0][b_v1_1]["endpoints"].keys())[0]
+    k_2     = list(b_struct.edge[b_v0][b_v1_2]["endpoints"].keys())[0]
     b_struct.edge[b_v0][b_v1_1]["endpoints"].update({k_1:(dpp_1[0], dpp_1[1])})
     b_struct.edge[b_v0][b_v1_2]["endpoints"].update({k_2:(dpp_2[0], dpp_2[1])})
 
@@ -391,8 +391,9 @@ def second_tangent(b2_1, b2_2, pt_mean_2, b_v2_1, b_v2_2, b_struct, b_v_old, pt1
             return None
 
         args    = ptM, ex, ey, r, pt_b_1, l_1, pt_b_2, l_2, 2*r, 2*r, ind
-        xfunc = XFunc('coop_assembly.help_functions.tangents.solve_second_tangent', r'C:\Users\ChaseGalis\Desktop\ECL\GITRepository', verbose=False)
+        # xfunc = XFunc('coop_assembly.help_functions.tangents.solve_second_tangent', r'C:\Users\ChaseGalis\Desktop\ECL\GITRepository', verbose=False)
         # xfunc = XFunc('coop_assembly.help_functions.tangents.solve_second_tangent', r'C:\Users\Stefana\Documents\git_repos\projects')
+        xfunc = XFunc('coop_assembly.help_functions.tangents.solve_second_tangent', r'C:\Users\parascho\Documents\git_repos')
         xfunc(ptM, ex, ey, r, pt_b_1, l_1, pt_b_2, l_2, 2*r, 2*r, ind)
         ret_sst = xfunc.data
         # ret_sst = solve_second_tangent(*args)
@@ -462,7 +463,7 @@ def second_tangent(b2_1, b2_2, pt_mean_2, b_v2_1, b_v2_2, b_struct, b_v_old, pt1
             if bool_col == True:
                 break
 
-    end_pts_0 = [map(float, p) for p in end_pts_0]
+    # end_pts_0 = [map(float, p) for p in end_pts_0]
 
     vec_x, vec_y, vec_z = calculate_coord_sys(end_pts_0, pt_mean)
     pt_o        = centroid_points(end_pts_0)
@@ -488,8 +489,8 @@ def second_tangent(b2_1, b2_2, pt_mean_2, b_v2_1, b_v2_2, b_struct, b_v_old, pt1
 
 #     b_struct.edge[b_v0][b_v2_1].update({"endpoints":[dpp_1[0], dpp_1[1]]})
 #     b_struct.edge[b_v0][b_v2_2].update({"endpoints":[dpp_2[0], dpp_2[1]]})
-    k_1     = b_struct.edge[b_v0][b_v2_1]["endpoints"].keys()[0]
-    k_2     = b_struct.edge[b_v0][b_v2_2]["endpoints"].keys()[0]
+    k_1     = list(b_struct.edge[b_v0][b_v2_1]["endpoints"].keys())[0]
+    k_2     = list(b_struct.edge[b_v0][b_v2_2]["endpoints"].keys())[0]
     b_struct.edge[b_v0][b_v2_1]["endpoints"].update({k_1:(dpp_1[0], dpp_1[1])})
     b_struct.edge[b_v0][b_v2_2]["endpoints"].update({k_2:(dpp_2[0], dpp_2[1])})
 
@@ -539,8 +540,9 @@ def third_tangent(b_struct, b_v_old, b_v1, b3_1, b3_2, pt_mean_3, max_len, b_v3_
 
         args = pt_mid, ex, ey, r, pt_b_1, l_1, pt_b_2, l_2, pt_b_3, l_3, pt_b_4, l_4, bounds, ind_1, ind_2
 
-        xfunc = XFunc('coop_assembly.help_functions.tangents.solve_third_tangent', r'C:\Users\ChaseGalis\Desktop\ECL\GITRepository', verbose=False)
+        # xfunc = XFunc('coop_assembly.help_functions.tangents.solve_third_tangent', r'C:\Users\ChaseGalis\Desktop\ECL\GITRepository', verbose=False)
         # xfunc = XFunc('coop_assembly.help_functions.tangents.solve_third_tangent', r'C:\Users\Stefana\Documents\git_repos\projects')
+        xfunc = XFunc('coop_assembly.help_functions.tangents.solve_third_tangent', r'C:\Users\parascho\Documents\git_repos')
         
         xfunc(pt_mid, ex, ey, r, pt_b_1, l_1, pt_b_2, l_2, pt_b_3, l_3, pt_b_4, l_4, bounds, ind_1, ind_2)
         ret_stt = xfunc.data
@@ -641,7 +643,7 @@ def third_tangent(b_struct, b_v_old, b_v1, b3_1, b3_2, pt_mean_3, max_len, b_v3_
                     break
             if bool_test == True: break
 
-    end_pts_0 = [map(float, p) for p in end_pts_0]
+    # end_pts_0 = [map(float, p) for p in end_pts_0]
     vec_x, vec_y, vec_z = calculate_coord_sys(end_pts_0, pt_mean)
     pt_o        = centroid_points(end_pts_0)
     if not b_v0_n:
@@ -666,8 +668,8 @@ def third_tangent(b_struct, b_v_old, b_v1, b3_1, b3_2, pt_mean_3, max_len, b_v3_
 
 #     b_struct.edge[b_v0][b_v3_1].update({"endpoints":[dpp_1[0], dpp_1[1]]})
 #     b_struct.edge[b_v0][b_v3_2].update({"endpoints":[dpp_2[0], dpp_2[1]]})
-    k_1     = b_struct.edge[b_v0][b_v3_1]["endpoints"].keys()[0]
-    k_2     = b_struct.edge[b_v0][b_v3_2]["endpoints"].keys()[0]
+    k_1     = list(b_struct.edge[b_v0][b_v3_1]["endpoints"].keys())[0]
+    k_2     = list(b_struct.edge[b_v0][b_v3_2]["endpoints"].keys())[0]
     b_struct.edge[b_v0][b_v3_1]["endpoints"].update({k_1:(dpp_1[0], dpp_1[1])})
     b_struct.edge[b_v0][b_v3_2]["endpoints"].update({k_2:(dpp_2[0], dpp_2[1])})
 

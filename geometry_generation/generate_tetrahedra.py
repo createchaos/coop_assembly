@@ -75,11 +75,16 @@ def generate_first_tri(o_struct, b_struct, r, points = None):
     b_struct.vertex[b_v1].update({"gripping_plane_no_offset": (pt_o_1, vec_x_1, vec_y_1, vec_z_1)})
     b_struct.vertex[b_v2].update({"gripping_plane_no_offset": (pt_o_2, vec_x_2, vec_y_2, vec_z_2)})
 
-    b_struct.connect_bars(b_v0, b_v1)
-    b_struct.connect_bars(b_v1, b_v2)
-    b_struct.connect_bars(b_v2, b_v0)
+    epts_0  = dropped_perpendicular_points(b_struct.vertex[b_v0]["axis_endpoints"][0], b_struct.vertex[b_v0]["axis_endpoints"][1], b_struct.vertex[b_v1]["axis_endpoints"][0], b_struct.vertex[b_v1]["axis_endpoints"][1]) 
+    epts_1  = dropped_perpendicular_points(b_struct.vertex[b_v1]["axis_endpoints"][0], b_struct.vertex[b_v1]["axis_endpoints"][1], b_struct.vertex[b_v2]["axis_endpoints"][0], b_struct.vertex[b_v2]["axis_endpoints"][1]) 
+    epts_2  = dropped_perpendicular_points(b_struct.vertex[b_v2]["axis_endpoints"][0], b_struct.vertex[b_v2]["axis_endpoints"][1], b_struct.vertex[b_v0]["axis_endpoints"][0], b_struct.vertex[b_v0]["axis_endpoints"][1]) 
+
+    b_struct.connect_bars(b_v0, b_v1, _endpoints=epts_0)
+    b_struct.connect_bars(b_v1, b_v2, _endpoints=epts_1)
+    b_struct.connect_bars(b_v2, b_v0, _endpoints=epts_2)
 
     # update_edges(b_struct)
+    update_bar_lengths(b_struct)
 
     if points == None:
         o_v0    = o_struct.add_node(add_vectors(st_pt,[0.0,0.0,0.0]), 0)
@@ -135,7 +140,7 @@ def generate_structure_from_points(o_struct, b_struct, r, points, dict_nodes, su
             comb_3 = [x for x in com_bars_3]
             comb_3.reverse()
 
-            add_tetra(o_struct, b_struct, nodes, comb_1, comb_2, comb_3,
+            add_tetra_old(o_struct, b_struct, nodes, comb_1, comb_2, comb_3,
                       1, n, r, correct=correct, check_col=check_col)
 
 
@@ -298,13 +303,13 @@ def add_tetra_old(o_struct, b_struct, nodes, comb_bars_1, comb_bars_2, comb_bars
         b_struct.connect_bars(b_v2, b_v0)
     
     dpp_1   = dropped_perpendicular_points(b_struct.vertex[b_v1]["axis_endpoints"][0], b_struct.vertex[b_v1]["axis_endpoints"][1], b_struct.vertex[b_v2]["axis_endpoints"][0], b_struct.vertex[b_v2]["axis_endpoints"][1])
-    key     = b_struct.edge[b_v1][b_v2]["endpoints"].keys()[0]
+    key     = list(b_struct.edge[b_v1][b_v2]["endpoints"].keys())[0]
     b_struct.edge[b_v1][b_v2]["endpoints"].update({key:(dpp_1[0], dpp_1[1])})
     dpp_2   = dropped_perpendicular_points(b_struct.vertex[b_v2]["axis_endpoints"][0], b_struct.vertex[b_v2]["axis_endpoints"][1], b_struct.vertex[b_v0]["axis_endpoints"][0], b_struct.vertex[b_v0]["axis_endpoints"][1])
-    key     = b_struct.edge[b_v2][b_v0]["endpoints"].keys()[0]
+    key     = list(b_struct.edge[b_v2][b_v0]["endpoints"].keys())[0]
     b_struct.edge[b_v2][b_v0]["endpoints"].update({key:(dpp_2[0], dpp_2[1])})
     dpp_3   = dropped_perpendicular_points(b_struct.vertex[b_v0]["axis_endpoints"][0], b_struct.vertex[b_v0]["axis_endpoints"][1], b_struct.vertex[b_v1]["axis_endpoints"][0], b_struct.vertex[b_v1]["axis_endpoints"][1])
-    key     = b_struct.edge[b_v0][b_v1]["endpoints"].keys()[0]
+    key     = list(b_struct.edge[b_v0][b_v1]["endpoints"].keys())[0]
     b_struct.edge[b_v0][b_v1]["endpoints"].update({key:(dpp_3[0], dpp_3[1])})
 
     

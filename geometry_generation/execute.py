@@ -56,16 +56,16 @@ def execute():
     return (b_struct.data, o_struct.data)
 
 
-def execute_from_points(points, dict_nodes, support_nodes=None, support_bars=None, load_bars=None, load=None, check_col=False):
+def execute_from_points(points, dict_nodes, r, support_nodes=None, support_bars=None, load_bars=None, load=None, check_col=False, correct=False):
     print("executing")
-    r = 12.5
     # r = 2.0
     # r = 30.0
     # check_col = True
     b_struct    = Bar_Structure()
     o_struct    = Overall_Structure(b_struct)
     generate_structure_from_points(o_struct, b_struct, r, points, dict_nodes, support_bars,
-                         load_bars, correct=True, load=load, check_col=check_col)
+                         load_bars, correct=correct, load=load, check_col=check_col)
+    update_bar_lengths(b_struct)
 
-
-    return pickle.dumps((b_struct, o_struct))
+    # return pickle.dumps((b_struct, o_struct))
+    return (b_struct.data, o_struct.data)

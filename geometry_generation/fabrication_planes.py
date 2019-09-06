@@ -85,6 +85,9 @@ def generate_planes_glue(b_struct, r, pickup_station_0, iterations, start_positi
 
 def gripping_planes(b_struct, index, r, iterations, two_robots=False):
 
+    multiple_planes = True
+    nb = 8
+
     if index == iterations or index <= 5:
         bar_endpoints = b_struct.vertex[index]["axis_endpoints"]
         gripping_point = centroid_points(bar_endpoints)
@@ -128,6 +131,14 @@ def gripping_planes(b_struct, index, r, iterations, two_robots=False):
 
     # gripping_frame = Frame.from_points(gripping_point, point_xaxis[0], point_xyplane[0])
     gripping_frame = [gripping_point, point_xaxis[0], point_xyplane[0]]
+
+    if multiple_planes:
+        ang = math.radians(360/nb)
+        frames_all = []
+        for n in range(nb):
+            frame_n = rotate_points(gripping_frame, angle=n*ang, axis=subtract_vectors(bar_endpoints[1], bar_endpoints[0]), origin=bar_endpoints[0])
+            frames_all.append(frame_n)
+        b_struct.vertex[index].update({"gripping_planes_all":frames_all})
     
     b_struct.vertex[index].update({"gripping_plane":gripping_frame})
     print("gripping frame", gripping_frame)
