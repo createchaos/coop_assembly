@@ -1,0 +1,17 @@
+name: coop_assembly_ws
+
+channels:
+    - conda-forge
+    - anaconda
+
+dependencies:
+   - python=3.6
+   - pip=19.0.1
+   - compas=0.7.2
+   - scipy
+   - pytest
+#    - pip:
+    # we don't need version of this new for coop_assembly
+    # just a convenient workaround for compas_fab's dependency
+    # on compas 0.5.x
+    #  - git+https://github.com/yijiangh/compas_fab.git@feature/choreo-seq-planner#egg=compas_fab
