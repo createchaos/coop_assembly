@@ -1,1 +1,0 @@
-# coop_assembly

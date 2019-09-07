@@ -1,0 +1,2 @@
+scipy
+compas >= 0.7.0
