@@ -9,13 +9,8 @@ from os.path import abspath, basename, dirname, join, splitext
 
 from setuptools import find_packages, setup
 
-# NOTE: Write dependencies (i.e. http://python-packaging.readthedocs.io/en/latest/dependencies.html)
-requirements = []
-# NOTE: Write a list of keywords (i.e. ['ros', 'ros-bridge', 'robotics', 'websockets'])
-keywords_list = []
 
 here = abspath(dirname(__file__))
-
 
 def read(*names, **kwargs):
     return io.open(
@@ -23,6 +18,9 @@ def read(*names, **kwargs):
         encoding=kwargs.get('encoding', 'utf8')
     ).read()
 
+requirements = read('requirements.txt').split('\n')
+
+keywords_list = []
 
 about = {}
 exec(read('src', 'coop_assembly', '__version__.py'), about)

@@ -689,8 +689,7 @@ def third_tangent(b_struct, b_v_old, b_v1, b3_1, b3_2, pt_mean_3, max_len, b_v3_
 
 
 def solve_second_tangent(*args):
-
-    r       = args[3]
+    r = args[3]
     import scipy.optimize
     for i in range(2):
         res_opt = scipy.optimize.fminbound(f_tangent_point_2, -2*r, 2*r, args, full_output=True, disp=0)
