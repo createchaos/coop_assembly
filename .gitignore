@@ -111,3 +111,6 @@ ENV/
 # vim temps
 *~
 *.un
+
+# rhino stuff
+*.3dmbak

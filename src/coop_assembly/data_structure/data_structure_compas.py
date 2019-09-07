@@ -12,8 +12,6 @@ created on 28.06.2019
 author: stefanaparascho
 '''
 
-
-
 from compas.datastructures.network import Network
 from compas.geometry.basic import add_vectors, scale_vector, cross_vectors, subtract_vectors, vector_from_points
 from compas.geometry.distance import distance_point_point, closest_point_on_plane

@@ -49,7 +49,7 @@ def main():
 
         xfunc = XFunc(
             'coop_assembly.geometry_generation.execute.execute') #, python=r'C:\Users\Stefana\Anaconda2\envs\py36\python'
-        xfun()
+        xfunc()
         print("error", xfunc.error)
         data = xfunc.data
 
@@ -112,8 +112,6 @@ def main_gh_simple(points, dict_nodes, sup_nodes=None, sup_bars=None, l_bars=Non
     [type]
         [description]
     """
-    save_struct_info = True
-
     if sup_nodes:
         for i, s in enumerate(sup_nodes):
             sup_nodes[i] = int(s)
