@@ -12,7 +12,6 @@ created on 30.06.2019
 author: stefanaparascho
 '''
 
-
 import random
 import itertools
 import math
@@ -25,9 +24,6 @@ from compas.geometry.average import centroid_points
 
 from coop_assembly.help_functions.helpers_geometry import calculate_coord_sys, calculate_bar_z, dropped_perpendicular_points, update_bar_lengths, correct_point, adjust_gripping_plane, find_bar_ends
 from coop_assembly.help_functions.tangents import tangent_from_point, check_length_sol_one, first_tangent, second_tangent, third_tangent
-
-
-
 
 def generate_first_tri(o_struct, b_struct, r, points = None):
 
@@ -230,9 +226,9 @@ def add_tetra(o_struct, b_struct, nodes, comb_bars_1, comb_bars_2, comb_bars_3, 
             b_v0, end_pts_0        = ret_ft
             break
         else:
-            print "tangent 1 not found"
+            print("tangent 1 not found")
             if j == len(comb_bars_1)-1:
-                print "no point found for first tangent calculation - 430, add_tetra"
+                print("no point found for first tangent calculation - 430, add_tetra")
                 return None
             
     for j, bar_jnd_2 in enumerate(comb_bars_2):
@@ -257,9 +253,9 @@ def add_tetra(o_struct, b_struct, nodes, comb_bars_1, comb_bars_2, comb_bars_3, 
             b_v1, pt2, end_pts_1    = ret_st
             break
         else:
-            print "tangent 2 not found"
+            print("tangent 2 not found")
             if j == len(comb_bars_2) - 1:
-                print "no point found for second tangent calculation - 430, add_tetra"
+                print("no point found for second tangent calculation - 430, add_tetra")
                 return None
     
 
@@ -286,9 +282,9 @@ def add_tetra(o_struct, b_struct, nodes, comb_bars_1, comb_bars_2, comb_bars_3, 
             b_v2, pt3, end_pts_2    = ret_tt
             break
         else:
-            print "tangent 3 not found"
+            print("tangent 3 not found")
             if j == len(comb_bars_3) - 1:
-                print "no point found for third tangent calculation - 430, add_tetra"
+                print("no point found for third tangent calculation - 430, add_tetra")
                 return None
 
     
@@ -298,13 +294,13 @@ def add_tetra(o_struct, b_struct, nodes, comb_bars_1, comb_bars_2, comb_bars_3, 
         b_struct.connect_bars(b_v2, b_v0)
     
     dpp_1   = dropped_perpendicular_points(b_struct.vertex[b_v1]["axis_endpoints"][0], b_struct.vertex[b_v1]["axis_endpoints"][1], b_struct.vertex[b_v2]["axis_endpoints"][0], b_struct.vertex[b_v2]["axis_endpoints"][1])
-    key     = b_struct.edge[b_v1][b_v2]["endpoints"].keys()[0]
+    key     = list(b_struct.edge[b_v1][b_v2]["endpoints"].keys())[0]
     b_struct.edge[b_v1][b_v2]["endpoints"].update({key:(dpp_1[0], dpp_1[1])})
     dpp_2   = dropped_perpendicular_points(b_struct.vertex[b_v2]["axis_endpoints"][0], b_struct.vertex[b_v2]["axis_endpoints"][1], b_struct.vertex[b_v0]["axis_endpoints"][0], b_struct.vertex[b_v0]["axis_endpoints"][1])
-    key     = b_struct.edge[b_v2][b_v0]["endpoints"].keys()[0]
+    key     = list(b_struct.edge[b_v2][b_v0]["endpoints"].keys())[0]
     b_struct.edge[b_v2][b_v0]["endpoints"].update({key:(dpp_2[0], dpp_2[1])})
     dpp_3   = dropped_perpendicular_points(b_struct.vertex[b_v0]["axis_endpoints"][0], b_struct.vertex[b_v0]["axis_endpoints"][1], b_struct.vertex[b_v1]["axis_endpoints"][0], b_struct.vertex[b_v1]["axis_endpoints"][1])
-    key     = b_struct.edge[b_v0][b_v1]["endpoints"].keys()[0]
+    key     = list(b_struct.edge[b_v0][b_v1]["endpoints"].keys())[0]
     b_struct.edge[b_v0][b_v1]["endpoints"].update({key:(dpp_3[0], dpp_3[1])})
 
     

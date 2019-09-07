@@ -10,8 +10,8 @@ dependencies:
    - compas=0.7.2
    - scipy
    - pytest
-#    - pip:
-    # we don't need version of this new for coop_assembly
+   - pip:
+    # we don't need version of this new for coop_assembly alone
     # just a convenient workaround for compas_fab's dependency
     # on compas 0.5.x
-    #  - git+https://github.com/yijiangh/compas_fab.git@feature/choreo-seq-planner#egg=compas_fab
+     - git+https://github.com/yijiangh/compas_fab.git@feature/choreo-seq-planner#egg=compas_fab

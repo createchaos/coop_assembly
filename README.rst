@@ -49,6 +49,14 @@ Then, activate the newly created conda environment and install ``coop_assembly``
     # cd to your `coop_assembly` directory
     pip install .
 
+If you've installed the environment following the instructions above,
+but want to update the env (e.g. if the ``yml`` file is updated),
+run the following command to update:
+
+::
+
+    conda env update -f coop_assembly_ws --prune
+
 Examples
 --------
 
