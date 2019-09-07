@@ -30,10 +30,7 @@ from compas.utilities.xfunc import XFunc
 
 from coop_assembly.geometry_generation.execute import execute
 from coop_assembly.help_functions.drawing import draw
-from coop_assembly.data_structure.data_structure_compas import Overall_Structure
-
-from spatial_structures.bar_structure import Bar_Structure
-
+from coop_assembly.data_structure import Overall_Structure, Bar_Structure
 
 def main():
     run_python = True

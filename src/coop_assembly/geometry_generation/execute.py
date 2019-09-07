@@ -15,8 +15,7 @@ author: stefanaparascho
 import pickle
 import time 
 
-from spatial_structures.bar_structure import Bar_Structure
-from coop_assembly.data_structure.data_structure_compas import Overall_Structure
+from coop_assembly.data_structure import Overall_Structure, Bar_Structure
 from coop_assembly.geometry_generation.generate_triangles import generate_structure
 from coop_assembly.geometry_generation.generate_tetrahedra import generate_first_tri, generate_structure_from_points
 from coop_assembly.help_functions.helpers_geometry import update_bar_lengths
