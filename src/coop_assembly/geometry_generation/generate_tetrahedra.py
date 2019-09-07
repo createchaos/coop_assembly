@@ -130,7 +130,7 @@ def generate_structure_from_points(o_struct, b_struct, r, points, dict_nodes, su
 
     generate_first_tri(o_struct, b_struct, r, points)
     # generate_structure_points(o_struct, b_struct, points, dict_nodes, r, correct=correct, check_col=check_col)
-    for i,n in enumerate(points):
+    for i, n in enumerate(points):
         if i > 2:
             nodes   = dict_nodes[str(i)]
             #b1_1    = b_struct.vertex[o_struct.edge[bars1[0][0]][bars1[0][1]]["vertex_bar"]]

@@ -52,15 +52,15 @@ def execute():
     return (b_struct.data, o_struct.data)
 
 
-def execute_from_points(points, dict_nodes, support_nodes=None, support_bars=None, 
-                        load_bars=None, load=None, check_col=False):
+def execute_from_points(points, dict_nodes, radius, support_nodes=None, support_bars=None, 
+                        load_bars=None, load=None, check_col=False, correct=True):
     print("execute from points")
     # in millimeter?
-    r = 12.5 # 2.0 | 30.0
+    # r = 12.5 # 2.0 | 30.0
 
     b_struct    = Bar_Structure()
     o_struct    = Overall_Structure(b_struct)
-    generate_structure_from_points(o_struct, b_struct, r, points, dict_nodes, support_bars,
-                         load_bars, correct=True, load=load, check_col=check_col)
+    generate_structure_from_points(o_struct, b_struct, radius, points, dict_nodes, support_bars,
+                         load_bars, correct=correct, load=load, check_col=check_col)
     
     return b_struct.data, o_struct.data

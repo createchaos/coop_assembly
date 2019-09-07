@@ -201,8 +201,7 @@ def draw_network_inv_gh(network):
 
     """
 
-    # from compas_fab.fab.grasshopper.utilities import drawing
-    from compas_ghpython.utilities import drawing
+    from compas_ghpython.utilities import draw_points, draw_lines
 
     points = []
     for key, attr in network.vertices(True):
@@ -267,12 +266,9 @@ def draw_network_inv_gh(network):
                 "end": end_p
             })
 
-    points_gh = drawing.xdraw_points(points)
-
-    lines_gh = drawing.xdraw_lines(lines)
-
-    lines_c_gh = drawing.xdraw_lines(lines_c)
-
+    points_gh = draw_points(points)
+    lines_gh = draw_lines(lines)
+    lines_c_gh = draw_lines(lines_c)
     return points_gh, lines_gh, lines_c_gh
 
 
@@ -290,6 +286,7 @@ def create_rhino_mesh(vertices, faces):
 
 
 def draw_robots(structure, building_member, rob_num, rob_num_b, path, config_b, pick_up_config):
+    raise DeprecationWarning('needs update on compas / compas_fab old function calls')
 
     import compas_rhino.helpers
     import scriptcontext
@@ -334,8 +331,7 @@ def draw_robots(structure, building_member, rob_num, rob_num_b, path, config_b, 
 
 
 def draw_structure(network, r, values="stresses"):
-
-    from compas_rhino import xdraw_cylinders
+    from compas_rhino.utilities import draw_cylinders
     from spatial_structures.rhino_visualization import draw_inner_forces_bar,\
     get_inner_force_value_points, draw_force_line, get_inner_force_line_points
 
@@ -377,13 +373,13 @@ def draw_structure(network, r, values="stresses"):
             cylinders.append({
                 "start": network.edge[key1][key2]["endpoints"][0][0],
                 "end": network.edge[key1][key2]["endpoints"][0][1],
-                "name": '{0}.edge_pipe.{1}'.format(network.attributes['name'], key1, key2),
+                "name": '{0}:{1}.edge_pipe.{2}'.format(network.attributes['name'], key1, key2),
                 "radius": r,
                 "color": color_struct
             })
 
     if values == "stresses" or values == "deformations":
-        xdraw_cylinders(cylinders, cap=True)
+        draw_cylinders(cylinders, cap=True)
     elif values == "forces":
         for v in network.vertex:
             forces = network.vertex[v]["exchange_values"]["forces"]
@@ -392,9 +388,7 @@ def draw_structure(network, r, values="stresses"):
 
 
 def draw_structure_gh(network, r, values="stresses"):
-
-    # print "drawing..."
-    from compas_fab.fab.grasshopper.utilities import drawing
+    from compas_ghpython.utilities import draw_cylinders
 
     cylinders = []
     colours = []
@@ -453,7 +447,7 @@ def draw_structure_gh(network, r, values="stresses"):
     #         })
 
     if values == "stresses" or values == "deformations":
-        cylinders_gh = drawing.xdraw_cylinders(cylinders, cap=True)
+        cylinders_gh = draw_cylinders(cylinders, cap=True)
     elif values == "forces":
         for v in network.vertex:
             forces = network.vertex[v]["exchange_values"]["forces"]

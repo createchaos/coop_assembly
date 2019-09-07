@@ -13,19 +13,9 @@ author: stefanaparascho
 '''
 
 import pickle
-# import coop_assembly
 import compas
 import platform
 
-# if platform.python_implementation() == "CPython":
-#     import importlib
-#     importlib.reload(coop_assembly)
-#     importlib.reload(compas)
-# else:
-#     reload(coop_assembly)
-#     reload(compas)
-
-import compas_fab
 from compas.utilities.xfunc import XFunc
 
 from coop_assembly.geometry_generation.execute import execute
@@ -87,7 +77,8 @@ def main():
     return data
 
 
-def main_gh_simple(points, dict_nodes, sup_nodes=None, sup_bars=None, l_bars=None, load=None, check_col=False, use_xfunc=True):
+def main_gh_simple(points, dict_nodes, radius, sup_nodes=None, sup_bars=None, l_bars=None, load=None, 
+    check_col=False, correct=True, use_xfunc=True):
     """ghpython entry point, xfunc or rpc call is made here.
     
     Parameters
@@ -96,6 +87,8 @@ def main_gh_simple(points, dict_nodes, sup_nodes=None, sup_bars=None, l_bars=Non
         [description]
     dict_nodes : dict
         [description]
+    radius : float
+        radius of the rod's cross section
     sup_nodes : [type], optional
         [description], by default None
     sup_bars : [type], optional
@@ -112,22 +105,19 @@ def main_gh_simple(points, dict_nodes, sup_nodes=None, sup_bars=None, l_bars=Non
     [type]
         [description]
     """
-    if sup_nodes:
-        for i, s in enumerate(sup_nodes):
-            sup_nodes[i] = int(s)
-
     if use_xfunc:
+        print('main_gh_simple: xfunc')
         xfunc = XFunc(
                 'coop_assembly.geometry_generation.execute.execute_from_points')
-        xfunc(points, dict_nodes, support_nodes=sup_nodes,
-            support_bars=sup_bars, load_bars=l_bars, load=load, check_col=check_col)
-        print('main_gh_simple, xfnc error: ', xfunc.error)
-        b_struct, o_struct = pickle.loads(xfunc.data)
+        xfunc(points, dict_nodes, radius, support_nodes=sup_nodes,
+            support_bars=sup_bars, load_bars=l_bars, load=load, check_col=check_col, correct=correct)
+        print('main_gh_simple: xfnc error: ', xfunc.error)
+        b_struct_data, o_struct_data = xfunc.data
     else:
+        print('main_gh_simple: rpc proxy')
         from compas.rpc import Proxy
         with Proxy('coop_assembly.geometry_generation.execute') as geo_gen_execute:
-            b_struct, o_struct = geo_gen_execute.execute_from_points(
-                points, dict_nodes, support_nodes=sup_nodes, 
-                support_bars=sup_bars, load_bars=l_bars, load=load, check_col=check_col)
-
-    return b_struct, o_struct
+            b_struct_data, o_struct_data = geo_gen_execute.execute_from_points(
+                points, dict_nodes, radius, support_nodes=sup_nodes, 
+                support_bars=sup_bars, load_bars=l_bars, load=load, check_col=check_col, correct=correct)
+    return b_struct_data, o_struct_data
