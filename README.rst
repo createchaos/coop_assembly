@@ -38,7 +38,7 @@ first download `miniconda <https://docs.conda.io/en/latest/miniconda.html>`_, an
 following commands in your terminal:
 
 ::
-
+    cd test_envs
     conda env create -f coop_assembly_ws
 
 Then, activate the newly created conda environment and install ``coop_assembly``:
