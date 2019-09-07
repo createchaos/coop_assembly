@@ -67,15 +67,28 @@ def generate_first_tri(o_struct, b_struct, r, points = None):
     pt_o_1  = centroid_points(end_pts_1)
     pt_o_2  = centroid_points(end_pts_2)
 
-    b_struct.vertex[b_v0].update({"gripping_plane_no_offset": (pt_o_0, vec_x_0, vec_y_0, vec_z_0)})
-    b_struct.vertex[b_v1].update({"gripping_plane_no_offset": (pt_o_1, vec_x_1, vec_y_1, vec_z_1)})
-    b_struct.vertex[b_v2].update({"gripping_plane_no_offset": (pt_o_2, vec_x_2, vec_y_2, vec_z_2)})
+    # b_struct.vertex[b_v0].update({"gripping_plane": (pt_o_0, vec_x_0, vec_y_0, vec_z_0)})
+    # b_struct.vertex[b_v1].update({"gripping_plane": (pt_o_1, vec_x_1, vec_y_1, vec_z_1)})
+    # b_struct.vertex[b_v2].update({"gripping_plane": (pt_o_2, vec_x_2, vec_y_2, vec_z_2)})
+    pt_m = [0,0,-10000000000000]
+    # calculate_gripping_plane(b_struct, b_v0, pt_m)
+    # calculate_gripping_plane(b_struct, b_v1, pt_m)
+    # calculate_gripping_plane(b_struct, b_v2, pt_m)
 
-    b_struct.connect_bars(b_v0, b_v1)
-    b_struct.connect_bars(b_v1, b_v2)
-    b_struct.connect_bars(b_v2, b_v0)
+    b_struct.vertex[b_v0].update({"mean_point":pt_m})
+    b_struct.vertex[b_v1].update({"mean_point":pt_m})
+    b_struct.vertex[b_v2].update({"mean_point":pt_m})
+
+    epts_0  = dropped_perpendicular_points(b_struct.vertex[b_v0]["axis_endpoints"][0], b_struct.vertex[b_v0]["axis_endpoints"][1], b_struct.vertex[b_v1]["axis_endpoints"][0], b_struct.vertex[b_v1]["axis_endpoints"][1]) 
+    epts_1  = dropped_perpendicular_points(b_struct.vertex[b_v1]["axis_endpoints"][0], b_struct.vertex[b_v1]["axis_endpoints"][1], b_struct.vertex[b_v2]["axis_endpoints"][0], b_struct.vertex[b_v2]["axis_endpoints"][1]) 
+    epts_2  = dropped_perpendicular_points(b_struct.vertex[b_v2]["axis_endpoints"][0], b_struct.vertex[b_v2]["axis_endpoints"][1], b_struct.vertex[b_v0]["axis_endpoints"][0], b_struct.vertex[b_v0]["axis_endpoints"][1]) 
+
+    b_struct.connect_bars(b_v0, b_v1, _endpoints=epts_0)
+    b_struct.connect_bars(b_v1, b_v2, _endpoints=epts_1)
+    b_struct.connect_bars(b_v2, b_v0, _endpoints=epts_2)
 
     # update_edges(b_struct)
+    update_bar_lengths(b_struct)
 
     if points == None:
         o_v0    = o_struct.add_node(add_vectors(st_pt,[0.0,0.0,0.0]), 0)
