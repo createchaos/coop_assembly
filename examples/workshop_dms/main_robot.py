@@ -109,9 +109,15 @@ def main():
                 ur.wait_for_ready()
                 number_of_completed_poses += 1
             else:    
-                for j in range((len(cmd) - 1)/9):
-                    ind_s = j*9 + 1
-                    ind_e = j*9 + 1 + 6
+                for j in range((len(cmd) - 4)/9):
+                    if j == cmd[1] or j ==cmd[3]:
+                        ur.send_command_digital_out(0, False) 
+                        ur.send_command_digital_out(1, True)  
+                    elif j == cmd[2]:
+                        ur.send_command_digital_out(1, False)  
+                        ur.send_command_digital_out(0, True)  
+                    ind_s = j*9 + 4
+                    ind_e = j*9 + 4 + 6
                     pose_joints = cmd[ind_s:ind_e] 
                     print("pose_joints", pose_joints)
                     acceleration, speed, wait_time = cmd[ind_e:ind_e+3]
