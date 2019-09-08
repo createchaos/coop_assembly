@@ -9,7 +9,6 @@ import time
 import sys
 import os
 
-
 sys.path.append(r"C:\Users\parascho\Documents\git_repos")
 sys.path.append(r"C:\Users\parascho\Documents\git_repos\ur_online_control")
 
@@ -27,7 +26,7 @@ import ur_online_control.communication.container as container
 from ur_online_control.communication.server import Server
 from ur_online_control.communication.client_wrapper import ClientWrapper
 from ur_online_control.communication.formatting import format_commands
-from helpers import send_cmd_place_sand
+# from helpers import send_cmd_place_sand
 
 if len(sys.argv) > 1:
     server_address = sys.argv[1]
@@ -47,7 +46,7 @@ def main():
     print("hi")
     # start the server
     server = Server(server_address, server_port)
-    print("Server"), server
+    # print("Server"), server
     server.start()
     server.client_ips.update({"UR": ur_ip})
 
@@ -72,19 +71,19 @@ def main():
 
         # 2. set the tool tcp
         tool_pose = gh.wait_for_float_list() # client.send(MSG_FLOAT_LIST, tool_pose)
-        print("teeeest 2", tool_pose)
         print("2: set tool TCP")
         ur.send_command_tcp(tool_pose)
 
         # 3. receive command length
+        print('3: send length of message')
         len_command = gh.wait_for_int()
+        print("length", len_command)
 
         # 4. receive commands flattened, and format according to the sent length
         commands_flattened = gh.wait_for_float_list()
-        print("teeeeeest 1", commands_flattened, len_command)
+        print("commands", commands_flattened)
         commands = format_commands(commands_flattened, len_command)
         print("We received %i commands." % len(commands))
-        print("teeeeest 3", commands)
         
         # 5. receive safety commands flattened, and format according to the sent length
         # savety_commands_flattened = gh.wait_for_float_list()
@@ -93,27 +92,44 @@ def main():
         # print("savety_commands_flattened: %s" % str(savety_commands_flattened))
         
         for i, cmd in enumerate(commands):
-            
             # x, y, z, ax, ay, az, acceleration, speed, wait_time = cmd
-            for i in range((len(cmd) - 9)/9):
-                ind_s = i
-                ind_e = i + 8
-                j1, j2, j3, j4, j5, j6 = cmd[ind_s:ind_e] 
-                acceleration, speed, wait_time = cmd[i+6:i+8]
-                ##ur.send_command_digital_out(number, True)    
-                send_command_movej(self, pose_joints, a=0, v=0, r=0, t=0)
-                ur.send_command_movel([x, y, z, ax, ay, az], a=acceleration, v=speed)
-                send_command_movej(self, pose_joints, a=0, v=0, r=0, t=0)
-                ## ur.send_command_digital_out(number, False) 
+            if cmd[0] == 0.0:
+                print((len(cmd) - 1)/9)
+                for j in range((len(cmd) - 1)/9):
+                    print("inside_loop")
+                    ind_s = j + 1
+                    ind_e = j + 1 + 6
+                    pose = cmd[ind_s:ind_e] 
+                    print("pose", pose)
+                    acceleration, speed, wait_time = cmd[ind_e:ind_e+3]
+                    print("speed_data", cmd[ind_e:ind_e+3])
+                    ##ur.send_command_digital_out(number, True)    
+                    ur.send_command_movel(pose, a=acceleration, v=speed)
+                    ## ur.send_command_digital_out(number, False) 
+                ur.wait_for_ready()
+                number_of_completed_poses += 1
+            else:    
+                for j in range((len(cmd) - 1)/9):
+                    ind_s = j*9 + 1
+                    ind_e = j*9 + 1 + 6
+                    pose_joints = cmd[ind_s:ind_e] 
+                    print("pose_joints", pose_joints)
+                    acceleration, speed, wait_time = cmd[ind_e:ind_e+3]
+                    print("speed_data", cmd[ind_e:ind_e+3])
+                    ##ur.send_command_digital_out(number, True)    
+                    ur.send_command_movej(pose_joints, a=acceleration, v=speed)
+                    ## ur.send_command_digital_out(number, False) 
+            
+                # x, y, z, ax, ay, az = cmd[-9:-3]
+                # print("position", cmd[-9:-3])
+                # acceleration, speed, wait_time = cmd[-3:]
+                # print("speed data", cmd[-3:])
+                # ur.send_command_movel([x, y, z, ax, ay, az], a=acceleration, v=speed)
 
-            x, y, z, ax, ay, az = cmd[]
-            ur.send_command_movel([x, y, z, ax, ay, az], a=acceleration, v=speed)
-
-            ur.wait_for_ready()
-            number_of_completed_poses += 1
+                ur.wait_for_ready()
+                number_of_completed_poses += 1
             # current_pose_joint = ur.wait_for_current_pose_joint()
             
-
 
             # if i == len(commands) - 1: # send savety commands
             #     for cmd in savety_commands:
