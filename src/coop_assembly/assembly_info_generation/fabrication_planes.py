@@ -344,3 +344,185 @@ def bar_regrip(b_struct, index, pickup_station_0):
     b_struct.vertex[index].update({"final_regrip_place":[offset_plane_2, pick_plane_2, offset_tool_2]})
 
     return offset_plane_1, place_plane_1, offset_tool_1, offset_plane_1, offset_plane_2, offset_tool_2, pick_plane_2, offset_plane_2
+
+
+
+
+def calculate_offset(o_struct, b_struct, v_key, d_o_1, d_o_2, seq):
+
+    v_pos = seq.index(v_key)
+    int_v = 2 - v_pos % 3
+    v_pos_max = v_pos + int_v
+    list_verts_con  = seq[0:v_pos_max+1]
+
+    o_edge = None
+    for e1 in o_struct.edge:
+        for e2 in o_struct.edge[e1]:
+            e = o_struct.edge[e1][e2]
+            if e["vertex_bar"] == v_key:
+                o_edge = (e1, e2)
+                break
+        if o_edge: break
+
+
+    cons_1      = o_struct.connectors(o_edge[0])
+    cons_2      = o_struct.connectors(o_edge[1])
+    #for c in cons_1:
+    #cons_all_1  = [c for c in cons_1 if c[0] <= v_key_max and c[1] <= v_key_max and (c[0] == v_key or c[1] == v_key)]
+    #cons_all_2  = [c for c in cons_2 if c[0] <= v_key_max and c[1] <= v_key_max and (c[0] == v_key or c[1] == v_key)]
+
+    cons_all_1  = [c for c in cons_1 if c[0] in list_verts_con and c[1] in list_verts_con and (c[0] == v_key or c[1] == v_key)]
+    cons_all_2  = [c for c in cons_2 if c[0] in list_verts_con and c[1] in list_verts_con and (c[0] == v_key or c[1] == v_key)]
+
+    bar_1       = b_struct.vertex[v_key]["axis_endpoints"]
+
+    vecs_con_1  = []            # vectors of all connections to the bar in endpoint 1
+    pts_con_1   = []            # points of connections on bar axis
+    for c in cons_all_1:
+        ep  =  b_struct.edge[c[0]][c[1]]["endpoints"][b_struct.edge[c[0]][c[1]]["endpoints"].keys()[0]]
+        if is_point_on_line(ep[0], bar_1, 0.1):
+            vecs_con_1.append(vector_from_points(ep[0], ep[1]))
+            pts_con_1.append(ep[0])
+        elif is_point_on_line(ep[1], bar_1, 0.1):
+            vecs_con_1.append(vector_from_points(ep[1], ep[0]))
+            pts_con_1.append(ep[1])
+        else:
+            print "no point found on axis - check function calculate_offset"
+
+    vecs_con_2  = []            # vectors of all connections to the bar in endpoint 2
+    pts_con_2   = []            # points of connections on bar axis
+    for c in cons_all_2:
+        ep  =  b_struct.edge[c[0]][c[1]]["endpoints"][b_struct.edge[c[0]][c[1]]["endpoints"].keys()[0]]
+        if is_point_on_line(ep[0], bar_1, 0.1):
+            vecs_con_2.append(vector_from_points(ep[0], ep[1]))
+            pts_con_2.append(ep[0])
+        elif is_point_on_line(ep[1], bar_1, 0.1):
+            vecs_con_2.append(vector_from_points(ep[1], ep[0]))
+            pts_con_2.append(ep[1])
+        else:
+            print "no point found on axis - check function calculate_offset"
+
+    ### calculate offset for first three bars (with one neighbour each)
+    if len(vecs_con_1) == 1 and len(vecs_con_2) == 1:
+        v1          = normalize_vector(vecs_con_1[0])
+        v2          = normalize_vector(vecs_con_2[0])
+        same_dir    = check_dir(v1, v2)
+        if same_dir:
+            vm      = scale_vector(normalize_vector(add_vectors(v1, v2)), -1.*d_o_1)
+            # shift gripping plane
+            pt_o    = b_struct.vertex[v_key]["gripping_plane_no_offset"][0]
+            x_ax    = b_struct.vertex[v_key]["gripping_plane_no_offset"][1]
+            y_ax    = b_struct.vertex[v_key]["gripping_plane_no_offset"][2]
+            z_ax    = b_struct.vertex[v_key]["gripping_plane_no_offset"][3]
+            pt_o_n  = translate_points([pt_o], vm)[0]
+            b_struct.vertex[v_key].update({"gripping_plane":(pt_o_n, x_ax, y_ax, z_ax)})
+
+        else:
+            pt_1    = pts_con_1[0]
+            pt_2    = pts_con_2[0]
+
+            pt_o_n, vec_x_n, y_ax, vec_z        = calculate_offset_point_1(b_struct, v_key, pt_1, pt_2, v1, v2, d_o_1, d_o_2)
+            #pt_o_n  = point_mean([pt_1_n, pt_2_n])
+            b_struct.vertex[v_key].update({"gripping_plane":(pt_o_n, vec_x_n, y_ax, vec_z)})
+
+    ### calculate offset for bars with neighbours only on one side
+    if (len(vecs_con_1) == 1 and len(vecs_con_2) == 0) or (len(vecs_con_2) == 1 and len(vecs_con_1) == 0):
+        if len(vecs_con_1) == 1:
+            v1          = normalize_vector(vecs_con_1[0])
+        else:
+            v1          = normalize_vector(vecs_con_2[0])
+        vm          = scale_vector(v1, -1.*d_o_1)
+        pt_o    = b_struct.vertex[v_key]["gripping_plane_no_offset"][0]
+        x_ax    = b_struct.vertex[v_key]["gripping_plane_no_offset"][1]
+        y_ax    = b_struct.vertex[v_key]["gripping_plane_no_offset"][2]
+        z_ax    = b_struct.vertex[v_key]["gripping_plane_no_offset"][3]
+        pt_o_n  = translate_points([pt_o], vm)[0]
+        b_struct.vertex[v_key].update({"gripping_plane":(pt_o_n, x_ax, y_ax, z_ax)})
+
+    if (len(vecs_con_1) == 2 and len(vecs_con_2) == 0) or (len(vecs_con_2) == 2 and len(vecs_con_1) == 0):
+        if len(vecs_con_1) == 2:
+            v1  = normalize_vector(vecs_con_1[0])
+            v2  = normalize_vector(vecs_con_1[1])
+        else:
+            v1  = normalize_vector(vecs_con_2[0])
+            v2  = normalize_vector(vecs_con_2[1])
+#         same_dir    = check_dir(v1, v2)
+#         if same_dir:
+        vm      = scale_vector(normalize_vector(add_vectors(v1, v2)), -1.*d_o_1)
+        # shift gripping plane
+        pt_o    = b_struct.vertex[v_key]["gripping_plane_no_offset"][0]
+        x_ax    = b_struct.vertex[v_key]["gripping_plane_no_offset"][1]
+        y_ax    = b_struct.vertex[v_key]["gripping_plane_no_offset"][2]
+        z_ax    = b_struct.vertex[v_key]["gripping_plane_no_offset"][3]
+        pt_o_n  = translate_points([pt_o], vm)[0]
+        b_struct.vertex[v_key].update({"gripping_plane":(pt_o_n, x_ax, y_ax, z_ax)})
+
+    ### calculate offset for other bars (with two neighbours each)
+    if len(vecs_con_1) == 2 and len(vecs_con_2) == 2:
+        v1_1    = normalize_vector(vecs_con_1[0])
+        v1_2    = normalize_vector(vecs_con_1[1])
+        v2_1    = normalize_vector(vecs_con_2[0])
+        v2_2    = normalize_vector(vecs_con_2[1])
+
+        pt_1_1  = pts_con_1[0]
+        pt_1_2  = pts_con_1[1]
+        pt_2_1  = pts_con_2[0]
+        pt_2_2  = pts_con_2[1]
+
+        pt_o_n, vec_x_n, y_ax, vec_z  = calculate_offset_point_2(b_struct, v_key, v1_1, v1_2, v2_1, v2_2, pt_1_1, pt_1_2, pt_2_1, pt_2_2, d_o_1, d_o_2)
+        # if v_key == 36:
+        #     vec_shift = scale_vector(normalize_vector(vector_from_points(b_struct.vertex[v_key]["axis_endpoints"][1], b_struct.vertex[v_key]["axis_endpoints"][0])), 100)
+        #     pt_o_n = add_vectors(pt_o_n, vec_shift)
+        # if v_key == 37:
+        #     vec_shift = scale_vector(normalize_vector(vector_from_points(
+        #         b_struct.vertex[v_key]["axis_endpoints"][1], b_struct.vertex[v_key]["axis_endpoints"][0])), -250)
+        #     pt_o_n = add_vectors(pt_o_n, vec_shift)
+
+        #pt_o_n  = point_mean([pt_1_n, pt_2_n])
+        b_struct.vertex[v_key].update({"gripping_plane":(pt_o_n, vec_x_n, y_ax, vec_z)})
+
+        return pt_o_n, vec_x_n, y_ax, vec_z
+
+
+def calculate_offset_point_1(b_struct, v_key, pt_1, pt_2, v1, v2, d_o_1, d_o_2):
+    pt_1_n  = add_vectors(pt_1, scale_vector(v1, -1.*d_o_1))
+    pt_2_n  = add_vectors(pt_2, scale_vector(v2, -1.*d_o_2))
+
+    vec_x_n = normalize_vector(vector_from_points(pt_1_n, pt_2_n))
+    x_ax    = b_struct.vertex[v_key]["gripping_plane_no_offset"][1]
+    orient  = check_dir(x_ax, vec_x_n)
+    if not orient:
+        vec_x_n = scale_vector(vec_x_n, -1.)
+    # transform gripping plane
+    pt_o    = b_struct.vertex[v_key]["gripping_plane_no_offset"][0]
+    y_ax    = b_struct.vertex[v_key]["gripping_plane_no_offset"][2]
+    vec_z   = cross_vectors(vec_x_n, y_ax)
+    l_n = (pt_1_n, pt_2_n)
+    pt_o_n  = closest_point_on_line(pt_o, l_n)
+
+    return pt_o_n, vec_x_n, y_ax, vec_z
+
+
+def calculate_offset_point_2(b_struct, v_key, v1_1, v1_2, v2_1, v2_2, pt_1_1, pt_1_2, pt_2_1, pt_2_2, d_o_1, d_o_2):
+
+    vm_1    = scale_vector(normalize_vector(add_vectors(v1_1, v1_2)), -1.*d_o_1)
+    pt_1    = point_mean([pt_1_1, pt_1_2])
+    pt_1_n  = translate_points([pt_1], vm_1)[0]
+
+    vm_2    = scale_vector(normalize_vector(add_vectors(v2_1, v2_2)), -1.*d_o_2)
+    pt_2    = point_mean([pt_2_1, pt_2_2])
+    pt_2_n  = translate_points([pt_2], vm_2)[0]
+
+    vec_x_n = normalize_vector(vector_from_points(pt_1_n, pt_2_n))
+    x_ax    = b_struct.vertex[v_key]["gripping_plane_no_offset"][1]
+    orient  = check_dir(x_ax, vec_x_n)
+
+    if not orient:
+        vec_x_n = scale_vector(vec_x_n, -1.)
+    pt_o    = b_struct.vertex[v_key]["gripping_plane_no_offset"][0]
+    y_ax    = b_struct.vertex[v_key]["gripping_plane_no_offset"][2]
+    vec_z   = cross_vectors(vec_x_n, y_ax)
+    l_n = (pt_1_n, pt_2_n)
+    pt_o_n  = closest_point_on_line(pt_o, l_n)
+
+    return pt_o_n, vec_x_n, y_ax, vec_z
