@@ -78,7 +78,7 @@ def main():
 
 
 def main_gh_simple(points, dict_nodes, radius, sup_nodes=None, sup_bars=None, l_bars=None, load=None, 
-    check_col=False, correct=True, use_xfunc=True):
+    check_col=False, correct=True, use_xfunc=True, python_path='pythonw'):
     """ghpython entry point, xfunc or rpc call is made here.
     
     Parameters
@@ -108,7 +108,7 @@ def main_gh_simple(points, dict_nodes, radius, sup_nodes=None, sup_bars=None, l_
     if use_xfunc:
         print('main_gh_simple: xfunc')
         xfunc = XFunc(
-                'coop_assembly.geometry_generation.execute.execute_from_points')
+                'coop_assembly.geometry_generation.execute.execute_from_points', python=python_path)
         xfunc(points, dict_nodes, radius, support_nodes=sup_nodes,
             support_bars=sup_bars, load_bars=l_bars, load=load, check_col=check_col, correct=correct)
         print('main_gh_simple: xfnc error: ', xfunc.error)
@@ -116,7 +116,7 @@ def main_gh_simple(points, dict_nodes, radius, sup_nodes=None, sup_bars=None, l_
     else:
         print('main_gh_simple: rpc proxy')
         from compas.rpc import Proxy
-        with Proxy('coop_assembly.geometry_generation.execute') as geo_gen_execute:
+        with Proxy('coop_assembly.geometry_generation.execute', python=python_path) as geo_gen_execute:
             b_struct_data, o_struct_data = geo_gen_execute.execute_from_points(
                 points, dict_nodes, radius, support_nodes=sup_nodes, 
                 support_bars=sup_bars, load_bars=l_bars, load=load, check_col=check_col, correct=correct)

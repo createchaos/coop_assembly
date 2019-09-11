@@ -38,8 +38,9 @@ first download `miniconda <https://docs.conda.io/en/latest/miniconda.html>`_, an
 following commands in your terminal:
 
 ::
+
     cd test_envs
-    conda env create -f coop_assembly_ws
+    conda env create -f coop_assembly_ws.yml
 
 Then, activate the newly created conda environment and install ``coop_assembly``:
 
@@ -55,13 +56,14 @@ run the following command to update:
 
 ::
 
-    conda env update -f coop_assembly_ws --prune
+    conda env update -n coop_assembly_ws -f coop_assembly_ws.yml --prune
 
 Examples
 --------
 
-`coop_assembly` can be used directly in Rhino/Grasshopper environment, where
-the function calls are handled by ``compas.utilities.xfunc`` or ``compas.rpc``(requires ``compas 0.7.0+``)
+``coop_assembly`` can be used directly in Rhino/Grasshopper environment, where
+the function calls are handled by ``compas.utilities.xfunc`` or 
+``compas.rpc`` (requires ``compas 0.7.0+``)
 and visualization is provided by ``compas_ghpython.utilities``.
 
 In order to make ``coop_assembly`` accessible in Rhino/Grasshopper,
@@ -73,7 +75,7 @@ we need the run the following command first and **restart Rhino**:
     python -m compas_rhino.install
 
     # make coop_assembly accessible in Rhino
-    python -m compas_rhino.install -p coop_assembly
+    python -m compas_rhino.install -p coop_assembly compas_fab roslibpy
 
 And you should be able to see outputs like:
 
@@ -93,6 +95,24 @@ And you should be able to see outputs like:
 For Rhino 5 users, add ``-v 5.0`` to the command above.
 
 Grasshopper examples can be found in ``examples\gh_interface_scripts``.
+
+Troubleshooting 
+---------------
+
+Sometimes things don't go as expected. Here are some of answers to the most common issues you might bump into:
+
+    Q: `conda` commands don't work.
+
+Try running them from the *Conda Prompt*. Depending on how you installed Anaconda, it might not be available by default on the normal Windows command prompt.
+
+    Q: When trying to install the framework in Rhino, it fails indicating the lib folder of IronPython does not exist.
+
+Make sure you have opened Rhino 6 and Grasshopper at least once, so that it finishes setting up all its internal folder structure.
+
+    Q: Error: Microsoft Visual C++ 14.0 is required
+
+Follow the link to install Microsoft Visual C++ 14.0
+https://www.scivision.co/python-windows-visual-c++-14-required/
 
 Credits
 -------
