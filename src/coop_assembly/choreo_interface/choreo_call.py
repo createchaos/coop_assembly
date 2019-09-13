@@ -333,6 +333,8 @@ def sequenced_picknplace_plan(assembly_json_path,
         traj_json_data.append(e_proc_data)
 
     if result_save_path:
+        if not os.path.exists(os.path.dirname(result_save_path)):
+            os.mkdir(os.path.dirname(result_save_path))
         with open(result_save_path, 'w+') as outfile:
             json.dump(traj_json_data, outfile)
             print('planned trajectories saved to {}'.format(result_save_path))
