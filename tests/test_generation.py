@@ -5,6 +5,7 @@ from compas.datastructures import Network
 from coop_assembly.data_structure import Overall_Structure, Bar_Structure
 from coop_assembly.geometry_generation import execute_from_points, main_gh_simple
 
+@pytest.mark.gen_from_pts
 def test_generate_from_points():
     points = [(866.02540378443905, 500.0, 0.0), (0.0, 0.0, 0.0), (0.0, 1000.0, 0.0), (288.67513720801298, 500.0, 818.08450024563103), \
         (769.63370557686096, 1333.0446812766299, 544.74326601771895), (-160.70791990805799, 1388.88716089995, 907.16026675621299), \

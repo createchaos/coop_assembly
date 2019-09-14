@@ -3,6 +3,8 @@
 created on 28.08.2019
 '''
 
+from __future__ import print_function
+
 import random
 import itertools
 import math

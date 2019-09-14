@@ -46,7 +46,7 @@ import ikfast_ur3
 def main():
     parser = argparse.ArgumentParser()
     # ur_picknplace_multiple_piece
-    parser.add_argument('-p', '--problem', default='ur_picknplace_single_piece', help='The name of the problem to solve')
+    parser.add_argument('-p', '--problem', default='dms_ws_tet_bars', help='The name of the problem to solve')
     parser.add_argument('-rob', '--robot', default='ur3', help='The type of UR robot to use.')
     parser.add_argument('-m', '--plan_transit', action='store_false', help='Plans motions between each picking and placing')
     parser.add_argument('-v', '--viewer', action='store_true', help='Enables the viewer during planning (slow!)')
