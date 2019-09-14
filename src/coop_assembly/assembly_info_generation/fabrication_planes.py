@@ -387,7 +387,7 @@ def calculate_offset(o_struct, b_struct, v_key, d_o_1, d_o_2, seq):
             vecs_con_1.append(vector_from_points(ep[1], ep[0]))
             pts_con_1.append(ep[1])
         else:
-            print "no point found on axis - check function calculate_offset"
+            print("no point found on axis - check function calculate_offset")
 
     vecs_con_2  = []            # vectors of all connections to the bar in endpoint 2
     pts_con_2   = []            # points of connections on bar axis
@@ -400,7 +400,7 @@ def calculate_offset(o_struct, b_struct, v_key, d_o_1, d_o_2, seq):
             vecs_con_2.append(vector_from_points(ep[1], ep[0]))
             pts_con_2.append(ep[1])
         else:
-            print "no point found on axis - check function calculate_offset"
+            print("no point found on axis - check function calculate_offset")
 
     ### calculate offset for first three bars (with one neighbour each)
     if len(vecs_con_1) == 1 and len(vecs_con_2) == 1:

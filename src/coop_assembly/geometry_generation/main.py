@@ -107,6 +107,7 @@ def main_gh_simple(points, dict_nodes, radius, sup_nodes=None, sup_bars=None, l_
     """
     if use_xfunc:
         print('main_gh_simple: xfunc')
+        print("python path", python_path)
         xfunc = XFunc(
                 'coop_assembly.geometry_generation.execute.execute_from_points', python=python_path)
         xfunc(points, dict_nodes, radius, support_nodes=sup_nodes,
