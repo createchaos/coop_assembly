@@ -60,7 +60,9 @@ def execute_from_points(points, dict_nodes, radius, support_nodes=None, support_
 
     b_struct    = Bar_Structure()
     o_struct    = Overall_Structure(b_struct)
-    generate_structure_from_points(o_struct, b_struct, radius, points, dict_nodes, support_bars,
-                         load_bars, correct=correct, load=load, check_col=check_col)
-    
-    return b_struct.data, o_struct.data
+    # o_struct, b_struct, r, points, dict_nodes, supports = None, loads = None, correct=True, load=None, check_col=False
+    generate_structure_from_points(o_struct, b_struct, radius, points, dict_nodes, supports = support_bars,
+                         loads = load, correct=correct, load=load, check_col=check_col)
+
+    # print("return execute", b_struct)   
+    return (b_struct.data, o_struct.data)
