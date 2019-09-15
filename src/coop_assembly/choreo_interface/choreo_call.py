@@ -41,6 +41,82 @@ from choreo.choreo_utils import plan_joint_motion, get_collision_fn
 import ikfast_ur3
 import ikfast_ur5
 
+
+def single_place_check(
+    ee_meshes, target_geo_meshes, collision_meshes=[],
+    robot_model='ur3', enable_viewer=True, view_ikfast=False,
+    tcp_tf_list=[1e-3 * 80.525, 0, 0], scale=1):
+
+    # # rescaling
+    # # TODO: this should be done when the Assembly object is made
+    # unit_geos, static_obstacles = load_assembly_package(assembly_json_path, scale=scale)
+
+    # urdf, end effector settings
+    if robot_model == 'ur3':
+        urdf_filename = compas_fab.get('universal_robot/ur_description/urdf/ur3.urdf')
+        srdf_filename = compas_fab.get('universal_robot/ur3_moveit_config/config/ur3.srdf')
+    else:
+        urdf_filename = compas_fab.get('universal_robot/ur_description/urdf/ur5.urdf')
+        srdf_filename = compas_fab.get('universal_robot/ur5_moveit_config/config/ur5.srdf')
+    urdf_pkg_name = 'ur_description'
+
+    ee_filename = compas_fab.get('universal_robot/ur_description/meshes/' +
+                                'dms_2019_gripper/collision/190907_Gripper_05.obj')
+
+    # geometry file is not loaded here
+    model = RobotModel.from_urdf_file(urdf_filename)
+    semantics = RobotSemantics.from_srdf_file(srdf_filename, model)
+    robot = RobotClass(model, semantics=semantics)
+
+    base_link_name = robot.get_base_link_name()
+    ee_link_name = robot.get_end_effector_link_name()
+    ik_joint_names = robot.get_configurable_joint_names()
+    disabled_link_names = semantics.get_disabled_collisions()
+
+    # parse end effector mesh
+    tcp_tf = Translation(tcp_tf_list)
+
+    # ======================================================
+    # ======================================================
+    # start pybullet environment & load pybullet robot
+    connect(use_gui=enable_viewer)
+    pb_robot = create_pb_robot_from_ros_urdf(urdf_filename, urdf_pkg_name,
+                                             ee_link_name=ee_link_name)
+    ee_attachs = attach_end_effector_geometry(ee_meshes, pb_robot, ee_link_name)
+
+    # update current joint conf and attach end effector
+    pb_ik_joints = joints_from_names(pb_robot, ik_joint_names)
+    pb_end_effector_link = link_from_name(pb_robot, ee_link_name)
+    set_joint_positions(pb_robot, pb_ik_joints, robot_start_conf)
+    for e_at in ee_attachs: e_at.assign()
+
+    # viz handles
+    handles = []
+
+    # convert input compas Mesh into pybullet collision objects
+    # deliver ros collision meshes to pybullet
+    static_obstacles = []
+    for mesh in collision_meshes:
+        static_obstacles.append(convert_mesh_to_pybullet_body(mesh))
+
+    # convert mesh into pybullet bodies
+    # TODO: this conversion should be moved into UnitGeometry
+    geo_bodies = []
+    for mesh in target_geo_meshes:
+        geo_bodies.append(convert_mesh_to_pybullet_body(mesh))
+    unit_geo.pybullet_bodies = geo_bodies
+
+    # check collision between obstacles and element geometries
+    # assert not sanity_check_collisions([unit_geo], static_obstacles_from_name)
+
+    ik_fn = ikfast_ur3.get_ik if robot_model == 'ur3' else ikfast_ur5.get_ik
+    
+    # quick_check_place_feasibility(pb_robot, ik_joint_names, base_link_name, ee_link_name, ik_fn,
+    #     unit_geo, disc_len=0.005, 
+    #     static_obstacles=static_obstacles, self_collisions=True,
+    #     mount_link_from_tcp_pose=tcp_tf, ee_attachs=ee_attachs, viz=view_ikfast, 
+    #     disabled_collision_link_names=disabled_link_names)
+
 def sequenced_picknplace_plan(assembly_json_path,
     robot_model='ur3', pick_from_same_rack=True, 
     enable_viewer=True, plan_transit=True, transit_res=0.01, view_ikfast=False,
