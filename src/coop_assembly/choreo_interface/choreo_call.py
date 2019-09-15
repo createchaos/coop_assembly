@@ -35,8 +35,7 @@ from conrob_pybullet import load_pybullet, connect, disconnect, wait_for_user, \
     get_link_pose, link_from_name, create_attachment, add_fixed_constraint,\
     create_obj, set_pose, joints_from_names, set_joint_positions, get_fixed_constraints, \
     remove_debug, WorldSaver
-from choreo import direct_ladder_graph_solve_picknplace, divide_nested_list_chunks, 
-    quick_check_place_feasibility
+from choreo import direct_ladder_graph_solve_picknplace, divide_nested_list_chunks
 from choreo.choreo_utils import plan_joint_motion, get_collision_fn
 
 import ikfast_ur3
@@ -112,11 +111,11 @@ def single_place_check(
 
     ik_fn = ikfast_ur3.get_ik if robot_model == 'ur3' else ikfast_ur5.get_ik
     
-    quick_check_place_feasibility(pb_robot, ik_joint_names, base_link_name, ee_link_name, ik_fn,
-        unit_geo, disc_len=0.005, 
-        static_obstacles=static_obstacles, self_collisions=True,
-        mount_link_from_tcp_pose=tcp_tf, ee_attachs=ee_attachs, viz=view_ikfast, 
-        disabled_collision_link_names=disabled_link_names):
+    # quick_check_place_feasibility(pb_robot, ik_joint_names, base_link_name, ee_link_name, ik_fn,
+    #     unit_geo, disc_len=0.005, 
+    #     static_obstacles=static_obstacles, self_collisions=True,
+    #     mount_link_from_tcp_pose=tcp_tf, ee_attachs=ee_attachs, viz=view_ikfast, 
+    #     disabled_collision_link_names=disabled_link_names)
 
 def sequenced_picknplace_plan(assembly_json_path,
     robot_model='ur3', pick_from_same_rack=True, 
