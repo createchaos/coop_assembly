@@ -167,7 +167,7 @@ def sequenced_picknplace_plan(assembly_json_path,
     co_dict = {}
     for i, static_obs_mesh in enumerate(static_obstacles):
         # offset the table a bit...
-        cm = CollisionMesh(static_obs_mesh, 'so_'+str(i), frame=Frame.from_transformation(Translation([0, 0, -0.02])))
+        cm = CollisionMesh(static_obs_mesh, 'so_'+str(i))
         co_dict[cm.id] = {}
         co_dict[cm.id]['meshes'] = [cm.mesh]
         co_dict[cm.id]['mesh_poses'] = [cm.frame]
@@ -194,10 +194,11 @@ def sequenced_picknplace_plan(assembly_json_path,
         wait_for_user()
 
     # deliver ros collision meshes to pybullet
-    static_obstacles_from_name = convert_meshes_and_poses_to_pybullet_bodies(co_dict)
-    # for now...
-    for so_key, so_val in static_obstacles_from_name.items():
-        static_obstacles_from_name[so_key] = so_val[0]
+    so_lists_from_name = convert_meshes_and_poses_to_pybullet_bodies(co_dict)
+    static_obstacles_from_name = {}
+    for so_key, so_val in so_lists_from_name.items():
+        for so_i, so_item in enumerate(so_val):
+            static_obstacles_from_name[so_key + '_' + str(so_i)] = so_item
 
     for unit_name, unit_geo in unit_geos.items():
         geo_bodies = []
@@ -294,6 +295,7 @@ def sequenced_picknplace_plan(assembly_json_path,
                                 place2pick_goal_conf,
                                 attachments=ee_attachs,
                                 obstacles=place2pick_obstacles,
+                                disabled_collisions=disabled_collision_links,
                                 self_collisions=True,
                                 resolutions=[transit_res]*len(pb_ik_joints),
                                 restarts=RRT_RESTARTS, iterations=RRT_ITERATIONS,
@@ -343,6 +345,7 @@ def sequenced_picknplace_plan(assembly_json_path,
             pick2place_obstacles = list(static_obstacles_from_name.values()) + built_obstacles
 
             pick2place_path = plan_joint_motion(pb_robot, pb_ik_joints, pick2place_goal_conf,
+                disabled_collisions=disabled_collision_links,
                 obstacles=pick2place_obstacles,
                 attachments=ee_attachs + element_attachs, self_collisions=True,
                 resolutions=[transit_res]*len(pb_ik_joints),
@@ -383,6 +386,7 @@ def sequenced_picknplace_plan(assembly_json_path,
                 for ee_a in ee_attachs: ee_a.assign()
 
                 return2idle_path = plan_joint_motion(pb_robot, pb_ik_joints, robot_start_conf,
+                    disabled_collisions=disabled_collision_links,
                     obstacles=list(static_obstacles_from_name.values()) + flatten_unit_geos_bodies(unit_geos),
                     attachments=ee_attachs, self_collisions=True,
                     resolutions=[transit_res]*len(pb_ik_joints),
