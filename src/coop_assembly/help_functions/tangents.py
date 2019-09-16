@@ -24,7 +24,7 @@ from compas.utilities import XFunc
 
 from coop_assembly.help_functions import dropped_perpendicular_points, find_points_extreme, check_dir, \
     calculate_coord_sys
-from coop_assembly.assembly_info_generation.fabrication_planes import calculate_gripping_plane
+# from coop_assembly.assembly_info_generation.fabrication_planes import calculate_gripping_plane
 
 
 def tangent_from_point(base_point1, line_vect1, base_point2, line_vect2, ref_point, dist1, dist2):
