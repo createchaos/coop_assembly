@@ -35,7 +35,8 @@ from conrob_pybullet import load_pybullet, connect, disconnect, wait_for_user, \
     get_link_pose, link_from_name, create_attachment, add_fixed_constraint,\
     create_obj, set_pose, joints_from_names, set_joint_positions, get_fixed_constraints, \
     remove_debug, WorldSaver
-from choreo import direct_ladder_graph_solve_picknplace, divide_nested_list_chunks
+from choreo import direct_ladder_graph_solve_picknplace, divide_nested_list_chunks, \
+    quick_check_place_feasibility
 from choreo.choreo_utils import plan_joint_motion, get_collision_fn
 
 import ikfast_ur3
@@ -43,13 +44,14 @@ import ikfast_ur5
 
 
 def single_place_check(
-    ee_meshes, target_geo_meshes, collision_meshes=[],
+    seq_id, assembly_json_path,
     robot_model='ur3', enable_viewer=True, view_ikfast=False,
-    tcp_tf_list=[1e-3 * 80.525, 0, 0], scale=1):
+    tcp_tf_list=[1e-3 * 80.525, 0, 0], scale=1, diagnosis=False):
 
     # # rescaling
     # # TODO: this should be done when the Assembly object is made
-    # unit_geos, static_obstacles = load_assembly_package(assembly_json_path, scale=scale)
+    unit_geos, static_obstacle_meshes = load_assembly_package(assembly_json_path, scale=scale)
+    unit_geo = unit_geos[seq_id]
 
     # urdf, end effector settings
     if robot_model == 'ur3':
@@ -74,6 +76,7 @@ def single_place_check(
     disabled_link_names = semantics.get_disabled_collisions()
 
     # parse end effector mesh
+    ee_meshes = [Mesh.from_obj(ee_filename)]
     tcp_tf = Translation(tcp_tf_list)
 
     # ======================================================
@@ -87,35 +90,41 @@ def single_place_check(
     # update current joint conf and attach end effector
     pb_ik_joints = joints_from_names(pb_robot, ik_joint_names)
     pb_end_effector_link = link_from_name(pb_robot, ee_link_name)
+    robot_start_conf = [0,-1.65715,1.71108,-1.62348,0,0]
     set_joint_positions(pb_robot, pb_ik_joints, robot_start_conf)
     for e_at in ee_attachs: e_at.assign()
 
     # viz handles
     handles = []
 
-    # convert input compas Mesh into pybullet collision objects
-    # deliver ros collision meshes to pybullet
-    static_obstacles = []
-    for mesh in collision_meshes:
-        static_obstacles.append(convert_mesh_to_pybullet_body(mesh))
-
     # convert mesh into pybullet bodies
     # TODO: this conversion should be moved into UnitGeometry
     geo_bodies = []
-    for mesh in target_geo_meshes:
+    for mesh in unit_geo.mesh:
         geo_bodies.append(convert_mesh_to_pybullet_body(mesh))
     unit_geo.pybullet_bodies = geo_bodies
+
+    static_obstacles = []
+    for so_mesh in static_obstacle_meshes:
+        static_obstacles.append(convert_mesh_to_pybullet_body(so_mesh))
+    for unit_name, other_unit_geo in unit_geos.items():
+        if unit_name < seq_id:
+            for _, mesh in enumerate(other_unit_geo.mesh):
+                pb_e = convert_mesh_to_pybullet_body(mesh)
+                set_pose(pb_e, other_unit_geo.goal_pb_pose)
+                static_obstacles.append(pb_e)
 
     # check collision between obstacles and element geometries
     # assert not sanity_check_collisions([unit_geo], static_obstacles_from_name)
 
     ik_fn = ikfast_ur3.get_ik if robot_model == 'ur3' else ikfast_ur5.get_ik
     
-    # quick_check_place_feasibility(pb_robot, ik_joint_names, base_link_name, ee_link_name, ik_fn,
-    #     unit_geo, disc_len=0.005, 
-    #     static_obstacles=static_obstacles, self_collisions=True,
-    #     mount_link_from_tcp_pose=tcp_tf, ee_attachs=ee_attachs, viz=view_ikfast, 
-    #     disabled_collision_link_names=disabled_link_names)
+    return quick_check_place_feasibility(pb_robot, ik_joint_names, base_link_name, ee_link_name, ik_fn,
+                unit_geo, disc_len=0.005, 
+                static_obstacles=static_obstacles, self_collisions=True,
+                mount_link_from_tcp_pose=pb_pose_from_Transformation(tcp_tf), 
+                ee_attachs=ee_attachs, viz=view_ikfast, 
+                disabled_collision_link_names=disabled_link_names, diagnosis=diagnosis)
 
 def sequenced_picknplace_plan(assembly_json_path,
     robot_model='ur3', pick_from_same_rack=True, 
