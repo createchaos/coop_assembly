@@ -200,6 +200,13 @@ def calculate_gripping_plane(b_struct, v, pt_mean, nb_rot=8, nb_trans=8, planes_
                 frame_n = [frame_n[0], scale_vector(frame_n[1], -1), scale_vector(frame_n[2], -1)]
                 frames_all.append(frame_n)
     
+    frames_z = []
+    
+    for i,f in enumerate(frames_all):
+        z_vec = cross_vectors(f[1], f[2])
+        frames_all[i].append(z_vec)
+
+
     b_struct.vertex[v].update({"gripping_planes_all":frames_all})
 
 
@@ -630,6 +637,7 @@ def calculate_offsets_all(o_struct, b_struct, v_key, d_o_1, d_o_2, seq):
 
     gp_all = []
     for i, gp in enumerate(b_struct.vertex[v_key]["gripping_planes_all"]):
+        print("gp", gp)
         ### calculate offset for first three bars (with one neighbour each)
         if len(vecs_con_1) == 1 and len(vecs_con_2) == 1:
             v1          = normalize_vector(vecs_con_1[0])
