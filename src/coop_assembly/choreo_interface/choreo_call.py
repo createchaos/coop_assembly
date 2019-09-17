@@ -3,6 +3,7 @@ import os
 import time
 import math
 import json
+import numpy as np
 
 from itertools import product
 
@@ -34,8 +35,9 @@ from conrob_pybullet import load_pybullet, connect, disconnect, wait_for_user, \
     LockRenderer, has_gui, get_model_info, get_pose, euler_from_quat, draw_pose, \
     get_link_pose, link_from_name, create_attachment, add_fixed_constraint,\
     create_obj, set_pose, joints_from_names, set_joint_positions, get_fixed_constraints, \
-    remove_debug, WorldSaver
-from choreo import direct_ladder_graph_solve_picknplace, divide_nested_list_chunks
+    remove_debug, WorldSaver, set_camera_pose
+from choreo import direct_ladder_graph_solve_picknplace, divide_nested_list_chunks, \
+    quick_check_place_feasibility
 from choreo.choreo_utils import plan_joint_motion, get_collision_fn
 
 import ikfast_ur3
@@ -43,13 +45,21 @@ import ikfast_ur5
 
 
 def single_place_check(
-    ee_meshes, target_geo_meshes, collision_meshes=[],
+    seq_id, assembly_json_path, customized_sequence=[],
+    num_cart_steps=10,
     robot_model='ur3', enable_viewer=True, view_ikfast=False,
-    tcp_tf_list=[1e-3 * 80.525, 0, 0], scale=1):
+    tcp_tf_list=[1e-3 * 80.525, 0, 0], scale=1, diagnosis=False):
 
     # # rescaling
     # # TODO: this should be done when the Assembly object is made
-    # unit_geos, static_obstacles = load_assembly_package(assembly_json_path, scale=scale)
+    unit_geos, static_obstacle_meshes = load_assembly_package(assembly_json_path, scale=scale)
+    assert seq_id < len(unit_geos)
+
+    if customized_sequence:
+        assert len(set(customized_sequence)) == len(unit_geos)
+        unit_geo = unit_geos[customized_sequence[seq_id]]
+    else:
+        unit_geo = unit_geos[seq_id]
 
     # urdf, end effector settings
     if robot_model == 'ur3':
@@ -74,12 +84,17 @@ def single_place_check(
     disabled_link_names = semantics.get_disabled_collisions()
 
     # parse end effector mesh
+    ee_meshes = [Mesh.from_obj(ee_filename)]
     tcp_tf = Translation(tcp_tf_list)
 
     # ======================================================
     # ======================================================
     # start pybullet environment & load pybullet robot
     connect(use_gui=enable_viewer)
+    camera_base_pt = (0,0,0)
+    camera_pt = np.array(camera_base_pt) + np.array([1, 0, 0.5])
+    set_camera_pose(tuple(camera_pt), camera_base_pt)
+
     pb_robot = create_pb_robot_from_ros_urdf(urdf_filename, urdf_pkg_name,
                                              ee_link_name=ee_link_name)
     ee_attachs = attach_end_effector_geometry(ee_meshes, pb_robot, ee_link_name)
@@ -87,38 +102,56 @@ def single_place_check(
     # update current joint conf and attach end effector
     pb_ik_joints = joints_from_names(pb_robot, ik_joint_names)
     pb_end_effector_link = link_from_name(pb_robot, ee_link_name)
+    robot_start_conf = [0,-1.65715,1.71108,-1.62348,0,0]
     set_joint_positions(pb_robot, pb_ik_joints, robot_start_conf)
     for e_at in ee_attachs: e_at.assign()
 
     # viz handles
     handles = []
 
-    # convert input compas Mesh into pybullet collision objects
-    # deliver ros collision meshes to pybullet
-    static_obstacles = []
-    for mesh in collision_meshes:
-        static_obstacles.append(convert_mesh_to_pybullet_body(mesh))
-
     # convert mesh into pybullet bodies
     # TODO: this conversion should be moved into UnitGeometry
     geo_bodies = []
-    for mesh in target_geo_meshes:
+    for mesh in unit_geo.mesh:
         geo_bodies.append(convert_mesh_to_pybullet_body(mesh))
     unit_geo.pybullet_bodies = geo_bodies
+
+    static_obstacles = []
+    for so_mesh in static_obstacle_meshes:
+        static_obstacles.append(convert_mesh_to_pybullet_body(so_mesh))
+
+    if customized_sequence:
+        assembled_element_ids = [customized_sequence[seq_iter] for seq_iter in range(seq_id)]
+    else:
+        assembled_element_ids = list(range(seq_id))
+
+    print('assembled_ids: ', assembled_element_ids)
+
+    for prev_e_id in assembled_element_ids:
+        other_unit_geo = unit_geos[prev_e_id]
+        print('other unit geo: ', other_unit_geo)
+        for _, mesh in enumerate(other_unit_geo.mesh):
+            pb_e = convert_mesh_to_pybullet_body(mesh)
+            set_pose(pb_e, other_unit_geo.goal_pb_pose)
+            static_obstacles.append(pb_e)
 
     # check collision between obstacles and element geometries
     # assert not sanity_check_collisions([unit_geo], static_obstacles_from_name)
 
     ik_fn = ikfast_ur3.get_ik if robot_model == 'ur3' else ikfast_ur5.get_ik
     
-    # quick_check_place_feasibility(pb_robot, ik_joint_names, base_link_name, ee_link_name, ik_fn,
-    #     unit_geo, disc_len=0.005, 
-    #     static_obstacles=static_obstacles, self_collisions=True,
-    #     mount_link_from_tcp_pose=tcp_tf, ee_attachs=ee_attachs, viz=view_ikfast, 
-    #     disabled_collision_link_names=disabled_link_names)
+    return quick_check_place_feasibility(pb_robot, ik_joint_names, base_link_name, ee_link_name, ik_fn,
+                unit_geo,
+                num_cart_steps=num_cart_steps,
+                static_obstacles=static_obstacles, self_collisions=True,
+                mount_link_from_tcp_pose=pb_pose_from_Transformation(tcp_tf), 
+                ee_attachs=ee_attachs, viz=view_ikfast, 
+                disabled_collision_link_names=disabled_link_names, diagnosis=diagnosis)
 
 def sequenced_picknplace_plan(assembly_json_path,
     robot_model='ur3', pick_from_same_rack=True, 
+    customized_sequence=[],
+    num_cart_steps=10,
     enable_viewer=True, plan_transit=True, transit_res=0.01, view_ikfast=False,
     tcp_tf_list=[1e-3 * 80.525, 0, 0], robot_start_conf = [0,-1.65715,1.71108,-1.62348,0,0],
     scale=1, result_save_path='',
@@ -167,7 +200,7 @@ def sequenced_picknplace_plan(assembly_json_path,
     co_dict = {}
     for i, static_obs_mesh in enumerate(static_obstacles):
         # offset the table a bit...
-        cm = CollisionMesh(static_obs_mesh, 'so_'+str(i), frame=Frame.from_transformation(Translation([0, 0, -0.02])))
+        cm = CollisionMesh(static_obs_mesh, 'so_'+str(i))
         co_dict[cm.id] = {}
         co_dict[cm.id]['meshes'] = [cm.mesh]
         co_dict[cm.id]['mesh_poses'] = [cm.frame]
@@ -176,6 +209,11 @@ def sequenced_picknplace_plan(assembly_json_path,
     # ======================================================
     # start pybullet environment & load pybullet robot
     connect(use_gui=enable_viewer)
+
+    camera_base_pt = (0,0,0)
+    camera_pt = np.array(camera_base_pt) + np.array([1, 0, 0.5])
+    set_camera_pose(tuple(camera_pt), camera_base_pt)
+
     pb_robot = create_pb_robot_from_ros_urdf(urdf_filename, urdf_pkg_name,
                                              ee_link_name=ee_link_name)
     ee_attachs = attach_end_effector_geometry(ee_meshes, pb_robot, ee_link_name)
@@ -194,10 +232,11 @@ def sequenced_picknplace_plan(assembly_json_path,
         wait_for_user()
 
     # deliver ros collision meshes to pybullet
-    static_obstacles_from_name = convert_meshes_and_poses_to_pybullet_bodies(co_dict)
-    # for now...
-    for so_key, so_val in static_obstacles_from_name.items():
-        static_obstacles_from_name[so_key] = so_val[0]
+    so_lists_from_name = convert_meshes_and_poses_to_pybullet_bodies(co_dict)
+    static_obstacles_from_name = {}
+    for so_key, so_val in so_lists_from_name.items():
+        for so_i, so_item in enumerate(so_val):
+            static_obstacles_from_name[so_key + '_' + str(so_i)] = so_item
 
     for unit_name, unit_geo in unit_geos.items():
         geo_bodies = []
@@ -209,8 +248,7 @@ def sequenced_picknplace_plan(assembly_json_path,
     assert not sanity_check_collisions(unit_geos, static_obstacles_from_name)
 
     # from random import shuffle
-    seq_assignment = list(range(len(unit_geos)))
-    # shuffle(seq_assignment)
+    seq_assignment = customized_sequence or list(range(len(unit_geos))) 
     element_seq = {seq_id : e_id for seq_id, e_id in enumerate(seq_assignment)}
 
     # for key, val in element_seq.items():
@@ -294,6 +332,7 @@ def sequenced_picknplace_plan(assembly_json_path,
                                 place2pick_goal_conf,
                                 attachments=ee_attachs,
                                 obstacles=place2pick_obstacles,
+                                disabled_collisions=disabled_collision_links,
                                 self_collisions=True,
                                 resolutions=[transit_res]*len(pb_ik_joints),
                                 restarts=RRT_RESTARTS, iterations=RRT_ITERATIONS,
@@ -343,6 +382,7 @@ def sequenced_picknplace_plan(assembly_json_path,
             pick2place_obstacles = list(static_obstacles_from_name.values()) + built_obstacles
 
             pick2place_path = plan_joint_motion(pb_robot, pb_ik_joints, pick2place_goal_conf,
+                disabled_collisions=disabled_collision_links,
                 obstacles=pick2place_obstacles,
                 attachments=ee_attachs + element_attachs, self_collisions=True,
                 resolutions=[transit_res]*len(pb_ik_joints),
@@ -383,6 +423,7 @@ def sequenced_picknplace_plan(assembly_json_path,
                 for ee_a in ee_attachs: ee_a.assign()
 
                 return2idle_path = plan_joint_motion(pb_robot, pb_ik_joints, robot_start_conf,
+                    disabled_collisions=disabled_collision_links,
                     obstacles=list(static_obstacles_from_name.values()) + flatten_unit_geos_bodies(unit_geos),
                     attachments=ee_attachs, self_collisions=True,
                     resolutions=[transit_res]*len(pb_ik_joints),
@@ -400,6 +441,8 @@ def sequenced_picknplace_plan(assembly_json_path,
         e_proc_data = {}
         for sub_proc_name, sub_process in element_process.items():
             sub_process_jt_traj_list =[]
+            if not sub_process:
+                continue
             for jt_sol in sub_process:
                 sub_process_jt_traj_list.append(
                     JointTrajectoryPoint(values=jt_sol, types=[0] * 6, time_from_start=Duration(traj_time_count, 0)))
