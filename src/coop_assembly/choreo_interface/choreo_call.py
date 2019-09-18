@@ -314,6 +314,7 @@ def sequenced_picknplace_plan(assembly_json_path,
                 tr_start_conf = robot_start_conf
 
             place2pick_st_conf = list(tr_start_conf)
+            assert picknplace_cart_plans[seq_id-from_seq_id]['pick_approach'], 'pick approach not found!'
             place2pick_goal_conf = list(picknplace_cart_plans[seq_id-from_seq_id]['pick_approach'][0])
 
             saved_world = WorldSaver()
@@ -362,6 +363,8 @@ def sequenced_picknplace_plan(assembly_json_path,
                 saved_world.restore()
                 print('Diagnosis over')
 
+            assert picknplace_cart_plans[seq_id-from_seq_id]['pick_retreat'], 'pick retreat not found!'
+            assert picknplace_cart_plans[seq_id-from_seq_id]['place_approach'], 'place approach not found!'
             pick2place_st_conf = picknplace_cart_plans[seq_id-from_seq_id]['pick_retreat'][-1]
             pick2place_goal_conf = picknplace_cart_plans[seq_id-from_seq_id]['place_approach'][0]
 
@@ -505,3 +508,73 @@ def sequenced_picknplace_plan(assembly_json_path,
                                         transition_time_step=trans_ts, step_sim=True, per_conf_step=per_conf_step)
 
     return traj_json_data
+
+
+def viz_saved_traj(traj_save_path, assembly_json_path, 
+    element_seq,
+    from_seq_id, to_seq_id,
+    cart_ts=0.01, trans_ts=0.01,
+    scale=0.001,  robot_model='ur3', per_conf_step=False):
+
+    assert os.path.exists(traj_save_path) and os.path.exists(assembly_json_path)
+    # rescaling
+    # TODO: this should be done when the Assembly object is made
+    unit_geos, static_obstacle_meshes = load_assembly_package(assembly_json_path, scale=scale)
+
+    # urdf, end effector settings
+    if robot_model == 'ur3':
+        urdf_filename = compas_fab.get('universal_robot/ur_description/urdf/ur3.urdf')
+        # urdf_filename = compas_fab.get('universal_robot/ur_description/urdf/ur3_collision_viz.urdf')
+        srdf_filename = compas_fab.get('universal_robot/ur3_moveit_config/config/ur3.srdf')
+    else:
+        urdf_filename = compas_fab.get('universal_robot/ur_description/urdf/ur5.urdf')
+        srdf_filename = compas_fab.get('universal_robot/ur5_moveit_config/config/ur5.srdf')
+
+    urdf_pkg_name = 'ur_description'
+
+    ee_filename = compas_fab.get('universal_robot/ur_description/meshes/' +
+                                'dms_2019_gripper/collision/190907_Gripper_05.obj')
+
+    model = RobotModel.from_urdf_file(urdf_filename)
+    semantics = RobotSemantics.from_srdf_file(srdf_filename, model)
+    robot = RobotClass(model, semantics=semantics)
+    ik_joint_names = robot.get_configurable_joint_names()
+    ee_link_name = robot.get_end_effector_link_name()
+
+    connect(use_gui=True)
+    camera_base_pt = (0,0,0)
+    camera_pt = np.array(camera_base_pt) + np.array([1, 0, 0.5])
+    set_camera_pose(tuple(camera_pt), camera_base_pt)
+
+    pb_robot = create_pb_robot_from_ros_urdf(urdf_filename, urdf_pkg_name,
+                                            ee_link_name=ee_link_name)
+    ee_meshes = [Mesh.from_obj(ee_filename)]
+    ee_attachs = attach_end_effector_geometry(ee_meshes, pb_robot, ee_link_name)
+
+    static_obstacles = []
+    for so_mesh in static_obstacle_meshes:
+        static_obstacles.append(convert_mesh_to_pybullet_body(so_mesh))
+
+    for unit_name, unit_geo in unit_geos.items():
+        geo_bodies = []
+        for sub_id, mesh in enumerate(unit_geo.mesh):
+            geo_bodies.append(convert_mesh_to_pybullet_body(mesh))
+        unit_geo.pybullet_bodies = geo_bodies
+
+    if os.path.exists(traj_save_path):
+        with open(traj_save_path, 'r') as f:
+            traj_json_data = json.loads(f.read())
+
+        for e_id in element_seq:
+            for e_body in unit_geos[e_id].pybullet_bodies:
+                set_pose(e_body, unit_geos[e_id].initial_pb_pose)
+
+        display_picknplace_trajectories(pb_robot, ik_joint_names, ee_link_name,
+                                        unit_geos, traj_json_data, \
+                                        element_seq=element_seq,
+                                        from_seq_id=from_seq_id, to_seq_id=to_seq_id,
+                                        ee_attachs=ee_attachs,
+                                        cartesian_time_step=cart_ts, 
+                                        transition_time_step=trans_ts, step_sim=True, per_conf_step=per_conf_step)
+    else:
+        print('no saved traj found at: ', traj_save_path)
