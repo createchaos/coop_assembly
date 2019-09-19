@@ -99,27 +99,37 @@ Troubleshooting
 
 Sometimes things don't go as expected. Here are some of answers to the most common issues you might bump into:
 
+------------
+
+..
+
     Q: Error: Microsoft Visual C++ 14.0 is required
 
 .. _vc14_instruction:
 
 1. Follow the `link <https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=BuildTools&rel=16>`_ 
-   to install Microsoft Visual C++ 14.0
+   to download the visual studio build tools.
 2. Click the ``vs_buildtools__xxx.exe`` file you just downloaded.
 3. Follow the instruction of the Visual Studio Installer, until it
    finishes its downloading and installation.
 4. Select ``C++ Build Tools`` and click ``Install``.
 
 .. image:: docs/images/visual_studio_installer_snapshot.png
-   :height: 200px
-   :width: 200px
    :scale: 50 %
    :alt: visual studio installer snapshot
-   :align: right
+   :align: center
+
+------------
+
+..
 
     Q: `conda` commands don't work.
 
 Try running them from the *Conda Prompt*. Depending on how you installed Anaconda, it might not be available by default on the normal Windows command prompt.
+
+------------
+
+..
 
     Q: When trying to install the framework in Rhino, it fails indicating the lib folder of IronPython does not exist.
 
