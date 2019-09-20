@@ -18,4 +18,5 @@ dependencies:
      - git+https://github.com/yijiangh/compas_fab.git@feature/dms2019_ws#egg=compas_fab
      - git+https://github.com/yijiangh/ikfast_pybind.git@master#egg=ikfast_pybind
      - git+https://github.com/yijiangh/pychoreo.git@feature/compas_fab-integration#egg=pychoreo
-    #  - git+https://github.com/hungpham2511/toppra.git@master#egg=toppra
+     - git+https://github.com/createchaos/coop_assembly.git@master#egg=coop_assembly
+     # TODO: add ur_online_control here

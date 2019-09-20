@@ -1,8 +1,0 @@
-name: ur_online_control_ws
-
-channels: 
-  - anaconda
-
-dependencies:
-   - python=2.7
-  #  - pip=19.0.1
