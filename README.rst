@@ -166,6 +166,19 @@ Try running them from the *Conda Prompt*. Depending on how you installed Anacond
 
 Make sure you have opened Rhino 6 and Grasshopper at least once, so that it finishes setting up all its internal folder structure.
 
+..
+
+    Q: Windows error...
+
+Make sure you enter the correct python path in the GH file. An easy way to obtain
+the path is to type ``where python`` in your conda prompt after you activate ``coop_assembly_ws``.
+
+..
+
+    Q: Fault
+
+Uninstall V-Ray for Rhinoceros 5 x64 adv.
+
 Updating packages
 -----------------
 
