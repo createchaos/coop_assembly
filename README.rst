@@ -59,7 +59,7 @@ Type in the following commands in your Anaconda terminal
 ::
 
     git clone https://github.com/createchaos/coop_assembly.git
-    cd test_envs
+    cd coop_assembly/test_envs
     conda env create -f coop_assembly_ws.yml
 
 Wait for the building process to finish, the command above will
