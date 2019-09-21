@@ -172,7 +172,7 @@ def correct_angle(pt_new, pt_int, pl_test):
 
 
 def calc_correction_vector_tip(b_struct, pt_new, pt_base_1, pt_base_2, pt_base_3):
-
+    print("correcting")
     vec_x   = normalize_vector(vector_from_points(pt_base_1, pt_base_2))
     vec_y   = normalize_vector(vector_from_points(pt_base_1, pt_base_3))
     vec_z   = normalize_vector(cross_vectors(vec_x, vec_y))
@@ -182,8 +182,8 @@ def calc_correction_vector_tip(b_struct, pt_new, pt_base_1, pt_base_2, pt_base_3
     dist_p  = distance_point_plane(pt_new, pl_test)
     pt_proj = project_point_plane(pt_new, pl_test)
 
-    if dist_p < 400:
-        vec_m   = scale_vector(normalize_vector(vector_from_points(pt_proj, pt_new)), 400)
+    if dist_p < 80:
+        vec_m   = scale_vector(normalize_vector(vector_from_points(pt_proj, pt_new)), 80)
         pt_n    = add_vectors(pt_proj, vec_m)
     else: pt_n = None
 
