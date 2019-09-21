@@ -321,13 +321,13 @@ def add_tetra(o_struct, b_struct, nodes, comb_bars_1, comb_bars_2, comb_bars_3, 
         o_n_new     = o_struct.add_node(pt_new)
     
     ### check length of bar and adjust gripper position ###
-    pt_bar_1    = b_struct.vertex[b_v0]["axis_endpoints"]
-    pt_bar_2    = b_struct.vertex[b_v1]["axis_endpoints"]
-    pt_bar_3    = b_struct.vertex[b_v2]["axis_endpoints"]
+    # pt_bar_1    = b_struct.vertex[b_v0]["axis_endpoints"]
+    # pt_bar_2    = b_struct.vertex[b_v1]["axis_endpoints"]
+    # pt_bar_3    = b_struct.vertex[b_v2]["axis_endpoints"]
     
-    adjust_gripping_plane(pt_bar_1, pt_new, b_struct, b_v0)
-    adjust_gripping_plane(pt_bar_2, pt_new, b_struct, b_v1)
-    adjust_gripping_plane(pt_bar_3, pt_new, b_struct, b_v2)
+    # adjust_gripping_plane(pt_bar_1, pt_new, b_struct, b_v0)
+    # adjust_gripping_plane(pt_bar_2, pt_new, b_struct, b_v1)
+    # adjust_gripping_plane(pt_bar_3, pt_new, b_struct, b_v2)
     ### ###
     
     if bool_add:
