@@ -250,19 +250,19 @@ Update ``coop_assembly``:
 
 ::
 
-    pip install git+https://github.com/createchaos/coop_assembly.git@master#egg=coop_assembly
+    pip install --upgrade git+https://github.com/createchaos/coop_assembly.git@master#egg=coop_assembly
 
 Update ``pychoreo``:
 
 ::
 
-    pip install git+https://github.com/yijiangh/pychoreo.git@feature/compas_fab-integration#egg=pychoreo
+    pip install --upgrade git+https://github.com/yijiangh/pychoreo.git@feature/compas_fab-integration#egg=pychoreo
 
 Update ``compas_fab``:
 
 ::
 
-    pip install git+https://github.com/yijiangh/compas_fab.git@feature/dms2019_ws#egg=compas_fab
+    pip install --upgrade git+https://github.com/yijiangh/compas_fab.git@feature/dms2019_ws#egg=compas_fab
 
 Credits
 -------
