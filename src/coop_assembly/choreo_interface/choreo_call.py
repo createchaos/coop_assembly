@@ -7,7 +7,7 @@ import numpy as np
 
 from itertools import product
 
-from compas.geometry import Frame
+from compas.geometry import Frame, Transformation
 from compas.geometry import Translation
 from compas.datastructures import Mesh
 from compas.robots import LocalPackageMeshLoader
@@ -27,9 +27,10 @@ from compas_fab.robots import JointTrajectoryPoint, JointTrajectory
 from compas_fab.backends.pybullet import attach_end_effector_geometry, \
     convert_mesh_to_pybullet_body, get_TCP_pose, create_pb_robot_from_ros_urdf, \
     convert_meshes_and_poses_to_pybullet_bodies, sanity_check_collisions, \
-    pb_pose_from_Transformation
+    pb_pose_from_Transformation, Frame_from_pb_pose
 
-from compas_fab.backends.ros.plugins_choreo import load_assembly_package, display_picknplace_trajectories
+from compas_fab.backends.ros.plugins_choreo import load_assembly_package, display_picknplace_trajectories, \
+   compute_forward_kinematics
 
 from conrob_pybullet import load_pybullet, connect, disconnect, wait_for_user, \
     LockRenderer, has_gui, get_model_info, get_pose, euler_from_quat, draw_pose, \
@@ -42,6 +43,24 @@ from choreo.choreo_utils import plan_joint_motion, get_collision_fn
 
 import ikfast_ur3
 import ikfast_ur5
+
+def get_TCP_pose_from_joint_values(joint_values, robot_model='ur3', tcp_tf_list=[1e-3 * 80.525, 0, 0]):
+    if robot_model == 'ur3':
+        fk_fn = ikfast_ur3.get_fk
+    elif robot_model == 'ur5':
+        fk_fn = ikfast_ur5.get_fk
+    else:
+        raise ValueError('Not supported robot model!')
+    pb_pose = compute_forward_kinematics(fk_fn, joint_values)
+    mount_frame = Frame_from_pb_pose(pb_pose)
+    if tcp_tf_list:
+        world_from_mount = Transformation.from_frame(mount_frame)
+        mount_from_TCP = Translation(tcp_tf_list)
+        TCP_frame = Frame.from_transformation(\
+            Transformation.concatenate(world_from_mount, mount_from_TCP))
+        return TCP_frame.to_data()
+    else:
+        return mount_frame.to_data()
 
 
 def single_place_check(

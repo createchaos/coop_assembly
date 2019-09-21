@@ -51,15 +51,15 @@ Working in a conda environment
 
 It is recommended to set up a conda environment to create a clean, isolated space for
 installing all the required python packages. We've provided a conda environment file
-to make this process easy - please do the following two steps:
+to make this process easy - please do the following steps:
 
-1. First download the conda env yaml file `here <./test_envs/coop_assembly_ws.yml>`_ to any of your local directory.
-2. Type in the following commands in your Anaconda terminal 
-   (search for ``Anaconda Prompt`` in the Windows search bar):
+Type in the following commands in your Anaconda terminal 
+(search for ``Anaconda Prompt`` in the Windows search bar):
 
 ::
 
-    # cd to the path where you save the yml file
+    git clone https://github.com/createchaos/coop_assembly.git
+    cd test_envs
     conda env create -f coop_assembly_ws.yml
 
 Wait for the building process to finish, the command above will
@@ -83,6 +83,7 @@ Great - we are almost there! Now type `python` in your Anaconda Prompt, and test
     >>> import compas_fab
     >>> import pybullet
     >>> import coop_assembly
+    >>> import ikfast_ur5
 
 If that doesn't fail, you're good to go! Exit the python interpreter (either typing `exit()` or pressing `CTRL+Z` followed by `Enter`).
 
@@ -95,7 +96,7 @@ and then **restart Rhino**:
 ::
 
     python -m compas_rhino.install
-    python -m compas_rhino.install -p coop_assembly compas_fab roslibpy
+    python -m compas_rhino.install -p coop_assembly ur_online_control compas_fab roslibpy
 
 And you should be able to see outputs like:
 
@@ -166,18 +167,63 @@ Try running them from the *Conda Prompt*. Depending on how you installed Anacond
 
 Make sure you have opened Rhino 6 and Grasshopper at least once, so that it finishes setting up all its internal folder structure.
 
+------------
+
 ..
 
-    Q: Windows error...
+    Q: Windows error in the Grasshopper rpc call.
 
 Make sure you enter the correct python path in the GH file. An easy way to obtain
 the path is to type ``where python`` in your conda prompt after you activate ``coop_assembly_ws``.
 
+.. image:: docs/images/windows_error.png
+   :scale: 50 %
+   :alt: GH windows error
+   :align: center
+
+------------
+
 ..
 
-    Q: Fault
+    Q: Runtime error: Fault in the Grasshopper rpc call.
 
-Uninstall V-Ray for Rhinoceros 5 x64 adv.
+.. image:: docs/images/GH_runtime_error_fault.png
+   :scale: 50 %
+   :alt: GH_runtime_error_fault
+   :align: center
+
+Try the following:
+
+1. If you have V-Ray installed, uninstall V-Ray for Rhinoceros and 
+   restart your computer.
+2. If the problem persists after retrying, first open your Task Manager and
+   end all ``Python`` processes.
+
+   Then in your activated conda environment, run:
+
+    ::
+
+        cd docs/gh_example_instructions
+        python rpc_test.py
+
+    It should print the following:
+
+    ::
+
+        Starting a new proxy server...
+        New proxy server started.
+
+    Then, retry opening the Grasshopper file.
+
+------------
+
+..
+
+    Q: In Xfunc call, error message "Cannot find DLL specified. (_Arpack ...)"
+
+This happens because some previous calls blocked the ``scipy`` complied libraries.
+For a temporal fix, in your conda environment, uninstall ``pip install scipy`` and
+then ``pip install scipy=1.3.1`` works.
 
 Updating packages
 -----------------

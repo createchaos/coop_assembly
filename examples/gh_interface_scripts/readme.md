@@ -1,1 +1,0 @@
-In this folder, Yijiang put some of his testing Grasshopper scripts for interfacing with `coop_assembly`.

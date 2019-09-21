@@ -19,4 +19,4 @@ dependencies:
      - git+https://github.com/yijiangh/ikfast_pybind.git@master#egg=ikfast_pybind
      - git+https://github.com/yijiangh/pychoreo.git@feature/compas_fab-integration#egg=pychoreo
      - git+https://github.com/createchaos/coop_assembly.git@master#egg=coop_assembly
-     # TODO: add ur_online_control here
+     - git+https://github.com/createchaos/ur_online_control.git@feature/pip_install#egg=ur_online_control
