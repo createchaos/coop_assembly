@@ -247,7 +247,7 @@ def sequenced_picknplace_plan(assembly_json_path,
     if has_gui() and view_ikfast:
         TCP_pb_pose = get_TCP_pose(pb_robot, ee_link_name, tcp_tf, return_pb_pose=True)
         handles = draw_pose(TCP_pb_pose, length=0.04)
-        wait_for_user()
+        # wait_for_user()
 
     # deliver ros collision meshes to pybullet
     so_lists_from_name = convert_meshes_and_poses_to_pybullet_bodies(co_dict)
@@ -511,8 +511,8 @@ def sequenced_picknplace_plan(assembly_json_path,
     print('\n*************************\nplanning completed.')
 
     if sim_traj and has_gui():
-        if has_gui():
-            wait_for_user()
+    #     if has_gui():
+    #         wait_for_user()
 
         for e_id in element_seq.values():
             for e_body in unit_geos[e_id].pybullet_bodies:
