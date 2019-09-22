@@ -293,7 +293,8 @@ def sequenced_picknplace_plan(assembly_json_path,
         from_seq_id=from_seq_id, to_seq_id=to_seq_id,
         pick_from_same_rack=pick_from_same_rack,
         tcp_transf=pb_pose_from_Transformation(tcp_tf),
-        ee_attachs=ee_attachs, disabled_collision_link_names=disabled_link_names, viz=view_ikfast, st_conf=robot_start_conf)
+        ee_attachs=ee_attachs, disabled_collision_link_names=disabled_link_names, viz=view_ikfast, st_conf=robot_start_conf,
+        num_cart_steps=num_cart_steps)
 
     picknplace_cart_plans = divide_nested_list_chunks(tot_traj, graph_sizes)
 
