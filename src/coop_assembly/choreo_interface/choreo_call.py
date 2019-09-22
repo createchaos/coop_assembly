@@ -67,7 +67,7 @@ def single_place_check(
     seq_id, assembly_json_path, customized_sequence=[],
     num_cart_steps=10,
     robot_model='ur3', enable_viewer=True, view_ikfast=False,
-    tcp_tf_list=[1e-3 * 80.525, 0, 0], scale=1, diagnosis=False):
+    tcp_tf_list=[1e-3 * 80.525, 0, 0], scale=1, diagnosis=False, viz_time_gap=0.5):
 
     # # rescaling
     # # TODO: this should be done when the Assembly object is made
@@ -164,7 +164,7 @@ def single_place_check(
                 static_obstacles=static_obstacles, self_collisions=True,
                 mount_link_from_tcp_pose=pb_pose_from_Transformation(tcp_tf), 
                 ee_attachs=ee_attachs, viz=view_ikfast, 
-                disabled_collision_link_names=disabled_link_names, diagnosis=diagnosis)
+                disabled_collision_link_names=disabled_link_names, diagnosis=diagnosis, viz_time_gap=viz_time_gap)
 
 def sequenced_picknplace_plan(assembly_json_path,
     robot_model='ur3', pick_from_same_rack=True, 
@@ -174,7 +174,7 @@ def sequenced_picknplace_plan(assembly_json_path,
     enable_viewer=True, plan_transit=True, transit_res=0.01, view_ikfast=False,
     tcp_tf_list=[1e-3 * 80.525, 0, 0], robot_start_conf = [0,-1.65715,1.71108,-1.62348,0,0],
     scale=1, result_save_path='',
-    sim_traj=True, cart_ts=0.1, trans_ts=0.01, per_conf_step=False):
+    sim_traj=True, cart_ts=0.1, trans_ts=0.01, per_conf_step=False, step_sim=False):
 
     # parser.add_argument('-vik', '--view_ikfast', action='store_true', help='Visualize each ikfast solutions')
     # parser.add_argument('-per_conf_step', '--per_conf_step', action='store_true', help='stepping each configuration in simulation')
@@ -333,7 +333,7 @@ def sequenced_picknplace_plan(assembly_json_path,
                 tr_start_conf = robot_start_conf
 
             place2pick_st_conf = list(tr_start_conf)
-            assert picknplace_cart_plans[seq_id-from_seq_id]['pick_approach'], 'pick approach not found!'
+            assert picknplace_cart_plans[seq_id-from_seq_id]['pick_approach'], 'pick approach not found in sequence {} (element id: {})!'.format(seq_id, e_id)
             place2pick_goal_conf = list(picknplace_cart_plans[seq_id-from_seq_id]['pick_approach'][0])
 
             saved_world = WorldSaver()
@@ -382,8 +382,8 @@ def sequenced_picknplace_plan(assembly_json_path,
                 saved_world.restore()
                 print('Diagnosis over')
 
-            assert picknplace_cart_plans[seq_id-from_seq_id]['pick_retreat'], 'pick retreat not found!'
-            assert picknplace_cart_plans[seq_id-from_seq_id]['place_approach'], 'place approach not found!'
+            assert picknplace_cart_plans[seq_id-from_seq_id]['pick_retreat'], 'pick retreat not found! in sequence {} (element id: {})!'.format(seq_id, e_id)
+            assert picknplace_cart_plans[seq_id-from_seq_id]['place_approach'], 'place approach not found! in sequence {} (element id: {})!'.format(seq_id, e_id)
             pick2place_st_conf = picknplace_cart_plans[seq_id-from_seq_id]['pick_retreat'][-1]
             pick2place_goal_conf = picknplace_cart_plans[seq_id-from_seq_id]['place_approach'][0]
 
@@ -524,7 +524,7 @@ def sequenced_picknplace_plan(assembly_json_path,
                                         from_seq_id=from_seq_id, to_seq_id=to_seq_id,
                                         ee_attachs=ee_attachs,
                                         cartesian_time_step=cart_ts, 
-                                        transition_time_step=trans_ts, step_sim=True, per_conf_step=per_conf_step)
+                                        transition_time_step=trans_ts, step_sim=step_sim, per_conf_step=per_conf_step)
 
     return traj_json_data
 
@@ -533,7 +533,7 @@ def viz_saved_traj(traj_save_path, assembly_json_path,
     element_seq,
     from_seq_id, to_seq_id,
     cart_ts=0.01, trans_ts=0.01,
-    scale=0.001,  robot_model='ur3', per_conf_step=False):
+    scale=0.001,  robot_model='ur3', per_conf_step=False, step_sim=False):
 
     assert os.path.exists(traj_save_path) and os.path.exists(assembly_json_path)
     # rescaling
@@ -594,6 +594,6 @@ def viz_saved_traj(traj_save_path, assembly_json_path,
                                         from_seq_id=from_seq_id, to_seq_id=to_seq_id,
                                         ee_attachs=ee_attachs,
                                         cartesian_time_step=cart_ts, 
-                                        transition_time_step=trans_ts, step_sim=True, per_conf_step=per_conf_step)
+                                        transition_time_step=trans_ts, step_sim=step_sim, per_conf_step=per_conf_step)
     else:
         print('no saved traj found at: ', traj_save_path)
