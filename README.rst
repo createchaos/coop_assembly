@@ -251,6 +251,7 @@ Update ``coop_assembly``:
 ::
 
     pip install --upgrade git+https://github.com/createchaos/coop_assembly.git@master#egg=coop_assembly
+    python -m compas_rhino.install -p coop_assembly
 
 Update ``pychoreo``:
 
@@ -263,6 +264,7 @@ Update ``compas_fab``:
 ::
 
     pip install --upgrade git+https://github.com/yijiangh/compas_fab.git@feature/dms2019_ws#egg=compas_fab
+    python -m compas_rhino.install -p compas_fab
 
 Credits
 -------

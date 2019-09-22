@@ -1,7 +1,7 @@
 __title__ = 'coop_assembly'
 __description__ = 'Geometry generation of robotically assembled spatial structures'
 __url__ = 'https://github.com/createchaos/coop_assembly'
-__version__ = '0.0.2'
+__version__ = '0.0.3'
 __author__ = 'Stefana Parascho'
 __author_email__ = 'parascho@princeton.edu'
 __license__ = 'MIT license'

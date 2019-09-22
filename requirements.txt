@@ -1,2 +1,2 @@
 scipy
-compas >= 0.7.0
+compas >= 0.7.2
