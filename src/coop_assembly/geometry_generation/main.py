@@ -80,6 +80,8 @@ def main():
 def main_gh_simple(points, dict_nodes, radius, sup_nodes=None, sup_bars=None, l_bars=None, load=None, 
     check_col=False, correct=True, use_xfunc=True, python_path='pythonw'):
     """ghpython entry point, xfunc or rpc call is made here.
+
+    Note: sup_nodes ~ load parameters are not used in the DMS workshop.
     
     Parameters
     ----------
@@ -89,14 +91,8 @@ def main_gh_simple(points, dict_nodes, radius, sup_nodes=None, sup_bars=None, l_
         [description]
     radius : float
         radius of the rod's cross section
-    sup_nodes : [type], optional
-        [description], by default None
-    sup_bars : [type], optional
-        support bars, by default None
-    l_bars : [type], optional
-        [description], by default None
-    load : list of float, optional
-        [description], by default None
+    correct : bool, optional
+        [description], by default True
     check_col : bool, optional
         [description], by default False
     

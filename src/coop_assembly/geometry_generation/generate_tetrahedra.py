@@ -124,6 +124,54 @@ def generate_first_tri(o_struct, b_struct, r, points = None):
 
 
 def generate_structure_from_points(o_struct, b_struct, r, points, dict_nodes, supports = None, loads = None, correct=True, load=None, check_col=False):
+    """main entry function for the generation system
+    
+    Parameters
+    ----------
+    o_struct : [type]
+        an empty OverallStructure to be written
+    b_struct : [type]
+        an empty Bar_Structure to be written
+    r : [type]
+        [description]
+    points : [type]
+        [description]
+    dict_nodes : [type]
+        [description]
+    supports : [type], optional
+        [description], by default None
+    loads : [type], optional
+        [description], by default None
+    correct : bool, optional
+        [description], by default True
+    load : [type], optional
+        [description], by default None
+    check_col : bool, optional
+        [description], by default False
+    """
+    # * topology editing rule
+    # sequential adding of tet onto one face of an existing tet
+    # a new node is added at each step, with three more new elements (three-bar-group)
+
+    # * connection
+    # only two bars are joined at one point
+    # double-tangent connection
+    # each new bar connects to two existing bars in two joints
+
+    # notation (see p56 of SP dissertation)
+    # vertex point: approximated point for a node in an idealised geometry
+    # node: a container of sub-nodes representing the physical realization of a vertex point
+    # sub-node: a polygon (triangle) resulting when two new joints are added for a new bar
+    # joint: a physical connection point where two bars touch and joined
+
+    # input for the calculation of the three new bars:
+    # 1. vertex points that represent the new node's location
+    # 2. three pairs of bar axes of the existing bars that the three new bars will connect to their base
+
+    # collision checks
+    # parameters: connection side of the bar, existing bars of the node that the new bar is connecting to
+    # the process iterates through over all four possible connection sides, and consequently runs through
+    # all possible bar pairs that a new bar connect to in a side
 
     generate_first_tri(o_struct, b_struct, r, points)
     # generate_structure_points(o_struct, b_struct, points, dict_nodes, r, correct=correct, check_col=check_col)

@@ -54,6 +54,26 @@ def execute():
 
 def execute_from_points(points, dict_nodes, radius, support_nodes=None, support_bars=None, 
                         load_bars=None, load=None, check_col=False, correct=True):
+    """Main entry point for the design system, for rpc call
+    
+    Parameters
+    ----------
+    points : [type]
+        [description]
+    dict_nodes : [type]
+        [description]
+    radius : [type]
+        [description]
+    check_col : bool, optional
+        [description], by default False
+    correct : bool, optional
+        [description], by default True
+    
+    Returns
+    -------
+    [type]
+        [description]
+    """
     print("execute from points")
     # in millimeter?
     # r = 12.5 # 2.0 | 30.0

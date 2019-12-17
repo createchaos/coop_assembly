@@ -2,12 +2,11 @@ name: coop_assembly_ws
 
 channels:
     - conda-forge
-    - anaconda
 
 dependencies:
    - python=3.6
    - pip=19.0.1
-   - compas=0.7.2
+   - compas
    - numpy
    - scipy
    - roslibpy>=0.6.0
