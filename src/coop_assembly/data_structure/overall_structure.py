@@ -10,6 +10,8 @@
                                            
 created on 28.06.2019
 author: stefanaparascho
+
+edited on 17.12.2019 by Yijiang Huang, yijiangh@mit.edu
 '''
 
 from compas.datastructures.network import Network

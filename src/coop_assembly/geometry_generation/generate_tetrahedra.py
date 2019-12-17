@@ -10,6 +10,8 @@
                                            
 created on 30.06.2019
 author: stefanaparascho
+
+edited on 17.12.2019 by Yijiang Huang, yijiangh@mit.edu
 '''
 
 import random
@@ -163,7 +165,7 @@ def generate_first_tri(o_struct, b_struct, radius, base_tri_pts, base_tri_ids):
 
 
 def generate_structure_from_points(o_struct, b_struct, radius, points, tet_node_ids, 
-    correct=True, check_col=False):
+    correct=True, check_collision=False):
     """main entry function for the generation system
     
     Parameters
@@ -254,12 +256,12 @@ def generate_structure_from_points(o_struct, b_struct, radius, points, tet_node_
 
         dir_factor = 1
         add_tetra(o_struct, b_struct, tri_node_ids, comb_1, comb_2, comb_3,
-                  dir_factor, vertex_pt, new_vertex_id, radius, correct=correct, check_col=check_col)
+                  dir_factor, vertex_pt, new_vertex_id, radius, correct=correct, check_collision=check_collision)
 
 
 def add_tetra(o_struct, b_struct, tri_node_ids, comb_bars_1, comb_bars_2, comb_bars_3, 
     dir_factor, new_vertex_pt, new_vertex_id, radius, 
-    b_v0=None, b_v1=None, b_v2=None, bool_add=True, o_v_key=None, correct=True, check_col=False):
+    b_v0=None, b_v1=None, b_v2=None, bool_add=True, o_v_key=None, correct=True, check_collision=False):
     
     # adds a new point and tetrahedron to the structure
     # input: nodes, bars from o_struct as vertex_key_integer and edge_vertex_key_tuples 
@@ -341,10 +343,10 @@ def add_tetra(o_struct, b_struct, tri_node_ids, comb_bars_1, comb_bars_2, comb_b
                                (b_v1_1, b_v1_2), (b_v2_1, b_v2_2), (b_v3_1, b_v3_2))
         if bool_add:
             ret_ft = first_tangent(pt1, b1_1, b1_2, pt_mean_1, max_len,
-                                b_v1_1, b_v1_2, b_struct, pt_mean, radius, check_col=check_col)
+                                b_v1_1, b_v1_2, b_struct, pt_mean, radius, check_col=check_collision)
         else:
             ret_ft = first_tangent(pt1, b1_1, b1_2, pt_mean_1, max_len,
-                                b_v1_1, b_v1_2, b_struct, pt_mean, radius, b_v0, check_col=check_col)
+                                b_v1_1, b_v1_2, b_struct, pt_mean, radius, b_v0, check_col=check_collision)
         
         if ret_ft:
             b_v0, end_pts_0        = ret_ft
@@ -369,10 +371,10 @@ def add_tetra(o_struct, b_struct, tri_node_ids, comb_bars_1, comb_bars_2, comb_b
                                (b_v1_1, b_v1_2), (b_v2_1, b_v2_2), (b_v3_1, b_v3_2))
         if bool_add:
             ret_st = second_tangent(b2_1, b2_2, pt_mean_2, b_v2_1, b_v2_2,
-                                    b_struct, b_v0, pt1, radius, max_len, pt_mean, check_col=check_col)
+                                    b_struct, b_v0, pt1, radius, max_len, pt_mean, check_col=check_collision)
         else:
             ret_st = second_tangent(b2_1, b2_2, pt_mean_2, b_v2_1, b_v2_2,
-                                    b_struct, b_v0, pt1, radius, max_len, pt_mean, b_v1, check_col=check_col)
+                                    b_struct, b_v0, pt1, radius, max_len, pt_mean, b_v1, check_col=check_collision)
         if ret_st:
             b_v1, pt2, end_pts_1    = ret_st
             break
@@ -398,10 +400,10 @@ def add_tetra(o_struct, b_struct, tri_node_ids, comb_bars_1, comb_bars_2, comb_b
                                (b_v1_1, b_v1_2), (b_v2_1, b_v2_2), (b_v3_1, b_v3_2))
         if bool_add:
             ret_tt = third_tangent(b_struct, b_v0, b_v1, b3_1, b3_2, pt_mean_3,
-                                max_len, b_v3_1, b_v3_2, pt_mean, radius, check_col=check_col)
+                                max_len, b_v3_1, b_v3_2, pt_mean, radius, check_col=check_collision)
         else:
             ret_tt = third_tangent(b_struct, b_v0, b_v1, b3_1, b3_2, pt_mean_3,
-                                max_len, b_v3_1, b_v3_2, pt_mean, radius, b_v2, check_col=check_col)
+                                max_len, b_v3_1, b_v3_2, pt_mean, radius, b_v2, check_col=check_collision)
         if ret_tt:
             b_v2, pt3, end_pts_2    = ret_tt
             break

@@ -1,3 +1,18 @@
+'''
+                                                                                                 
+    ****       *****       ******       ****       ******  ******          **           **       
+   **  **      **  **      **          **  **        **    **              **           **       
+   **          *****       ****        ******        **    ****            **   *****   *****    
+   **  **      **  **      **          **  **        **    **              **  **  **   **  **   
+    ****   **  **  **  **  ******  **  **  **  **    **    ******          **   ******  *****    
+                           
+                                           
+created on 28.06.2019
+author: stefanaparascho
+
+edited on 17.12.2019 by Yijiang Huang, yijiangh@mit.edu
+'''
+
 from compas.datastructures.network import Network
 from compas.geometry import is_point_on_line
 from coop_assembly.help_functions.helpers_geometry import dropped_perpendicular_points, find_points_extreme
