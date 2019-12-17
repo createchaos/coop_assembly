@@ -52,18 +52,17 @@ def execute():
     return (b_struct.data, o_struct.data)
 
 
-def execute_from_points(points, dict_nodes, radius, support_nodes=None, support_bars=None, 
-                        load_bars=None, load=None, check_col=False, correct=True):
+def execute_from_points(points, tet_node_ids, radius, check_col=False, correct=True):
     """Main entry point for the design system, for rpc call
     
     Parameters
     ----------
     points : [type]
         [description]
-    dict_nodes : [type]
-        [description]
+    tet_node_ids : list
+        [[(base triangle vertex ids), new vertex id], ...]
     radius : [type]
-        [description]
+        rod radius in millimeter
     check_col : bool, optional
         [description], by default False
     correct : bool, optional
@@ -71,18 +70,12 @@ def execute_from_points(points, dict_nodes, radius, support_nodes=None, support_
     
     Returns
     -------
-    [type]
-        [description]
+    (Overall_Structure.data, Bar_Structure.data)
+        Serialized version of the overall structure and bar structure
     """
-    print("execute from points")
-    # in millimeter?
-    # r = 12.5 # 2.0 | 30.0
-
     b_struct    = Bar_Structure()
     o_struct    = Overall_Structure(b_struct)
-    # o_struct, b_struct, r, points, dict_nodes, supports = None, loads = None, correct=True, load=None, check_col=False
-    generate_structure_from_points(o_struct, b_struct, radius, points, dict_nodes, supports = support_bars,
-                         loads = load, correct=correct, load=load, check_col=check_col)
+    generate_structure_from_points(o_struct, b_struct, radius, points, tet_node_ids, 
+        correct=correct, check_col=check_col)
 
-    # print("return execute", b_struct)   
     return (b_struct.data, o_struct.data)
