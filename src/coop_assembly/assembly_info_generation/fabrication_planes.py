@@ -63,7 +63,7 @@ def generate_planes_no_glue(b_struct, r, iterations, pickup_station_0, mill_stat
 
     return frames
 
-# things to fix:  pickup rotation angle, why is the starting position already rotated
+# TODO: SP: things to fix:  pickup rotation angle, why is the starting position already rotated
 
 def generate_planes_glue(b_struct, r, pickup_station_0, iterations, start_position, end_position):
 
@@ -356,10 +356,7 @@ def bar_regrip(b_struct, index, pickup_station_0):
     return offset_plane_1, place_plane_1, offset_tool_1, offset_plane_1, offset_plane_2, offset_tool_2, pick_plane_2, offset_plane_2
 
 
-
-
 def calculate_offset(o_struct, b_struct, v_key, d_o_1, d_o_2, seq):
-
     v_pos = seq.index(v_key)
     int_v = 2 - v_pos % 3
     v_pos_max = v_pos + int_v
@@ -374,11 +371,8 @@ def calculate_offset(o_struct, b_struct, v_key, d_o_1, d_o_2, seq):
                 break
         if o_edge: break
 
-
     cons_1      = find_connectors(o_struct, o_edge[0])
     cons_2      = find_connectors(o_struct, o_edge[1])
-
-
 
     #for c in cons_1:
     #cons_all_1  = [c for c in cons_1 if c[0] <= v_key_max and c[1] <= v_key_max and (c[0] == v_key or c[1] == v_key)]

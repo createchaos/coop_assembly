@@ -19,7 +19,8 @@ import itertools
 import math
 import warnings
 
-from compas.geometry.basic import add_vectors, normalize_vector, vector_from_points, scale_vector, cross_vectors, subtract_vectors
+from compas.geometry.basic import add_vectors, normalize_vector, vector_from_points, scale_vector, \
+    cross_vectors, subtract_vectors
 from compas.geometry.distance import distance_point_point
 from compas.geometry.transformations import rotate_points
 from compas.geometry.angles import angle_vectors
@@ -234,7 +235,8 @@ def generate_structure_from_points(o_struct, b_struct, radius, points, tet_node_
         vertex_pt = points[new_vertex_id]
 
         # ? does the order of the vertex in the base triangle matter?
-        assert o_struct.has_vertex(tri_node_ids[0]), 'base triangle vertex 0 not added to the OverallStructure! key: {}'.format(o_struct.vertex.keys())
+        assert o_struct.has_vertex(tri_node_ids[0]), 'base triangle vertex 0: ({}) not added to the OverallStructure! key: {}'.format(
+            tri_node_ids[0], o_struct.vertex.keys())
         list_bars_1 = o_struct.vertex_connected_edges(tri_node_ids[0])
         # all combination of two bars connected to the o_vertex
         com_bars_1 = itertools.combinations(list_bars_1, 2)
@@ -242,21 +244,24 @@ def generate_structure_from_points(o_struct, b_struct, radius, points, tet_node_
         comb_1 = [x for x in com_bars_1]
         comb_1.reverse()
 
-        assert o_struct.has_vertex(tri_node_ids[1]), 'base triangle vertex 1 not added to the OverallStructure! {}'.format(o_struct.vertex.keys())
+        assert o_struct.has_vertex(tri_node_ids[1]), 'base triangle vertex 1: ({}) not added to the OverallStructure! {}'.format(
+            tri_node_ids[1], o_struct.vertex.keys())
         list_bars_2 = o_struct.vertex_connected_edges(tri_node_ids[1])
         com_bars_2 = itertools.combinations(list_bars_2, 2)
         comb_2 = [x for x in com_bars_2]
         comb_2.reverse()
 
-        assert o_struct.has_vertex(tri_node_ids[2]), 'base triangle vertex 2 not added to the OverallStructure! {}'.format(o_struct.vertex.keys())
+        assert o_struct.has_vertex(tri_node_ids[2]), 'base triangle vertex 2: ({}) not added to the OverallStructure! {}'.format(
+            tri_node_ids[2], o_struct.vertex.keys())
         list_bars_3 = o_struct.vertex_connected_edges(tri_node_ids[2])
         com_bars_3 = itertools.combinations(list_bars_3, 2)
         comb_3 = [x for x in com_bars_3]
         comb_3.reverse()
 
         dir_factor = 1
-        add_tetra(o_struct, b_struct, tri_node_ids, comb_1, comb_2, comb_3,
-                  dir_factor, vertex_pt, new_vertex_id, radius, correct=correct, check_collision=check_collision)
+        assert add_tetra(o_struct, b_struct, tri_node_ids, comb_1, comb_2, comb_3,
+                         dir_factor, vertex_pt, new_vertex_id, radius, correct=correct, check_collision=check_collision), \
+               'Tet generation fails at #{} ({}) -> {}'.format(tet_id, tri_node_ids, new_vertex_id)
 
 
 def add_tetra(o_struct, b_struct, tri_node_ids, comb_bars_1, comb_bars_2, comb_bars_3, 
