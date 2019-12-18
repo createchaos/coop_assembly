@@ -20,7 +20,20 @@ from compas.geometry.angles import angle_vectors
 from compas.geometry.distance import distance_point_point, distance_point_plane
 from compas.geometry.queries import is_point_on_line
 from compas.geometry.transformations import project_point_plane, translate_points
+from coop_assembly.help_functions.shared_const import TOL
 
+
+###############################################
+
+def find_point_id(query_pt, pts, tol=TOL):
+    ids = []
+    for id, pt in enumerate(pts):
+        if distance_point_point(query_pt, pt) < tol:
+            ids.append(id)
+    assert len(ids) == 1, 'duplicated pts!'
+    return ids[0]
+
+###############################################
 
 def calculate_coord_sys(end_pts, pt_mean):
     """construct local coordinate system for a line connecting two end_pts.

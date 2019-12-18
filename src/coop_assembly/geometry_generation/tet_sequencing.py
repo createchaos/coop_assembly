@@ -72,14 +72,6 @@ def compute_distance_from_grounded_node(elements, node_points, ground_node_ids):
                 heapq.heappush(queue, (cost2, node2))
     return cost_from_node
 
-def find_point_id(query_pt, pts, tol=TOL):
-    ids = []
-    for id, pt in enumerate(pts):
-        if query_pt.DistanceTo(pt) < tol:
-            ids.append(id)
-    assert len(ids) == 1, 'duplicated pts!'
-    return ids[0]
-
 def point2point_shortest_distance_tet_sequencing(points, cost_from_node):
     """generate a tet sequence by adding node one by one based on cost_from_node (ascending order)
     The base triangle for each node is chosen based on its Euclidean distance to the already added nodes (closest three).
@@ -102,14 +94,14 @@ def point2point_shortest_distance_tet_sequencing(points, cost_from_node):
     for pt_id, score in sorted(cost_from_node.items(), key=lambda item: item[1]):
         # if pt_id not in start_tri_ids and len(added_pt_ids) >= 3:
         if len(added_pt_ids) >= 3:
-            dists = [points[pt_id].DistanceTo(points[prev_node]) for prev_node in added_pt_ids]
+            dists = [distance_point_point(points[pt_id], points[prev_node]) for prev_node in added_pt_ids]
             # use distance to previous nodes to sort previous nodes' indices
             sorted_added_ids = [added_id for dist, added_id in sorted(zip(dists, added_pt_ids)) \
                 if added_id != pt_id]
             assert len(sorted_added_ids) >= 3
             # take the top three nodes
             closest_node_ids = sorted_added_ids[0:3]
-            tet_node_ids.append(closest_node_ids + [pt_id])
+            tet_node_ids.append((closest_node_ids, pt_id))
         assert pt_id not in added_pt_ids, 'pt_id: {} already in previously added pts: {}'.format(
             pt_id, added_pt_ids)
         added_pt_ids.append(pt_id)
@@ -122,20 +114,24 @@ def distance_point_triangle(point, tri_end_pts):
     return sum([distance_point_line(point, line) for line in lines])
 
 def compute_candidate_nodes(all_nodes, grounded_nodes, built_nodes):
+    print('all nodes: {}, grounded: {}, built nodes: {}'.format(all_nodes, grounded_nodes, built_nodes))
     if grounded_nodes <= built_nodes:
         nodes = built_nodes | set(grounded_nodes) # union
     else:
         # build grounded ones first
         nodes = grounded_nodes
-    return {node for node in set(nodes) - set(built_nodes)}
+    return {node for node in set(all_nodes) - set(built_nodes)} # if_buildable()
 
 def add_successors(queue, all_nodes, grounded_nodes, heuristic_fn, built_nodes, built_triangles):
     remaining = all_nodes - built_nodes
     num_remaining = len(remaining) - 1
     assert 0 <= num_remaining
-    for node_id in shuffle(compute_candidate_nodes(all_nodes, grounded_nodes, built_nodes)):
+    candidate_nodes = compute_candidate_nodes(all_nodes, grounded_nodes, built_nodes)
+    print('candidate nodes: {}'.format(candidate_nodes))
+    for node_id in candidate_nodes: # shuffle(list(candidate_nodes):
         # compute bias
         bias, tri_node_ids = heuristic_fn(built_nodes, node_id, built_triangles)
+        # print('bias: {}, tri_node_id: {}'.format(bias, tri_node_ids))
         priority = (num_remaining, bias, random.random())
         heapq.heappush(queue, (priority, built_nodes, built_triangles, node_id, tri_node_ids))
 
@@ -143,7 +139,7 @@ def get_heuristic_fn(points):
     def h_fn(built_nodes, node_id, built_triangles):
         # iterate through all existing triangles and return the minimal distance
         # TODO: this is wasteful...
-        dist_to_tri = [distance_point_triangle(points[node_id], [points[tri_id] for tri_id in tri]) for tri in list(built_triangles)]
+        dist_to_tri = [distance_point_triangle(points[node_id], [points[tri_id] for tri_id in list(tri)]) for tri in list(built_triangles)]
         sort_tris = sorted(zip(dist_to_tri, built_triangles))
         return sort_tris[0]
     return h_fn
@@ -152,15 +148,16 @@ def retrace_tet_sequence(visited, next_built_nodes):
     # recursive plan retrace
     pass
 
-def point2triangle_shortest_distance_tet_sequencing(points, ground_nodes):
-    all_nodes = frozenset(list(range(len(points))))
+def point2triangle_shortest_distance_tet_sequencing(points, base_triangle_node_ids):
+    all_nodes = frozenset(range(len(points)))
+    ground_nodes = frozenset(base_triangle_node_ids)
     assert len(ground_nodes) == 3, 'the grounded nodes need to form a triangle.'
     heuristic_fn = get_heuristic_fn(points)
 
     initial_built_nodes = frozenset(ground_nodes)
-    initial_built_triangles = set(frozenset(ground_nodes))
+    initial_built_triangles = set([frozenset(ground_nodes)])
     queue = []
-    visited = [initial_built_nodes]
+    visited = {initial_built_nodes : initial_built_triangles}
     add_successors(queue, all_nodes, ground_nodes, heuristic_fn, initial_built_nodes, initial_built_triangles)
 
     min_remaining = len(points)
@@ -176,12 +173,16 @@ def point2triangle_shortest_distance_tet_sequencing(points, ground_nodes):
             min_remaining = num_remaining
 
         print('Iteration: {} | Best: {} | Built: {}/{} | Node: {} | Triangle: {}'.format(
-            num_evaluated, min_remaining, len(built_nodes), len(all_nodes), node_id, tri_node_ids))
+            num_evaluated, min_remaining, len(built_nodes), len(all_nodes), node_id, list(tri_node_ids)))
         next_built_nodes = built_nodes | {node_id}
+        next_built_triangles = built_triangles | frozenset(tri_node_ids)
         if all_nodes <= next_built_nodes:
             min_remaining = 0
-            plan = retrace_tet_sequence(visited, next_built_nodes)
+            # plan = retrace_tet_sequence(visited, next_built_nodes)
+            print('plan found!')
             break
 
-        add_successors(queue, all_nodes, ground_nodes, heuristic_fn, built_nodes, built_triangles)
-    return plan
+        add_successors(queue, all_nodes, ground_nodes, heuristic_fn, next_built_nodes, next_built_triangles)
+    # return plan
+    tet_ids = []
+    return tet_ids
