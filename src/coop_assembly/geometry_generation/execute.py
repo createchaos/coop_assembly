@@ -15,55 +15,23 @@ author: stefanaparascho
 import pickle
 import time 
 
+from compas.utilities.xfunc import XFunc
 from coop_assembly.data_structure import Overall_Structure, Bar_Structure
 from coop_assembly.geometry_generation.generate_triangles import generate_structure
 from coop_assembly.geometry_generation.generate_tetrahedra import generate_first_tri, generate_structure_from_points
 from coop_assembly.help_functions.helpers_geometry import update_bar_lengths
 
-
-def execute():
-    print("execute")
-    bool_draw = True
-    try:
-        import compas_rhino
-    except: 
-        bool_draw = False
-
-    b_struct    = Bar_Structure()
-    o_struct    = Overall_Structure(b_struct)
-
-    r           = 12.5
-    # r = 0.1
-    extension   = 50
-    support_nodes = (0, 1, 2)
-    support_bars = [(0,1), (1,2), (2,0)]
-    load_bars = [(3,4)]
-    # load_bars = None
-
-    t1 = time.time()
-
-    generate_first_tri(o_struct, b_struct, r)
-
-    update_bar_lengths(b_struct)
-    generate_structure(o_struct, b_struct, bool_draw, r)
-    steps   = 3
-    # generate_structure(o_struct, b_struct, bool_draw, r, support_bars, load_bars, correct=False)
-    # print ("output",b_struct, o_struct)
-    return (b_struct.data, o_struct.data)
-
-
-def execute_from_points(points, dict_nodes, radius, support_nodes=None, support_bars=None, 
-                        load_bars=None, load=None, check_col=False, correct=True):
-    """Main entry point for the design system, for rpc call
+def execute_from_points(points, tet_node_ids, radius, check_collision=False, correct=True):
+    """Main entry point for the design system, for direct, xfunc or rpc call
     
     Parameters
     ----------
-    points : [type]
-        [description]
-    dict_nodes : [type]
-        [description]
-    radius : [type]
-        [description]
+    points : list of float lists
+        [[x,y,z], ...]
+    tet_node_ids : list
+        [[(base triangle vertex ids), new vertex id], ...]
+    radius : float
+        rod radius in millimeter
     check_col : bool, optional
         [description], by default False
     correct : bool, optional
@@ -71,18 +39,24 @@ def execute_from_points(points, dict_nodes, radius, support_nodes=None, support_
     
     Returns
     -------
-    [type]
-        [description]
+    (Overall_Structure.data, Bar_Structure.data)
+        Serialized version of the overall structure and bar structure
     """
-    print("execute from points")
-    # in millimeter?
-    # r = 12.5 # 2.0 | 30.0
-
     b_struct    = Bar_Structure()
     o_struct    = Overall_Structure(b_struct)
-    # o_struct, b_struct, r, points, dict_nodes, supports = None, loads = None, correct=True, load=None, check_col=False
-    generate_structure_from_points(o_struct, b_struct, radius, points, dict_nodes, supports = support_bars,
-                         loads = load, correct=correct, load=load, check_col=check_col)
+    generate_structure_from_points(o_struct, b_struct, radius, points, tet_node_ids, 
+        correct=correct, check_collision=check_collision)
 
-    # print("return execute", b_struct)   
     return (b_struct.data, o_struct.data)
+
+
+def xfunc_execute_from_points(points, tet_node_ids, radius, check_collision=False, correct=True, python_path='pythonw'):
+    """ghpython entry point, xfunc call is made here.
+
+    """
+    xfunc = XFunc(
+            'coop_assembly.geometry_generation.execute.execute_from_points', python=python_path)
+    xfunc(points, tet_node_ids, radius, check_collision=check_collision, correct=correct)
+    print('xfunc_entry: xfnc error: ', xfunc.error)
+    b_struct_data, o_struct_data = xfunc.data
+    return b_struct_data, o_struct_data

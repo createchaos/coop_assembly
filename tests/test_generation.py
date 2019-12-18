@@ -1,50 +1,37 @@
 import pytest
-from numpy.testing import assert_almost_equal, assert_equal
+from itertools import combinations
+from termcolor import cprint
 
-from compas.datastructures import Network
-from coop_assembly.data_structure import Overall_Structure, Bar_Structure
-from coop_assembly.geometry_generation import execute_from_points, main_gh_simple
+from coop_assembly.help_functions import find_point_id
+from coop_assembly.geometry_generation import compute_distance_from_grounded_node
+from coop_assembly.geometry_generation import point2point_shortest_distance_tet_sequencing
+from coop_assembly.geometry_generation import point2triangle_shortest_distance_tet_sequencing
+from coop_assembly.geometry_generation import execute_from_points
 
 @pytest.mark.gen_from_pts
-def test_generate_from_points():
-    points = [(866.02540378443905, 500.0, 0.0), (0.0, 0.0, 0.0), (0.0, 1000.0, 0.0), (288.67513720801298, 500.0, 818.08450024563103), \
-        (769.63370557686096, 1333.0446812766299, 544.74326601771895), (-160.70791990805799, 1388.88716089995, 907.16026675621299), \
-        (117.857296010868, 1981.4332041832699, 151.32258105017999), (-798.20078255574094, 1580.5022372901301, 160.91197525036301), \
-        (-560.70093861717601, 2300.5484023076901, 812.92987741903903), (-666.65502975497805, 2519.4354019355501, -176.536520678389), \
-        (58.742324089034398, 2934.6909001409299, 527.67951271342201)]
+@pytest.mark.parametrize('test_set_name', [('single_cube'), ])
+@pytest.mark.parametrize('radius', [(3.17), ])
+@pytest.mark.parametrize('pt_search_method', [('point2point'), ])
+# @pytest.mark.parametrize('pt_search_method', [('point2triangle'), ])
+# @pytest.mark.parametrize('pt_search_method', [('point2point'), ('point2triangle')])
+def test_generate_from_points(points_library, test_set_name, radius, pt_search_method):
+    points, base_tri_pts = points_library[test_set_name]
+    print('\n' + '#'*10)
+    print('Testing generate from point for set: {}, total # of pts: {}'.format(test_set_name, len(points)))
 
-    dict_nodes = {'5': [4, 2, 3], '4': [3, 0, 2], '7': [6, 5, 2], \
-                  '6': [2, 4, 5], '10': [8, 6, 9], '3': [0, 2, 1], '9': [6, 7, 8], '8': [5, 7, 6]}
-    supports_bars = [(0,1), (1,2), (2,0)]
-    supports_nodes = [0, 1, 2, 4]
-    load_bars = [(4,5)]
-    load = (0, 0, -2000)
-    radius = 10.0
+    start_tri_ids = [find_point_id(base_pt, points) for base_pt in base_tri_pts]
+    assert len(start_tri_ids) == 3, 'start triangle should only have three points!'
+    print('base triangle ids: {}'.format(start_tri_ids))
 
-    b_struct_data, o_struct_data = execute_from_points(
-        points, dict_nodes, radius, support_nodes=supports_nodes, 
-        support_bars=supports_bars, load_bars=load_bars, load=load)
+    if pt_search_method == 'point2point':
+        cost_from_node = {}
+        all_pt_ids = list(range(len(points)))
+        elements = list(combinations(all_pt_ids, 2))
+        cost_from_node = compute_distance_from_grounded_node(elements, points, start_tri_ids)
+        tet_node_ids = point2point_shortest_distance_tet_sequencing(points, cost_from_node)
+    elif pt_search_method == 'point2triangle':
+        tet_node_ids = point2triangle_shortest_distance_tet_sequencing(points, start_tri_ids)
+    else:
+        raise NotImplementedError('search method not implemented!')
 
-    # workaround for "reconstructing" classes in GH 
-    b_struct = Network.from_data(b_struct_data)
-    o_struct = Network.from_data(o_struct_data)
-
-
-@pytest.mark.proxy_compare
-def test_compare_xfunc_rpc():
-    points = [(150.01005777432357, -0.10444999026289396, 0.0), (71.876490367019642, 132.50681323244007, 0.0), (0.010057774323581724, -0.10444999026289396, 0.0), (64.100272158117349, 48.497333880525062, 165.82349611141939)]
-    dict_nodes = {'3': [2, 1, 0]}
-    radius = 10.0
-
-    xfunc_b_data, xfunc_o_data = main_gh_simple(points, dict_nodes, radius, use_xfunc=True)
-    rpc_b_data, rpc_o_data = main_gh_simple(points, dict_nodes, radius, use_xfunc=False)
-
-    # print('xfunc\n')
-    # for vkey, v in xfunc_o_data['vertex'].items():
-    #     print(v['x'], v['y'], v['z'])
-    # print('rpc\n')
-    # for vkey, v in rpc_o_data['vertex'].items():
-    #     print(v['x'], v['y'], v['z'])
-
-    assert_equal(xfunc_b_data, rpc_b_data)
-    assert_equal(xfunc_o_data, rpc_o_data)    
+    b_struct_data, o_struct_data = execute_from_points(points, tet_node_ids, radius, correct=True)

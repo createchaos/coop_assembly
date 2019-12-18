@@ -12,16 +12,46 @@ created on 28.06.2019
 author: stefanaparascho
 '''
 
-from compas.geometry.basic import normalize_vector, subtract_vectors, cross_vectors, vector_from_points, add_vectors, scale_vector
+from compas.geometry.basic import normalize_vector, subtract_vectors, cross_vectors, vector_from_points, \
+    add_vectors, scale_vector
 from compas.geometry.average import centroid_points
 from compas.geometry.intersections import intersection_line_plane
 from compas.geometry.angles import angle_vectors
 from compas.geometry.distance import distance_point_point, distance_point_plane
 from compas.geometry.queries import is_point_on_line
 from compas.geometry.transformations import project_point_plane, translate_points
+from coop_assembly.help_functions.shared_const import TOL
 
+
+###############################################
+
+def find_point_id(query_pt, pts, tol=TOL):
+    ids = []
+    for id, pt in enumerate(pts):
+        if distance_point_point(query_pt, pt) < tol:
+            ids.append(id)
+    assert len(ids) == 1, 'duplicated pts!'
+    return ids[0]
+
+###############################################
 
 def calculate_coord_sys(end_pts, pt_mean):
+    """construct local coordinate system for a line connecting two end_pts.
+    Local x axis: along the element from st to end
+    Local y axis: center of the element to the given pt_mean
+    
+    Parameters
+    ----------
+    end_pts : list of two points
+        start and end point specifying the element
+    pt_mean : list of three floats
+        A given pt to help constructing the local y axis
+    
+    Returns
+    -------
+    tuple of three lists
+        a tuple of three vectors for the local coordinate system
+    """
     vec_x = normalize_vector(subtract_vectors(end_pts[1], end_pts[0]))
     vec_n = normalize_vector(subtract_vectors(pt_mean, centroid_points(end_pts)))
     vec_y = normalize_vector(cross_vectors(vec_n, vec_x))
@@ -30,16 +60,23 @@ def calculate_coord_sys(end_pts, pt_mean):
 
 
 def calculate_bar_z(points):
-
+    """compute cross product between the vector formed by points and the global z axis.
+    
+    """
     vec_x = subtract_vectors(points[1], points[0])
     vec_y_temp = (1,0,0)
     vec_z = cross_vectors(vec_x, vec_y_temp)
-
     return vec_z
 
 
 def dropped_perpendicular_points(line_point_1_1, line_point_1_2, line_point_2_1, line_point_2_2):
-    
+    """compute the projected tangent point on axis defined by [L1_pt1, L1_pt2] and [L2_pt1, L2_pt2]
+
+    See figure 'perpendicular_bar_tangent_to_two_existing_bars.png' in the docs/images
+    or Fig. 3.7. We are computing the point pair (P1, P_{C1}) here, given the axis endpoints of 
+    bar b_{e1} and b_{n1}
+
+    """ 
     line_unity_vector_1 = normalize_vector(vector_from_points(line_point_1_1, line_point_1_2))
     line_unity_vector_2 = normalize_vector(vector_from_points(line_point_2_1, line_point_2_2))
     d_vector = cross_vectors(line_unity_vector_1, line_unity_vector_2)
@@ -86,30 +123,8 @@ def check_dir(vec1, vec2):
         return False
 
 
-# to move to bar structure 
 def update_bar_lengths(b_struct):
-
-    for b in b_struct.vertex:
-        edges_con = b_struct.vertex_connected_edges(b)
-        list_pts = []
-        for e, f in edges_con:
-            dpp = dropped_perpendicular_points(b_struct.vertex[e]["axis_endpoints"][0], b_struct.vertex[e]["axis_endpoints"][1], b_struct.vertex[f]["axis_endpoints"][0], b_struct.vertex[f]["axis_endpoints"][1])
-            b_struct.edge[e][f]["endpoints"][0] = dpp
-            points = b_struct.edge[e][f]["endpoints"]
-            for p in points.keys():
-                pair_points = points[p]
-                if pair_points !=[]:
-                    for pt in pair_points:
-                        bool_online = is_point_on_line(pt, b_struct.vertex[b]["axis_endpoints"], 0.1)
-                        if bool_online:
-                            list_pts.append(pt)
-
-        if list_pts != []:
-            if len(list_pts) > 2:
-                pts_extr = find_points_extreme(list_pts, b_struct.vertex[b]["axis_endpoints"])
-            else:
-                pts_extr = list_pts
-            b_struct.vertex[b].update({"axis_endpoints":pts_extr})
+    raise ImportError('Moved to Bar_Structure class function.')
 
 
 def correct_point(b_struct, o_struct, o_v_key, pt_new, bars_1, bars_2, bars_3):
@@ -172,7 +187,7 @@ def correct_angle(pt_new, pt_int, pl_test):
 
 
 def calc_correction_vector_tip(b_struct, pt_new, pt_base_1, pt_base_2, pt_base_3):
-    print("correcting")
+    # print("correcting")
     vec_x   = normalize_vector(vector_from_points(pt_base_1, pt_base_2))
     vec_y   = normalize_vector(vector_from_points(pt_base_1, pt_base_3))
     vec_z   = normalize_vector(cross_vectors(vec_x, vec_y))

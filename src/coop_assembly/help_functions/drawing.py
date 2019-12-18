@@ -227,8 +227,8 @@ def draw_network_inv_gh(network):
         #                              network.vertex[v]["axis_endpoints"][0],
         #                              network.vertex[v]["axis_endpoints"][1])
         if network.edge[u][v]:
-            print("u, v", u, v)
-            print(network.edge[u][v])
+            # print("u, v", u, v)
+            # print(network.edge[u][v])
             try:
                 network.edge[u][v]["endpoints"][0]
                 dpp = network.edge[u][v]["endpoints"][0]

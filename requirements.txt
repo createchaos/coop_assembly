@@ -1,2 +1,5 @@
+compas
 scipy
-compas >= 0.7.2
+termcolor
+# compas_fab
+# pychoreo

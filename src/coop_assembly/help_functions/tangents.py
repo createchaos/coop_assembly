@@ -20,7 +20,6 @@ from compas.geometry.queries import is_point_on_segment
 from compas.geometry.angles import angle_vectors
 from compas.geometry.average import centroid_points
 from compas.geometry.transformations import project_points_plane
-from compas.utilities import XFunc
 
 from coop_assembly.help_functions import dropped_perpendicular_points, find_points_extreme, check_dir, \
     calculate_coord_sys
@@ -41,13 +40,11 @@ def tangent_from_point(base_point1, line_vect1, base_point2, line_vect2, ref_poi
 
 
 def tangent_from_point_one(base_point1, line_vect1, base_point2, line_vect2, ref_point, dist1, dist2, nb):
-
     solution = lines_tangent_to_two_cylinder_one(
         base_point1, line_vect1, base_point2, line_vect2, ref_point, dist1, dist2, nb)
     if solution == None:
         print("no solutions for tangent_from_point")
         return None
-
     return [solution]
 
 
