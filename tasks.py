@@ -176,14 +176,14 @@ def test(ctx, checks=True, build=False):
 
         if build:
             log.write('Checking build')
-            ctx.run('python setup.py clean --all sdist') #bdist_wheel
+            ctx.run('python setup.py clean --all sdist bdist_wheel') #bdist_wheel
             if sys.platform == 'win32':
                 ctx.run('powershell -Command "& pip install --verbose $(ls dist/*.tar.gz | % {$_.FullName})"')
             else:
                 ctx.run('pip install --verbose dist/*.tar.gz')
 
         log.write('Running pytest')
-        ctx.run('pytest --doctest-modules --cov=pychoreo tests')
+        ctx.run('pytest --doctest-modules --cov={} tests'.format(PACKAGE_NAME))
 
 
 @task(help={
