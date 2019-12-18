@@ -31,8 +31,7 @@ Installation
 
 .. Write installation instructions here
 
-Prerequisites
-^^^^^^^^^^^^^
+**Prerequisites**
 
 0. Operating System:
     **Windows 10** and **Mac(!)**
@@ -53,8 +52,7 @@ Prerequisites
     Our simulation environment ``pybullet`` has a C++ backend, which needs
     ``Microsoft Visual C++ 14.0`` to compile and build the python bindings. Note that this is needed only for Windows OS.
 
-Working in a conda environment
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**Working in a conda environment**
 
 It is recommended to set up a conda environment to create a clean, isolated space for
 installing all the required python packages. We've provided a conda environment file
