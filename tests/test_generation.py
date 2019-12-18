@@ -11,9 +11,9 @@ from coop_assembly.geometry_generation import execute_from_points
 @pytest.mark.gen_from_pts
 @pytest.mark.parametrize('test_set_name', [('single_cube'), ])
 @pytest.mark.parametrize('radius', [(3.17), ])
-@pytest.mark.parametrize('pt_search_method', [('point2point'), ])
+# @pytest.mark.parametrize('pt_search_method', [('point2point'), ])
 # @pytest.mark.parametrize('pt_search_method', [('point2triangle'), ])
-# @pytest.mark.parametrize('pt_search_method', [('point2point'), ('point2triangle')])
+@pytest.mark.parametrize('pt_search_method', [('point2point'), ('point2triangle')])
 def test_generate_from_points(points_library, test_set_name, radius, pt_search_method):
     points, base_tri_pts = points_library[test_set_name]
     print('\n' + '#'*10)
