@@ -1,6 +1,5 @@
 import pytest
 from itertools import combinations
-from termcolor import cprint
 
 from coop_assembly.help_functions import find_point_id
 from coop_assembly.geometry_generation import compute_distance_from_grounded_node
