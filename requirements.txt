@@ -1,5 +1,4 @@
 compas
 scipy
-termcolor
 # compas_fab
 # pychoreo

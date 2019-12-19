@@ -5,7 +5,7 @@ from termcolor import cprint
 from coop_assembly.help_functions import find_point_id
 from coop_assembly.geometry_generation import compute_distance_from_grounded_node
 from coop_assembly.geometry_generation import point2point_shortest_distance_tet_sequencing
-from coop_assembly.geometry_generation import point2triangle_shortest_distance_tet_sequencing
+from coop_assembly.geometry_generation import point2triangle_tet_sequencing
 from coop_assembly.geometry_generation import execute_from_points
 
 @pytest.mark.gen_from_pts
@@ -30,7 +30,7 @@ def test_generate_from_points(points_library, test_set_name, radius, pt_search_m
         cost_from_node = compute_distance_from_grounded_node(elements, points, start_tri_ids)
         tet_node_ids = point2point_shortest_distance_tet_sequencing(points, cost_from_node)
     elif pt_search_method == 'point2triangle':
-        tet_node_ids = point2triangle_shortest_distance_tet_sequencing(points, start_tri_ids)
+        tet_node_ids = point2triangle_tet_sequencing(points, start_tri_ids)
     else:
         raise NotImplementedError('search method not implemented!')
 

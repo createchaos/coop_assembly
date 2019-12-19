@@ -12,14 +12,18 @@ created on 28.06.2019
 author: stefanaparascho
 '''
 
-from compas.geometry.basic import normalize_vector, subtract_vectors, cross_vectors, vector_from_points, \
-    add_vectors, scale_vector
-from compas.geometry.average import centroid_points
-from compas.geometry.intersections import intersection_line_plane
-from compas.geometry.angles import angle_vectors
-from compas.geometry.distance import distance_point_point, distance_point_plane
-from compas.geometry.queries import is_point_on_line
-from compas.geometry.transformations import project_point_plane, translate_points
+from itertools import combinations
+
+from compas.geometry import Plane
+from compas.geometry import normalize_vector, subtract_vectors, cross_vectors, vector_from_points, \
+    add_vectors, scale_vector, angle_vectors
+from compas.geometry import centroid_points
+from compas.geometry import intersection_line_plane
+from compas.geometry import is_point_on_line, is_point_infront_plane, is_coplanar
+from compas.geometry import project_point_plane, translate_points
+from compas.geometry import distance_point_point, distance_point_line, distance_point_plane, \
+    area_triangle, volume_polyhedron
+
 from coop_assembly.help_functions.shared_const import EPS
 
 
@@ -32,6 +36,36 @@ def find_point_id(query_pt, pts, tol=EPS):
             ids.append(id)
     assert len(ids) == 1, 'duplicated pts!'
     return ids[0]
+
+def distance_point_triangle(point, tri_end_pts):
+    lines = [(pt_1, pt_2) for pt_1, pt_2 in combinations(tri_end_pts, 2)]
+    return sum([distance_point_line(point, line) for line in lines])
+
+def tet_surface_area(tet_end_points):
+    assert len(tet_end_points) == 4, 'input points must be four!'
+    faces = [face_pts for face_pts in combinations(tet_end_points, 3)]
+    return sum([area_triangle(face_pts) for face_pts in faces])
+
+def tet_from_points(tet_end_points):
+    assert len(tet_end_points) == 4, 'input points must be four!'
+    ids = frozenset([0,1,2,3])
+    faces = []
+    if is_coplanar(tet_end_points):
+        return None, None
+    for face in combinations(ids, 3):
+        left_id, = ids - set(face)
+        if is_point_infront_plane(tet_end_points[left_id], Plane.from_three_points(*[tet_end_points[i] for i in face])):
+            face = [face[0], face[2], face[1]]
+        faces.append(list(face) + [left_id])
+    return tet_end_points, faces
+
+def tet_volume(tet_end_points):
+    assert len(tet_end_points) == 4, 'input points must be four!'
+    verts, faces = tet_from_points(tet_end_points)
+    if verts and faces:
+        return volume_polyhedron((verts, faces))
+    else:
+        return None
 
 ###############################################
 

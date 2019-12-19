@@ -267,9 +267,11 @@ def generate_structure_from_points(o_struct, b_struct, radius, points, tet_node_
         comb_3.reverse()
 
         dir_factor = 1
-        assert add_tetra(o_struct, b_struct, tri_node_ids, comb_1, comb_2, comb_3,
-                         dir_factor, vertex_pt, new_vertex_id, radius, correct=correct, check_collision=check_collision), \
-               'Tet generation fails at #{} ({}) -> {}'.format(tet_id, tri_node_ids, new_vertex_id)
+        success = add_tetra(o_struct, b_struct, tri_node_ids, comb_1, comb_2, comb_3,
+                            dir_factor, vertex_pt, new_vertex_id, radius, correct=correct, check_collision=check_collision)
+        if success is None:
+            print('Tet generation fails at #{} ({}) -> {}'.format(tet_id, tri_node_ids, new_vertex_id))
+            break
 
 
 def add_tetra(o_struct, b_struct, tri_node_ids, comb_bars_1, comb_bars_2, comb_bars_3,

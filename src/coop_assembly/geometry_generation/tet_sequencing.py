@@ -8,6 +8,7 @@ from collections import namedtuple
 from compas.geometry import distance_point_point, distance_point_line, distance_point_plane
 from compas.geometry import is_coplanar
 from coop_assembly.help_functions.shared_const import INF, EPS
+from coop_assembly.help_functions import tet_surface_area, tet_volume, distance_point_triangle
 
 
 def adjacent_from_edges(edges):
@@ -110,10 +111,6 @@ def point2point_shortest_distance_tet_sequencing(points, cost_from_node):
 
 SearchState = namedtuple('SearchState', ['action', 'state'])
 
-def distance_point_triangle(point, tri_end_pts):
-    lines = [(pt_1, pt_2) for pt_1, pt_2 in combinations(tri_end_pts, 2)]
-    return sum([distance_point_line(point, line) for line in lines])
-
 def compute_candidate_nodes(all_nodes, grounded_nodes, built_nodes):
     if grounded_nodes <= built_nodes:
         nodes = built_nodes | set(grounded_nodes) # union
@@ -134,13 +131,37 @@ def add_successors(queue, all_nodes, grounded_nodes, heuristic_fn, built_nodes, 
         priority = (num_remaining, bias, random.random())
         heapq.heappush(queue, (priority, built_nodes, built_triangles, node_id, tri_node_ids))
 
-def get_heuristic_fn(points):
+PT2TRI_SEARCH_HEURISTIC = {
+    'point2triangle_distance', 'tet_surface_area', 'tet_volume',
+}
+
+# TODO: minimize number of crossings
+def get_pt2tri_search_heuristic_fn(points, penalty_cost=2.0, heuristic='tet_surface_area'):
+    assert penalty_cost >= 1.0, 'penalty cost should be bigger than 1.0, heuristic is computed by score *= penalty_cost'
     def h_fn(built_nodes, node_id, built_triangles):
-        # iterate through all existing triangles and return the minimal distance
-        # TODO: this is wasteful...
-        dist_to_tri = [distance_point_triangle(points[node_id], [points[tri_id] for tri_id in list(tri)]) for tri in list(built_triangles)]
-        sort_tris = sorted(zip(dist_to_tri, built_triangles), key=lambda pair: pair[0])
-        return sort_tris[0]
+        # return (bias, chosen triangle node ids)
+        # lower bias will be dequed first
+        # iterate through all existing triangles and return the minimal cost one
+        dist_to_tri = []
+        for tri in list(built_triangles):
+            tri_node_pts = [points[tri_id] for tri_id in list(tri)]
+            tet_pts = tri_node_pts + [points[node_id]]
+            score = 0.0
+            if heuristic == 'point2triangle_distance':
+                score = distance_point_triangle(points[node_id], tri_node_pts)
+            elif heuristic == 'tet_surface_area':
+                score = tet_surface_area(tet_pts)
+            elif heuristic == 'tet_volume':
+                vol = tet_volume(tet_pts)
+                score = vol if vol else penalty_cost
+            else:
+                raise NotImplementedError('point2triangle search heuristic ({}) not implemented, the only available ones are: {}'.format(
+                heuristic, PT2TRI_SEARCH_HEURISTIC))
+            planar_cost = penalty_cost if is_coplanar(tri_node_pts + [points[node_id]]) else 1.0
+            score *= planar_cost
+            dist_to_tri.append(score)
+        sorted_built_triangles = sorted(zip(dist_to_tri, built_triangles), key=lambda pair: pair[0])
+        return sorted_built_triangles[0]
     return h_fn
 
 def retrace_tet_sequence(visited, current_state, horizon=INF):
@@ -152,11 +173,11 @@ def retrace_tet_sequence(visited, current_state, horizon=INF):
     previous_tet_ids = retrace_tet_sequence(visited, prev_state, horizon=horizon-1)
     return previous_tet_ids + [command]
 
-def point2triangle_shortest_distance_tet_sequencing(points, base_triangle_node_ids, heuristic_fn=None, verbose=False):
+def point2triangle_tet_sequencing(points, base_triangle_node_ids, heuristic_fn=None, verbose=False):
     all_nodes = frozenset(range(len(points)))
     ground_nodes = frozenset(base_triangle_node_ids)
     assert len(ground_nodes) == 3, 'the grounded nodes need to form a triangle.'
-    heuristic_fn = heuristic_fn or get_heuristic_fn(points)
+    heuristic_fn = heuristic_fn or get_pt2tri_search_heuristic_fn(points)
 
     initial_built_nodes = frozenset(ground_nodes)
     initial_built_triangles = set([frozenset(ground_nodes)])
