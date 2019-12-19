@@ -19,6 +19,8 @@ Unreleased
 
 **Changed**
 
+* Changed 'Overall_Structure' to `OverallStructure`, 'Bar_Structure' to `BarStructure`
+
 
 **Fixed**
 

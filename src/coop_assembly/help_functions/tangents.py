@@ -1,13 +1,13 @@
 
 '''
-                                                                                                 
-    ****       *****       ******       ****      ******  ******          **           **       
-   **  **      **  **      **          **  **       **    **              **           **       
-   **          *****       ****        ******       **    ****            **   *****   *****    
-   **  **      **  **      **          **  **       **    **              **  **  **   **  **   
-    ****   **  **  **  **  ******  **  **  **  **   **    ******          **   ******  *****    
-                           
-                                           
+
+    ****       *****       ******       ****      ******  ******          **           **
+   **  **      **  **      **          **  **       **    **              **           **
+   **          *****       ****        ******       **    ****            **   *****   *****
+   **  **      **  **      **          **  **       **    **              **  **  **   **  **
+    ****   **  **  **  **  ******  **  **  **  **   **    ******          **   ******  *****
+
+
 created on 30.06.2019
 author: stefanaparascho
 '''
@@ -67,7 +67,7 @@ def tangent_through_two_points(base_point1, line_vect1, ref_point1, base_point2,
         pp1 = project_points_plane([ref_point1], plane1)[0]
         vec_move = scale_vector(subtract_vectors(ref_point1, pp1), 0.5)
         pt1 = add_vectors(pp1, vec_move)
-        
+
         for j in ind:
             ret_p2 = p_planes_tangent_to_cylinder(base_point2, line_vect2, ref_point1, dist1 + dist2 + dist1 + dist2)
             ret2 = ret_p2[j]
@@ -78,12 +78,12 @@ def tangent_through_two_points(base_point1, line_vect1, ref_point1, base_point2,
             pt2 = add_vectors(pp2, vec_move)
 
             sols_pts.append([pt1, pt2])
-            sol_vec = subtract_vectors(pt1, pt2)            
+            sol_vec = subtract_vectors(pt1, pt2)
             sols_vec.append(sol_vec)
     print(sols_pts)
     return sols_pts
 
-    
+
 
     # ret_p1 = p_planes_tangent_to_cylinder(base_point1, line_vect1, ref_point2, dist1 + dist2)
     # print("this is it", ret_p1)
@@ -95,7 +95,7 @@ def tangent_through_two_points(base_point1, line_vect1, ref_point1, base_point2,
     # vec_move = scale_vector(subtract_vectors(ref_point1, pp1), 0.5)
     # pt1 = add_vectors(pp1, vec_move)
 
-    
+
     # ret_p2 = p_planes_tangent_to_cylinder(base_point2, line_vect2, ref_point1, dist1 + dist2)
     # ret2 = ret_p2[ind2]
     # z_vec = cross_vectors(line_vect2, ret2[2])
@@ -267,7 +267,7 @@ def check_length_sol_one(solution, pt_mean, pt, b1, b2, b1_key, b2_key, b_struct
     return sol
 
 
-def first_tangent(pt1, b1_1, b1_2, pt_mean_1, max_len, b_v1_1, b_v1_2, b_struct, pt_mean, r, 
+def first_tangent(pt1, b1_1, b1_2, pt_mean_1, max_len, b_v1_1, b_v1_2, b_struct, pt_mean, r,
     b_v0_n=None, check_col=False):
     if check_col==False:
         if b_v0_n:
@@ -286,6 +286,14 @@ def first_tangent(pt1, b1_1, b1_2, pt_mean_1, max_len, b_v1_1, b_v1_2, b_struct,
         pt1_e = add_vectors(pt1, scale_vector(vec_sol_1, l1))
         end_pts_0 = (pt1, pt1_e)
     else:
+        # SP disseration P129.
+        # two discrete parameters are used for adjusting the topology in case a collision is found:
+        # 1. the connection side of the bar
+        # 2. the existing bars in the node that a new bar is connecting to
+        # The process first iterates over the four possible connection sides
+        # then runs through all possible bar pairs that a new bar can connect to in a node
+        # the check is performed sequentially for each of the three bars in a three-bar-group
+        # and stopped once a collision-free solution is found
         for ind in range (4):
             solutions_1 = tangent_from_point_one(b1_1["axis_endpoints"][0], subtract_vectors(b1_1["axis_endpoints"][1], b1_1["axis_endpoints"][0]),
                                              b1_2["axis_endpoints"][0], subtract_vectors(b1_2["axis_endpoints"][1], b1_2["axis_endpoints"][0]), pt1, 2 * r, 2 * r, ind)
@@ -304,7 +312,7 @@ def first_tangent(pt1, b1_1, b1_2, pt_mean_1, max_len, b_v1_1, b_v1_2, b_struct,
             vec_sol_1, l1, pts_b1_1, pts_b1_2 = ret_cls
             pt1_e       = add_vectors(pt1, scale_vector(vec_sol_1, l1))
             end_pts_0   = (pt1, pt1_e)
-            
+
             # add extension
             ext_len = 30
             end_pts_0 = (add_vectors(pt1, scale_vector(normalize_vector(vector_from_points(pt1_e, pt1)), ext_len)), add_vectors(
@@ -355,14 +363,14 @@ def first_tangent(pt1, b1_1, b1_2, pt_mean_1, max_len, b_v1_1, b_v1_2, b_struct,
         b_struct.connect_bars(b_v0, b_v1_1)
         b_struct.connect_bars(b_v0, b_v1_2)
 
-    dpp_1   = dropped_perpendicular_points(b_struct.vertex[b_v0]["axis_endpoints"][0], 
-                                           b_struct.vertex[b_v0]["axis_endpoints"][1], 
-                                           b_struct.vertex[b_v1_1]["axis_endpoints"][0], 
+    dpp_1   = dropped_perpendicular_points(b_struct.vertex[b_v0]["axis_endpoints"][0],
+                                           b_struct.vertex[b_v0]["axis_endpoints"][1],
+                                           b_struct.vertex[b_v1_1]["axis_endpoints"][0],
                                            b_struct.vertex[b_v1_1]["axis_endpoints"][1])
 
-    dpp_2   = dropped_perpendicular_points(b_struct.vertex[b_v0]["axis_endpoints"][0], 
-                                           b_struct.vertex[b_v0]["axis_endpoints"][1], 
-                                           b_struct.vertex[b_v1_2]["axis_endpoints"][0], 
+    dpp_2   = dropped_perpendicular_points(b_struct.vertex[b_v0]["axis_endpoints"][0],
+                                           b_struct.vertex[b_v0]["axis_endpoints"][1],
+                                           b_struct.vertex[b_v1_2]["axis_endpoints"][0],
                                            b_struct.vertex[b_v1_2]["axis_endpoints"][1])
 
     k_1     = list(b_struct.edge[b_v0][b_v1_1]["endpoints"].keys())[0]
@@ -547,7 +555,7 @@ def third_tangent(b_struct, b_v_old, b_v1, b3_1, b3_2, pt_mean_3, max_len, b_v3_
             ind_2 = 0
 
         # args = pt_mid, ex, ey, r, pt_b_1, l_1, pt_b_2, l_2, pt_b_3, l_3, pt_b_4, l_4, bounds, ind_1, ind_2
-        # xfunc = XFunc('coop_assembly.help_functions.tangents.solve_third_tangent', r'C:\Users\parascho\Documents\git_repos')        
+        # xfunc = XFunc('coop_assembly.help_functions.tangents.solve_third_tangent', r'C:\Users\parascho\Documents\git_repos')
         # xfunc(pt_mid, ex, ey, r, pt_b_1, l_1, pt_b_2, l_2, pt_b_3, l_3, pt_b_4, l_4, bounds, ind_1, ind_2)
         # ret_stt = xfunc.data
         ## ret_stt = solve_third_tangent(*args)
@@ -555,7 +563,7 @@ def third_tangent(b_struct, b_v_old, b_v1, b3_1, b3_2, pt_mean_3, max_len, b_v3_
         ret_stt = solve_third_tangent(pt_mid, ex, ey, r, pt_b_1, l_1, pt_b_2, l_2, pt_b_3, l_3, pt_b_4, l_4, bounds, ind_1, ind_2)
 
         # if max(b_struct.vertex.keys()) == 67: print("args", args)
-        
+
         if ret_stt:
             pt3, vec_l1, vec_l2, ang_check = ret_stt
         else:
@@ -622,11 +630,11 @@ def third_tangent(b_struct, b_v_old, b_v1, b3_1, b3_2, pt_mean_3, max_len, b_v3_
                 pt3_e2 = add_vectors(pt3, scale_vector(vec_sol_32, -1 * l32))
 
                 end_pts_0 = (pt3_e2, pt3_e1)
-                
+
                 ext_len = 30
                 end_pts_0 = (add_vectors(pt3_e2, scale_vector(normalize_vector(vector_from_points(pt3_e1, pt3_e2)), ext_len)), add_vectors(
                     pt3_e1, scale_vector(normalize_vector(vector_from_points(pt3_e2, pt3_e1)), ext_len)))
-                
+
                 bool_col = check_colisions(b_struct, end_pts_0, r, bar_nb=b_v0_n)
 
                 if bool_col == True:

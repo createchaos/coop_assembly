@@ -1,24 +1,24 @@
+import time
 import heapq
 from collections import defaultdict
 from itertools import combinations
 import random
-from random import shuffle
-import time
+from collections import namedtuple
 
 from compas.geometry import distance_point_point, distance_point_line, distance_point_plane
 from compas.geometry import is_coplanar
+from coop_assembly.help_functions.shared_const import INF, EPS
+from coop_assembly.help_functions import tet_surface_area, tet_volume, distance_point_triangle
 
-TOL = 1e-4
-INF = 1e10
 
 def adjacent_from_edges(edges):
     """get a dict for graph connectivity {node_id : neighnor node ids}
-    
+
     Parameters
     ----------
     edges : a list of 2-int-tuples
         [(node_1, node_2), ...]
-    
+
     Returns
     -------
     undirected_edges : dict
@@ -33,7 +33,7 @@ def adjacent_from_edges(edges):
 def compute_distance_from_grounded_node(elements, node_points, ground_node_ids):
     """Use the dijkstra algorithm to compute the graph distance from each node to the grounded nodes.
     Graph edge cost is set to be the Euclidean distance between two vertices.
-    
+
     Parameters
     ----------
     elements : list of 2-int-tuples
@@ -42,7 +42,7 @@ def compute_distance_from_grounded_node(elements, node_points, ground_node_ids):
         [[x,y,z], ...]
     ground_node_ids : list of int
         grounded node indices
-    
+
     Returns
     -------
     cost_from_node : dict
@@ -75,14 +75,14 @@ def compute_distance_from_grounded_node(elements, node_points, ground_node_ids):
 def point2point_shortest_distance_tet_sequencing(points, cost_from_node):
     """generate a tet sequence by adding node one by one based on cost_from_node (ascending order)
     The base triangle for each node is chosen based on its Euclidean distance to the already added nodes (closest three).
-    
+
     Parameters
     ----------
     points : a list of 3-float lists
         [description]
     cost_from_node : dict
         {node_id : cost}
-    
+
     Returns
     -------
     tet_node_ids : list of 4-int lists
@@ -109,12 +109,9 @@ def point2point_shortest_distance_tet_sequencing(points, cost_from_node):
 
 #######################################
 
-def distance_point_triangle(point, tri_end_pts):
-    lines = [(pt_1, pt_2) for pt_1, pt_2 in combinations(tri_end_pts, 2)]
-    return sum([distance_point_line(point, line) for line in lines])
+SearchState = namedtuple('SearchState', ['action', 'state'])
 
 def compute_candidate_nodes(all_nodes, grounded_nodes, built_nodes):
-    print('all nodes: {}, grounded: {}, built nodes: {}'.format(all_nodes, grounded_nodes, built_nodes))
     if grounded_nodes <= built_nodes:
         nodes = built_nodes | set(grounded_nodes) # union
     else:
@@ -122,67 +119,106 @@ def compute_candidate_nodes(all_nodes, grounded_nodes, built_nodes):
         nodes = grounded_nodes
     return {node for node in set(all_nodes) - set(built_nodes)} # if_buildable()
 
-def add_successors(queue, all_nodes, grounded_nodes, heuristic_fn, built_nodes, built_triangles):
+def add_successors(queue, all_nodes, grounded_nodes, heuristic_fn, built_nodes, built_triangles, verbose=False):
     remaining = all_nodes - built_nodes
     num_remaining = len(remaining) - 1
     assert 0 <= num_remaining
     candidate_nodes = compute_candidate_nodes(all_nodes, grounded_nodes, built_nodes)
-    print('candidate nodes: {}'.format(candidate_nodes))
-    for node_id in candidate_nodes: # shuffle(list(candidate_nodes):
+    if verbose : print('add successors: candidate nodes: {}'.format(candidate_nodes))
+    for node_id in candidate_nodes: # random.shuffle(list(candidate_nodes):
         # compute bias
         bias, tri_node_ids = heuristic_fn(built_nodes, node_id, built_triangles)
-        # print('bias: {}, tri_node_id: {}'.format(bias, tri_node_ids))
         priority = (num_remaining, bias, random.random())
         heapq.heappush(queue, (priority, built_nodes, built_triangles, node_id, tri_node_ids))
 
-def get_heuristic_fn(points):
+PT2TRI_SEARCH_HEURISTIC = {
+    'point2triangle_distance', 'tet_surface_area', 'tet_volume',
+}
+
+# TODO: minimize number of crossings
+def get_pt2tri_search_heuristic_fn(points, penalty_cost=2.0, heuristic='tet_surface_area'):
+    assert penalty_cost >= 1.0, 'penalty cost should be bigger than 1.0, heuristic is computed by score *= penalty_cost'
     def h_fn(built_nodes, node_id, built_triangles):
-        # iterate through all existing triangles and return the minimal distance
-        # TODO: this is wasteful...
-        dist_to_tri = [distance_point_triangle(points[node_id], [points[tri_id] for tri_id in list(tri)]) for tri in list(built_triangles)]
-        sort_tris = sorted(zip(dist_to_tri, built_triangles))
-        return sort_tris[0]
+        # return (bias, chosen triangle node ids)
+        # lower bias will be dequed first
+        # iterate through all existing triangles and return the minimal cost one
+        dist_to_tri = []
+        for tri in list(built_triangles):
+            tri_node_pts = [points[tri_id] for tri_id in list(tri)]
+            tet_pts = tri_node_pts + [points[node_id]]
+            score = 0.0
+            if heuristic == 'point2triangle_distance':
+                score = distance_point_triangle(points[node_id], tri_node_pts)
+            elif heuristic == 'tet_surface_area':
+                score = tet_surface_area(tet_pts)
+            elif heuristic == 'tet_volume':
+                vol = tet_volume(tet_pts)
+                score = vol if vol else penalty_cost
+            else:
+                raise NotImplementedError('point2triangle search heuristic ({}) not implemented, the only available ones are: {}'.format(
+                heuristic, PT2TRI_SEARCH_HEURISTIC))
+            planar_cost = penalty_cost if is_coplanar(tri_node_pts + [points[node_id]]) else 1.0
+            score *= planar_cost
+            dist_to_tri.append(score)
+        sorted_built_triangles = sorted(zip(dist_to_tri, built_triangles), key=lambda pair: pair[0])
+        return sorted_built_triangles[0]
     return h_fn
 
-def retrace_tet_sequence(visited, next_built_nodes):
-    # recursive plan retrace
-    pass
+def retrace_tet_sequence(visited, current_state, horizon=INF):
+    # command = ((triangle__node_ids), new_node_id)
+    command, prev_state = visited[current_state]
+    if (prev_state is None) or (horizon == 0):
+        # tracing reaches the end
+        return []
+    previous_tet_ids = retrace_tet_sequence(visited, prev_state, horizon=horizon-1)
+    return previous_tet_ids + [command]
 
-def point2triangle_shortest_distance_tet_sequencing(points, base_triangle_node_ids):
+def point2triangle_tet_sequencing(points, base_triangle_node_ids, heuristic_fn=None, verbose=False):
     all_nodes = frozenset(range(len(points)))
     ground_nodes = frozenset(base_triangle_node_ids)
     assert len(ground_nodes) == 3, 'the grounded nodes need to form a triangle.'
-    heuristic_fn = get_heuristic_fn(points)
+    heuristic_fn = heuristic_fn or get_pt2tri_search_heuristic_fn(points)
 
     initial_built_nodes = frozenset(ground_nodes)
     initial_built_triangles = set([frozenset(ground_nodes)])
     queue = []
-    visited = {initial_built_nodes : initial_built_triangles}
-    add_successors(queue, all_nodes, ground_nodes, heuristic_fn, initial_built_nodes, initial_built_triangles)
+    visited = {initial_built_nodes : SearchState(None, None)}
+    add_successors(queue, all_nodes, ground_nodes, heuristic_fn, initial_built_nodes, initial_built_triangles, verbose=verbose)
 
     min_remaining = len(points)
-    num_evaluated = max_backtrack = 0
+    num_evaluated = 0
     max_time = 10
     start_time = time.time()
     while queue and (time.time() - start_time < max_time) :
-        num_evaluated += 1
         bias, built_nodes, built_triangles, node_id, tri_node_ids = heapq.heappop(queue)
         num_remaining = len(all_nodes) - len(built_nodes)
         num_evaluated += 1
         if num_remaining < min_remaining:
             min_remaining = num_remaining
 
-        print('Iteration: {} | Best: {} | Built: {}/{} | Node: {} | Triangle: {}'.format(
-            num_evaluated, min_remaining, len(built_nodes), len(all_nodes), node_id, list(tri_node_ids)))
+        if verbose:
+            print('Iteration: {} | Min Remain: {} | Built: {}/{} | Node: {} | Triangle: {}'.format(
+                num_evaluated, min_remaining, len(built_nodes), len(all_nodes), node_id, list(tri_node_ids)))
+
         next_built_nodes = built_nodes | {node_id}
-        next_built_triangles = built_triangles | frozenset(tri_node_ids)
+        next_built_triangles = built_triangles | set([frozenset(list(two_ends) + [node_id]) for two_ends in combinations(tri_node_ids, 2)])
+
+        # * check constraint
+        if (next_built_nodes in visited):
+            if verbose: print('State visited before: {}'.format(next_built_nodes))
+            continue
+
+        # * record history
+        visited[next_built_nodes] = SearchState((tri_node_ids, node_id), built_nodes)
         if all_nodes <= next_built_nodes:
             min_remaining = 0
-            # plan = retrace_tet_sequence(visited, next_built_nodes)
-            print('plan found!')
+            tet_ids = retrace_tet_sequence(visited, next_built_nodes)
             break
 
-        add_successors(queue, all_nodes, ground_nodes, heuristic_fn, next_built_nodes, next_built_triangles)
-    # return plan
-    tet_ids = []
+        # * continue to the next search level, add candidates to queue
+        add_successors(queue, all_nodes, ground_nodes, heuristic_fn, next_built_nodes, next_built_triangles, verbose=verbose)
+    for i in range(len(tet_ids)):
+        tri_node_ids, node_id = tet_ids[i]
+        tet_ids[i] = (list(tri_node_ids), node_id)
+    if verbose: print('Resulting tet_ids: {}'.format(tet_ids))
     return tet_ids

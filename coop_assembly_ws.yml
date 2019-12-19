@@ -9,9 +9,7 @@ dependencies:
    - compas
    - numpy
    - scipy
-   - roslibpy>=0.6.0
    - cmake
-   - pytest
    - pip:
      - pybullet
      - git+https://github.com/yijiangh/compas_fab.git@feature/dms2019_ws#egg=compas_fab

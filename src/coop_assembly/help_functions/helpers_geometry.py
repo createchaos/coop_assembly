@@ -1,31 +1,35 @@
 
 '''
-                                                                                                 
-    ****       *****       ******       ****       ******  ******          **           **       
-   **  **      **  **      **          **  **        **    **              **           **       
-   **          *****       ****        ******        **    ****            **   *****   *****    
-   **  **      **  **      **          **  **        **    **              **  **  **   **  **   
-    ****   **  **  **  **  ******  **  **  **  **    **    ******          **   ******  *****    
-                           
-                                           
+
+    ****       *****       ******       ****       ******  ******          **           **
+   **  **      **  **      **          **  **        **    **              **           **
+   **          *****       ****        ******        **    ****            **   *****   *****
+   **  **      **  **      **          **  **        **    **              **  **  **   **  **
+    ****   **  **  **  **  ******  **  **  **  **    **    ******          **   ******  *****
+
+
 created on 28.06.2019
 author: stefanaparascho
 '''
 
-from compas.geometry.basic import normalize_vector, subtract_vectors, cross_vectors, vector_from_points, \
-    add_vectors, scale_vector
-from compas.geometry.average import centroid_points
-from compas.geometry.intersections import intersection_line_plane
-from compas.geometry.angles import angle_vectors
-from compas.geometry.distance import distance_point_point, distance_point_plane
-from compas.geometry.queries import is_point_on_line
-from compas.geometry.transformations import project_point_plane, translate_points
-from coop_assembly.help_functions.shared_const import TOL
+from itertools import combinations
+
+from compas.geometry import Plane
+from compas.geometry import normalize_vector, subtract_vectors, cross_vectors, vector_from_points, \
+    add_vectors, scale_vector, angle_vectors
+from compas.geometry import centroid_points
+from compas.geometry import intersection_line_plane
+from compas.geometry import is_point_on_line, is_point_infront_plane, is_coplanar
+from compas.geometry import project_point_plane, translate_points
+from compas.geometry import distance_point_point, distance_point_line, distance_point_plane, \
+    area_triangle, volume_polyhedron
+
+from coop_assembly.help_functions.shared_const import EPS
 
 
 ###############################################
 
-def find_point_id(query_pt, pts, tol=TOL):
+def find_point_id(query_pt, pts, tol=EPS):
     ids = []
     for id, pt in enumerate(pts):
         if distance_point_point(query_pt, pt) < tol:
@@ -33,20 +37,50 @@ def find_point_id(query_pt, pts, tol=TOL):
     assert len(ids) == 1, 'duplicated pts!'
     return ids[0]
 
+def distance_point_triangle(point, tri_end_pts):
+    lines = [(pt_1, pt_2) for pt_1, pt_2 in combinations(tri_end_pts, 2)]
+    return sum([distance_point_line(point, line) for line in lines])
+
+def tet_surface_area(tet_end_points):
+    assert len(tet_end_points) == 4, 'input points must be four!'
+    faces = [face_pts for face_pts in combinations(tet_end_points, 3)]
+    return sum([area_triangle(face_pts) for face_pts in faces])
+
+def tet_from_points(tet_end_points):
+    assert len(tet_end_points) == 4, 'input points must be four!'
+    ids = frozenset([0,1,2,3])
+    faces = []
+    if is_coplanar(tet_end_points):
+        return None, None
+    for face in combinations(ids, 3):
+        left_id, = ids - set(face)
+        if is_point_infront_plane(tet_end_points[left_id], Plane.from_three_points(*[tet_end_points[i] for i in face])):
+            face = [face[0], face[2], face[1]]
+        faces.append(list(face) + [left_id])
+    return tet_end_points, faces
+
+def tet_volume(tet_end_points):
+    assert len(tet_end_points) == 4, 'input points must be four!'
+    verts, faces = tet_from_points(tet_end_points)
+    if verts and faces:
+        return volume_polyhedron((verts, faces))
+    else:
+        return None
+
 ###############################################
 
 def calculate_coord_sys(end_pts, pt_mean):
     """construct local coordinate system for a line connecting two end_pts.
     Local x axis: along the element from st to end
     Local y axis: center of the element to the given pt_mean
-    
+
     Parameters
     ----------
     end_pts : list of two points
         start and end point specifying the element
     pt_mean : list of three floats
         A given pt to help constructing the local y axis
-    
+
     Returns
     -------
     tuple of three lists
@@ -61,7 +95,7 @@ def calculate_coord_sys(end_pts, pt_mean):
 
 def calculate_bar_z(points):
     """compute cross product between the vector formed by points and the global z axis.
-    
+
     """
     vec_x = subtract_vectors(points[1], points[0])
     vec_y_temp = (1,0,0)
@@ -73,10 +107,10 @@ def dropped_perpendicular_points(line_point_1_1, line_point_1_2, line_point_2_1,
     """compute the projected tangent point on axis defined by [L1_pt1, L1_pt2] and [L2_pt1, L2_pt2]
 
     See figure 'perpendicular_bar_tangent_to_two_existing_bars.png' in the docs/images
-    or Fig. 3.7. We are computing the point pair (P1, P_{C1}) here, given the axis endpoints of 
+    or Fig. 3.7. We are computing the point pair (P1, P_{C1}) here, given the axis endpoints of
     bar b_{e1} and b_{n1}
 
-    """ 
+    """
     line_unity_vector_1 = normalize_vector(vector_from_points(line_point_1_1, line_point_1_2))
     line_unity_vector_2 = normalize_vector(vector_from_points(line_point_2_1, line_point_2_2))
     d_vector = cross_vectors(line_unity_vector_1, line_unity_vector_2)
@@ -106,7 +140,7 @@ def find_points_extreme(pts_all, pts_init):
     ang_test = angle_vectors(vec_init, vec_new, deg=True)
     if ang_test > 90:
         pts_draw = [pts_draw[1], pts_draw[0]]
-    
+
     ext_len = 30
     # pts_draw = (add_vectors(pts_draw[0], scale_vector(normalize_vector(vector_from_points(pts_draw[1], pts_draw[0])), ext_len)), add_vectors(
     #            pts_draw[1], scale_vector(normalize_vector(vector_from_points(pts_draw[0], pts_draw[1])), ext_len)))
@@ -270,7 +304,7 @@ def adjust_gripping_plane(pt_bar, pt_new, b_struct, b_v0):
     #     gp      = b_struct.vertex[b_v0]["gripping_plane_no_offset"]
     #     gp_o_n  = translate_points([gp[0]], scale_vector(vec_move, d_move))[0]
     #     b_struct.vertex[b_v0]["gripping_plane_no_offset"] = (gp_o_n, gp[1], gp[2], gp[3])
-    
+
     # if b_v0 == 37:
     #     vec_move    = normalize_vector(vector_from_points(pt_bar[0], pt_bar[1]))
     #     len_bar = distance_point_point(pt_bar[0], pt_bar[1])

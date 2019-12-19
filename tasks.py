@@ -183,7 +183,7 @@ def test(ctx, checks=True, build=False):
                 ctx.run('pip install --verbose dist/*.tar.gz')
 
         log.write('Running pytest')
-        ctx.run('pytest --doctest-modules --cov={} tests'.format(PACKAGE_NAME))
+        ctx.run('pytest --doctest-modules --cov={} tests --cov-report term-missing'.format(PACKAGE_NAME))
 
 
 @task(help={

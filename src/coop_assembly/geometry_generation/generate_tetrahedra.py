@@ -1,13 +1,13 @@
 
 '''
-                                                                                                 
-    ****       *****       ******       ****      ******  ******          **           **       
-   **  **      **  **      **          **  **       **    **              **           **       
-   **          *****       ****        ******       **    ****            **   *****   *****    
-   **  **      **  **      **          **  **       **    **              **  **  **   **  **   
-    ****   **  **  **  **  ******  **  **  **  **   **    ******          **   ******  *****    
-                           
-                                           
+
+    ****       *****       ******       ****      ******  ******          **           **
+   **  **      **  **      **          **  **       **    **              **           **
+   **          *****       ****        ******       **    ****            **   *****   *****
+   **  **      **  **      **          **  **       **    **              **  **  **   **  **
+    ****   **  **  **  **  ******  **  **  **  **   **    ******          **   ******  *****
+
+
 created on 30.06.2019
 author: stefanaparascho
 
@@ -33,7 +33,7 @@ from coop_assembly.help_functions.tangents import tangent_from_point, check_leng
 
 def generate_first_tri(o_struct, b_struct, radius, base_tri_pts, base_tri_ids):
     """[summary]
-    
+
     Parameters
     ----------
     o_struct : [type]
@@ -45,9 +45,9 @@ def generate_first_tri(o_struct, b_struct, radius, base_tri_pts, base_tri_ids):
     base_tri_pts : list of lists of 3-float
         [[x, y, z], [x, y, z], [x, y, z]]
     base_tri_ids : list of int
-        point indices for the base triangle, used for bookkeeping indices 
+        point indices for the base triangle, used for bookkeeping indices
         in the OverallStructure vertex
-    
+
     Returns
     -------
     (Bar_Structure, Overall_Structure)
@@ -57,7 +57,7 @@ def generate_first_tri(o_struct, b_struct, radius, base_tri_pts, base_tri_ids):
     pt_0 = base_tri_pts[0]
     pt_1 = base_tri_pts[1]
     pt_2 = base_tri_pts[2]
-    
+
     vec_0   = normalize_vector(vector_from_points(pt_0, pt_1))
     vec_1   = normalize_vector(vector_from_points(pt_1, pt_2))
     vec_2   = normalize_vector(vector_from_points(pt_2, pt_0))
@@ -82,7 +82,7 @@ def generate_first_tri(o_struct, b_struct, radius, base_tri_pts, base_tri_ids):
     vec_z_1 = calculate_bar_z(end_pts_1)
     vec_z_2 = calculate_bar_z(end_pts_2)
 
-    # add the three bars to the Bar_Structure as vertices, 
+    # add the three bars to the Bar_Structure as vertices,
     bar_type = 0
     crosec_type = "tube"
     crosec_values = (25.0, 2.0) # ? what does this cross section value mean?
@@ -110,18 +110,18 @@ def generate_first_tri(o_struct, b_struct, radius, base_tri_pts, base_tri_ids):
     b_struct.vertex[b_v2_key].update({"mean_point":pt_m})
 
     # calculate contact point projected on bar axes, (Pi, P_{ci}) between bar i and bar i+1
-    epts_0 = dropped_perpendicular_points(b_struct.vertex[b_v0_key]["axis_endpoints"][0], 
-                                          b_struct.vertex[b_v0_key]["axis_endpoints"][1], 
-                                          b_struct.vertex[b_v1_key]["axis_endpoints"][0], 
-                                          b_struct.vertex[b_v1_key]["axis_endpoints"][1]) 
-    epts_1 = dropped_perpendicular_points(b_struct.vertex[b_v1_key]["axis_endpoints"][0], 
-                                          b_struct.vertex[b_v1_key]["axis_endpoints"][1], 
-                                          b_struct.vertex[b_v2_key]["axis_endpoints"][0], 
-                                          b_struct.vertex[b_v2_key]["axis_endpoints"][1]) 
-    epts_2 = dropped_perpendicular_points(b_struct.vertex[b_v2_key]["axis_endpoints"][0], 
-                                          b_struct.vertex[b_v2_key]["axis_endpoints"][1], 
-                                          b_struct.vertex[b_v0_key]["axis_endpoints"][0], 
-                                          b_struct.vertex[b_v0_key]["axis_endpoints"][1]) 
+    epts_0 = dropped_perpendicular_points(b_struct.vertex[b_v0_key]["axis_endpoints"][0],
+                                          b_struct.vertex[b_v0_key]["axis_endpoints"][1],
+                                          b_struct.vertex[b_v1_key]["axis_endpoints"][0],
+                                          b_struct.vertex[b_v1_key]["axis_endpoints"][1])
+    epts_1 = dropped_perpendicular_points(b_struct.vertex[b_v1_key]["axis_endpoints"][0],
+                                          b_struct.vertex[b_v1_key]["axis_endpoints"][1],
+                                          b_struct.vertex[b_v2_key]["axis_endpoints"][0],
+                                          b_struct.vertex[b_v2_key]["axis_endpoints"][1])
+    epts_2 = dropped_perpendicular_points(b_struct.vertex[b_v2_key]["axis_endpoints"][0],
+                                          b_struct.vertex[b_v2_key]["axis_endpoints"][1],
+                                          b_struct.vertex[b_v0_key]["axis_endpoints"][0],
+                                          b_struct.vertex[b_v0_key]["axis_endpoints"][1])
 
     b_struct.connect_bars(b_v0_key, b_v1_key, _endpoints=epts_0)
     b_struct.connect_bars(b_v1_key, b_v2_key, _endpoints=epts_1)
@@ -137,7 +137,7 @@ def generate_first_tri(o_struct, b_struct, radius, base_tri_pts, base_tri_ids):
     o_v2_key = o_struct.add_node(pt_2, v_key=base_tri_ids[2], t_key=tet_id)
     print('vertex key: {} added to the OverallStructure as the base triangle, original ids in the list: {}'.format(\
         [o_v0_key, o_v1_key, o_v2_key], base_tri_ids))
-    
+
     # ? shouldn't these be assigned to tet #0 as well?
     # o_vi and o_vj's connection is "realized" by bar # b_v_key
     o_struct.add_bar(o_v0_key, o_v1_key, b_v0_key)
@@ -165,10 +165,18 @@ def generate_first_tri(o_struct, b_struct, radius, base_tri_pts, base_tri_ids):
     return b_struct, o_struct
 
 
-def generate_structure_from_points(o_struct, b_struct, radius, points, tet_node_ids, 
+def generate_structure_from_points(o_struct, b_struct, radius, points, tet_node_ids,
     correct=True, check_collision=False):
-    """main entry function for the generation system
-    
+    """generate double-tangent tet design from a given list of points and tet sequence indices.
+
+    There are three types of parameters to be resolved at each step of the generation process:
+    1. the node that a new bar connects to
+    2. the two exisiting bars in the nodes that a new bar connects to
+    3. one of the four possible sides of attachment to these bars
+
+    where #1 above is specified in the given `tet_node_ids`) and the latter two are resolved
+    in `add_tetra` function calls.
+
     Parameters
     ----------
     o_struct : [type]
@@ -259,26 +267,28 @@ def generate_structure_from_points(o_struct, b_struct, radius, points, tet_node_
         comb_3.reverse()
 
         dir_factor = 1
-        assert add_tetra(o_struct, b_struct, tri_node_ids, comb_1, comb_2, comb_3,
-                         dir_factor, vertex_pt, new_vertex_id, radius, correct=correct, check_collision=check_collision), \
-               'Tet generation fails at #{} ({}) -> {}'.format(tet_id, tri_node_ids, new_vertex_id)
+        success = add_tetra(o_struct, b_struct, tri_node_ids, comb_1, comb_2, comb_3,
+                            dir_factor, vertex_pt, new_vertex_id, radius, correct=correct, check_collision=check_collision)
+        if success is None:
+            print('Tet generation fails at #{} ({}) -> {}'.format(tet_id, tri_node_ids, new_vertex_id))
+            break
 
 
-def add_tetra(o_struct, b_struct, tri_node_ids, comb_bars_1, comb_bars_2, comb_bars_3, 
-    dir_factor, new_vertex_pt, new_vertex_id, radius, 
+def add_tetra(o_struct, b_struct, tri_node_ids, comb_bars_1, comb_bars_2, comb_bars_3,
+    dir_factor, new_vertex_pt, new_vertex_id, radius,
     b_v0=None, b_v1=None, b_v2=None, bool_add=True, o_v_key=None, correct=True, check_collision=False):
-    
+
     # adds a new point and tetrahedron to the structure
-    # input: nodes, bars from o_struct as vertex_key_integer and edge_vertex_key_tuples 
-    
+    # input: nodes, bars from o_struct as vertex_key_integer and edge_vertex_key_tuples
+
 #     len_vec_min     = 1500
 #     len_vec_max     = 1500
-    
+
     len_vec_min     = 500
     len_vec_max     = 1400
     len_vec         = (random.random()*(len_vec_max - len_vec_min))+len_vec_min
     max_len         = 1800
-    
+
     jnd = 0
 
     bars1 = comb_bars_1[jnd]
@@ -297,29 +307,29 @@ def add_tetra(o_struct, b_struct, tri_node_ids, comb_bars_1, comb_bars_2, comb_b
     b_v3_1  = o_struct.edge[bars3[0][0]][bars3[0][1]]["vertex_bar"]
     b3_2    = b_struct.vertex[o_struct.edge[bars3[1][0]][bars3[1][1]]["vertex_bar"]]
     b_v3_2  = o_struct.edge[bars3[1][0]][bars3[1][1]]["vertex_bar"]
-    
-    
+
+
     dpp1        = dropped_perpendicular_points(b1_1["axis_endpoints"][0], b1_1["axis_endpoints"][1], b1_2["axis_endpoints"][0], b1_2["axis_endpoints"][1])
     pt_mean_1   = centroid_points(dpp1)
     dpp2        = dropped_perpendicular_points(b2_1["axis_endpoints"][0], b2_1["axis_endpoints"][1], b2_2["axis_endpoints"][0], b2_2["axis_endpoints"][1])
     pt_mean_2   = centroid_points(dpp2)
     dpp3        = dropped_perpendicular_points(b3_1["axis_endpoints"][0], b3_1["axis_endpoints"][1], b3_2["axis_endpoints"][0], b3_2["axis_endpoints"][1])
     pt_mean_3   = centroid_points(dpp3)
-    
+
     pt_mean     = centroid_points([pt_mean_1, pt_mean_2, pt_mean_3])
-    
+
     if bool_add == True:
         vec1    = subtract_vectors(pt_mean_1, pt_mean_2)
         vec2    = subtract_vectors(pt_mean_2, pt_mean_3)
         vec_n   = normalize_vector(cross_vectors(vec1, vec2))
         vec_n   = scale_vector(vec_n, len_vec)
-    
+
         dir_factor  = random.sample((1, -1), 1)[0]
         #dir_factor = 1
         vec_n       = scale_vector(vec_n, dir_factor)
-    
+
         pt_new = add_vectors(pt_mean, vec_n)
-        
+
     if new_vertex_pt:
         pt_new = new_vertex_pt
     # check if new point is inside of structure
@@ -329,11 +339,11 @@ def add_tetra(o_struct, b_struct, tri_node_ids, comb_bars_1, comb_bars_2, comb_b
                 if not o_struct.isOutside(pt_new, t):
                     vec_n   = scale_vector(vec_n, -1)
                     pt_new  = add_vectors(pt_mean, vec_n)
-    
+
     if correct==True:
         pt_new = correct_point(b_struct, o_struct, o_v_key, pt_new, (b_v1_1, b_v1_2), (b_v2_1, b_v2_2), (b_v3_1, b_v3_2))
     pt1 = pt_new
-    
+
     for j, bar_jnd_1 in enumerate(comb_bars_1):
         bars1 = bar_jnd_1
         b1_1 = b_struct.vertex[o_struct.edge[bars1[0][0]]
@@ -342,7 +352,7 @@ def add_tetra(o_struct, b_struct, tri_node_ids, comb_bars_1, comb_bars_2, comb_b
         b1_2 = b_struct.vertex[o_struct.edge[bars1[1][0]]
                                 [bars1[1][1]]["vertex_bar"]]
         b_v1_2 = o_struct.edge[bars1[1][0]][bars1[1][1]]["vertex_bar"]
-        
+
         if correct == True:
             pt_new = correct_point(b_struct, o_struct, o_v_key, pt_new,
                                (b_v1_1, b_v1_2), (b_v2_1, b_v2_2), (b_v3_1, b_v3_2))
@@ -352,7 +362,7 @@ def add_tetra(o_struct, b_struct, tri_node_ids, comb_bars_1, comb_bars_2, comb_b
         else:
             ret_ft = first_tangent(pt1, b1_1, b1_2, pt_mean_1, max_len,
                                 b_v1_1, b_v1_2, b_struct, pt_mean, radius, b_v0, check_col=check_collision)
-        
+
         if ret_ft:
             b_v0, end_pts_0        = ret_ft
             break
@@ -361,7 +371,7 @@ def add_tetra(o_struct, b_struct, tri_node_ids, comb_bars_1, comb_bars_2, comb_b
             if j == len(comb_bars_1)-1:
                 print("no point found for first tangent calculation - 430, add_tetra")
                 return None
-            
+
     for j, bar_jnd_2 in enumerate(comb_bars_2):
         bars2 = bar_jnd_2
         b2_1 = b_struct.vertex[o_struct.edge[bars2[0][0]]
@@ -388,7 +398,7 @@ def add_tetra(o_struct, b_struct, tri_node_ids, comb_bars_1, comb_bars_2, comb_b
             if j == len(comb_bars_2) - 1:
                 print("no point found for second tangent calculation - 430, add_tetra")
                 return None
-    
+
 
     for j, bar_jnd_3 in enumerate(comb_bars_3):
         bars3 = bar_jnd_3
@@ -418,12 +428,12 @@ def add_tetra(o_struct, b_struct, tri_node_ids, comb_bars_1, comb_bars_2, comb_b
                 print("no point found for third tangent calculation - 430, add_tetra")
                 return None
 
-    
+
     if bool_add:
         b_struct.connect_bars(b_v0, b_v1)
         b_struct.connect_bars(b_v1, b_v2)
         b_struct.connect_bars(b_v2, b_v0)
-    
+
     dpp_1   = dropped_perpendicular_points(b_struct.vertex[b_v1]["axis_endpoints"][0], b_struct.vertex[b_v1]["axis_endpoints"][1], b_struct.vertex[b_v2]["axis_endpoints"][0], b_struct.vertex[b_v2]["axis_endpoints"][1])
     key     = list(b_struct.edge[b_v1][b_v2]["endpoints"].keys())[0]
     b_struct.edge[b_v1][b_v2]["endpoints"].update({key:(dpp_1[0], dpp_1[1])})
@@ -436,17 +446,17 @@ def add_tetra(o_struct, b_struct, tri_node_ids, comb_bars_1, comb_bars_2, comb_b
 
     if bool_add:
         o_n_new = o_struct.add_node(pt_new, v_key=new_vertex_id)
-    
+
     ### check length of bar and adjust gripper position ###
     # pt_bar_1    = b_struct.vertex[b_v0]["axis_endpoints"]
     # pt_bar_2    = b_struct.vertex[b_v1]["axis_endpoints"]
     # pt_bar_3    = b_struct.vertex[b_v2]["axis_endpoints"]
-    
+
     # adjust_gripping_plane(pt_bar_1, pt_new, b_struct, b_v0)
     # adjust_gripping_plane(pt_bar_2, pt_new, b_struct, b_v1)
     # adjust_gripping_plane(pt_bar_3, pt_new, b_struct, b_v2)
     ### ###
-    
+
     if bool_add:
         o_n1 = tri_node_ids[0]
         o_n2 = tri_node_ids[1]
@@ -454,27 +464,27 @@ def add_tetra(o_struct, b_struct, tri_node_ids, comb_bars_1, comb_bars_2, comb_b
         o_struct.add_bar(o_n_new, o_n1, b_v0)
         o_struct.add_bar(o_n_new, o_n2, b_v1)
         o_struct.add_bar(o_n_new, o_n3, b_v2)
-    
+
     #draw(b_struct, o_struct, 0)
-    
+
     #### dummy definition of alternationg robot numbers - to be changed in path planning calculation
         rob_num_0 = "21" if b_v0 % 2 == 0 else "22"
         rob_num_1 = "21" if b_v1 % 2 == 0 else "22"
         rob_num_2 = "21" if b_v2 % 2 == 0 else "22"
-        
+
         b_struct.vertex[b_v0].update({"rob_num":rob_num_0})
         b_struct.vertex[b_v1].update({"rob_num":rob_num_1})
         b_struct.vertex[b_v2].update({"rob_num":rob_num_2})
-    
+
     find_bar_ends(b_struct, b_struct.vertex[b_v0], b_v0)
     find_bar_ends(b_struct, b_struct.vertex[b_v1], b_v1)
     find_bar_ends(b_struct, b_struct.vertex[b_v2], b_v2)
-    
+
     find_bar_ends(b_struct, b_struct.vertex[b_v1_1], b_v1_1)
     find_bar_ends(b_struct, b_struct.vertex[b_v1_2], b_v1_2)
     find_bar_ends(b_struct, b_struct.vertex[b_v2_1], b_v2_1)
     find_bar_ends(b_struct, b_struct.vertex[b_v2_2], b_v2_2)
     find_bar_ends(b_struct, b_struct.vertex[b_v3_1], b_v3_1)
     find_bar_ends(b_struct, b_struct.vertex[b_v3_2], b_v3_2)
-    
+
     return o_struct, b_struct
