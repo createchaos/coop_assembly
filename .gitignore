@@ -116,3 +116,6 @@ ENV/
 *.3dmbak
 
 *.rhl
+
+# choreo results
+/*_result_.json
