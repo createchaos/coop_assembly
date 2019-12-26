@@ -12,7 +12,8 @@ Unreleased
 ----------
 
 **Added**
-
+- added new interface function to pychoreo v0.3.0+
+- added local data folders and `get_data` function
 
 **Removed**
 

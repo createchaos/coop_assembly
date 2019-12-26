@@ -1,4 +1,7 @@
 compas
 scipy
+# ! before PR is merged...
 # compas_fab
 # pychoreo
+-e git+https://github.com/yijiangh/compas_fab.git@feature/assembly_datastructure#egg=compas_fab
+-e git+https://github.com/yijiangh/pychoreo.git@test/extrusion_rss#egg=pychoreo
