@@ -36,7 +36,8 @@ from coop_assembly.choreo_interface.robot_setup import get_picknplace_robot_data
 
 AVAIBLE_SOLVE_METHODS = ['ladder_graph', 'sparse_ladder_graph']
 
-def sequenced_picknplace_plan(assembly_pkg_json_path, solve_method='sparse_ladder_graph', viewer=False, scale=1.0, **kwargs):
+def sequenced_picknplace_plan(assembly_pkg_json_path, solve_method='sparse_ladder_graph', viewer=False, scale=1.0,
+    **kwargs):
     # TODO: assert solve method in avaiable list
     step_num = 5
     sample_time = 5
@@ -62,6 +63,7 @@ def sequenced_picknplace_plan(assembly_pkg_json_path, solve_method='sparse_ladde
         # * pybullet can handle ROS-package path URDF automatically now (ver 2.5.7)!
         robot = load_pybullet(robot_urdf, fixed_base=True)
         workspace = load_pybullet(workspace_urdf, fixed_base=True)
+        # ee_body = create_obj(picknplace_end_effector_urdf)
         ee_body = load_pybullet(picknplace_end_effector_urdf)
 
     # * set robot idle configuration
@@ -80,7 +82,6 @@ def sequenced_picknplace_plan(assembly_pkg_json_path, solve_method='sparse_ladde
         ee_attach.assign()
         ee_link_pose = get_pose(ee_attach.child)
         draw_pose(multiply(ee_link_pose, root_from_tcp))
-        wait_for_user()
 
     # * specify ik fn wrapper
     ik_fn = IK_MODULE.get_ik
@@ -108,7 +109,8 @@ def sequenced_picknplace_plan(assembly_pkg_json_path, solve_method='sparse_ladde
 
     # * load precomputed sequence / use assigned sequence
     # element_seq = elements.keys()
-    element_seq = [0, 2, 3]
+    # element_seq = [0, 2, 3]
+    element_seq = [3, 4, 5]
     print('sequence: ', element_seq)
 
     # visualize goal pose
@@ -131,9 +133,10 @@ def sequenced_picknplace_plan(assembly_pkg_json_path, solve_method='sparse_ladde
     disabled_self_collisions = get_disabled_collisions(robot, disabled_self_collision_link_names)
     # and links between the robot and the workspace (e.g. robot_base_link to base_plate)
     extra_disabled_collisions = get_body_body_disabled_collisions(robot, workspace, workspace_robot_disabled_link_names)
-    # extra_disabled_collisions.add(
-    #     ((robot, link_from_name(robot, 'wrist_3_link')), (ee_body, BASE_LINK))
-    #     )
+    extra_disabled_collisions.update({
+        ((robot, link_from_name(robot, 'robot_link_5')), (ee_body, link_from_name(ee_body, 'eef_base_link'))),
+        ((robot, link_from_name(robot, 'robot_link_6')), (ee_body, link_from_name(ee_body, 'eef_base_link')))
+        })
 
     # * create cartesian processes without a sequence being given, with random pose generators
     cart_process_seq = build_picknplace_cartesian_process_seq(
@@ -148,13 +151,14 @@ def sequenced_picknplace_plan(assembly_pkg_json_path, solve_method='sparse_ladde
     for cp in cart_process_seq:
         cp.target_conf = robot_start_conf
 
-    viz_inspect = False
+    viz_inspect = False if 'viz_inspect' not in kwargs else kwargs['viz_inspect']
+    warning_pause = False if 'warning_pause' not in kwargs else kwargs['viz_inspect']
     with LockRenderer(not viz_inspect):
         if solve_method == 'ladder_graph':
             print('\n'+'#' * 10)
             print('Solving with the vanilla ladder graph search algorithm.')
             cart_process_seq = solve_ladder_graph_from_cartesian_process_list(cart_process_seq,
-                verbose=True, warning_pause=False, viz_inspect=viz_inspect, check_collision=True, start_conf=robot_start_conf)
+                verbose=True, warning_pause=warning_pause, viz_inspect=viz_inspect, check_collision=False, start_conf=robot_start_conf)
         elif solve_method == 'sparse_ladder_graph':
             print('\n'+'#' * 10)
             print('Solving with the sparse ladder graph search algorithm.')
@@ -199,8 +203,11 @@ def sequenced_picknplace_plan(assembly_pkg_json_path, solve_method='sparse_ladde
     if return2idle:
         full_trajs[-1].append(transition_traj[-1][-1])
 
-    here = os.path.dirname(__file__)
-    save_dir = os.path.join(here, 'results')
+    if 'save_dir' not in kwargs:
+        here = os.path.dirname(__file__)
+        save_dir = os.path.join(here, 'results')
+    else:
+        save_dir = kwargs['save_dir']
     export_trajectory(save_dir, full_trajs, ee_link_name, indent=None, shape_file_path=assembly_pkg_json_path,
         include_robot_data=True, include_link_path=False)
 
@@ -216,35 +223,17 @@ def sequenced_picknplace_plan(assembly_pkg_json_path, solve_method='sparse_ladde
                                         ee_urdf=picknplace_end_effector_urdf, workspace_urdf=workspace_urdf, animate=True,
                                         cart_time_step=cart_time_step, tr_time_step=tr_time_step)
 
-def visualize_picknplace_planning_results(viewer, picknplace_problem_path, picknplace_robot_data,
-    picknplace_end_effector): #, picknplace_tcp_def
-
+def visualize_picknplace_planning_results(pkg_json_path, save_file_path, viewer=False):
     # * create robot and pb environment
     (robot_urdf, base_link_name, tool_root_link_name, ee_link_name, ik_joint_names, disabled_self_collision_link_names), \
-    (workspace_urdf, workspace_robot_disabled_link_names) = picknplace_robot_data
-
-    # * get problem & pre-computed json file paths
-    pkg_json_path, result_file_name = picknplace_problem_path
-
-    # * parse saved trajectory results
-    here = os.path.dirname(__file__)
-    save_file_path = os.path.join(here, 'results', result_file_name)
-
-    # parse without connect
-    with pytest.warns(UserWarning, match='Pybullet environment not connected*'):
-        full_trajs = parse_saved_trajectory(save_file_path)
-
-    # parse with connect but robot body not added
-    connect(use_gui=False)
-    with pytest.raises(ValueError):
-        full_trajs = parse_saved_trajectory(save_file_path)
-    disconnect()
+    (workspace_urdf, workspace_robot_disabled_link_names) = get_picknplace_robot_data()
+    picknplace_end_effector_urdf = get_picknplace_end_effector_urdf()
+    picknplace_tcp_def = get_picknplace_tcp_def()
 
     # parse with connect
-    connect(use_gui=False)
+    connect(use_gui=viewer)
     with HideOutput():
-        robot = load_pybullet(robot_urdf, fixed_base=True)
-    # with pytest.warns(UserWarning, match='Cannot find body with name*'):
+        _ = load_pybullet(robot_urdf, fixed_base=True)
     full_trajs = parse_saved_trajectory(save_file_path)
     disconnect()
 
@@ -254,5 +243,5 @@ def visualize_picknplace_planning_results(viewer, picknplace_problem_path, pickn
         tr_time_step = None
         display_picknplace_trajectories(robot_urdf, ik_joint_names,
                                         pkg_json_path, full_trajs, tool_root_link_name,
-                                        ee_urdf=picknplace_end_effector, workspace_urdf=workspace_urdf, animate=True,
+                                        ee_urdf=picknplace_end_effector_urdf, workspace_urdf=workspace_urdf, animate=True,
                                         cart_time_step=cart_time_step, tr_time_step=tr_time_step)
