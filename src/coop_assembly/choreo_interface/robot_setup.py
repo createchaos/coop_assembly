@@ -58,7 +58,7 @@ def get_picknplace_end_effector_urdf():
 def get_picknplace_tcp_def():
     # TODO: should be derived from the end effector URDF
     # in meter
-    return Pose(point=[0, 0, 0.185795])
+    return Pose(point=[-0.002851003, 0.001035, 0.188155183])
 
 def get_robot_init_conf():
     # radius

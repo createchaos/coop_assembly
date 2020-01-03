@@ -37,12 +37,8 @@ from coop_assembly.choreo_interface.robot_setup import get_picknplace_robot_data
 AVAIBLE_SOLVE_METHODS = ['ladder_graph', 'sparse_ladder_graph']
 
 def sequenced_picknplace_plan(assembly_pkg_json_path, solve_method='sparse_ladder_graph', viewer=False, scale=1.0,
-    **kwargs):
+    step_num=5, sample_time=5, sparse_time_out=2, jt_res=0.1, **kwargs):
     # TODO: assert solve method in avaiable list
-    step_num = 5
-    sample_time = 5
-    sparse_time_out = 2
-    jt_res = 0.1
 
     # * load robot setup data
     (robot_urdf, base_link_name, tool_root_link_name, ee_link_name, ik_joint_names, disabled_self_collision_link_names), \
@@ -109,8 +105,8 @@ def sequenced_picknplace_plan(assembly_pkg_json_path, solve_method='sparse_ladde
 
     # * load precomputed sequence / use assigned sequence
     # element_seq = elements.keys()
-    # element_seq = [0, 2, 3]
-    element_seq = [3, 4, 5]
+    element_seq = [0, 1, 2, 3, 4, 5]
+    # element_seq = [3, 4, 5]
     print('sequence: ', element_seq)
 
     # visualize goal pose
@@ -208,8 +204,8 @@ def sequenced_picknplace_plan(assembly_pkg_json_path, solve_method='sparse_ladde
         save_dir = os.path.join(here, 'results')
     else:
         save_dir = kwargs['save_dir']
-    export_trajectory(save_dir, full_trajs, ee_link_name, indent=None, shape_file_path=assembly_pkg_json_path,
-        include_robot_data=True, include_link_path=False)
+    export_trajectory(save_dir, full_trajs, ee_link_name, indent=1, shape_file_path=assembly_pkg_json_path,
+        include_robot_data=True, include_link_path=True)
 
     # * disconnect and close pybullet engine used for planning, visualizing trajectories will start a new one
     reset_simulation()

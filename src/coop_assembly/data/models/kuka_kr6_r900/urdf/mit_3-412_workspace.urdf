@@ -138,7 +138,8 @@
     <parent link="workspace_base_link"/>
     <child link="print_table"/>
     <!-- change table coordinate here!!! -->
-    <origin rpy="0 0 0" xyz="0.7 0 0.0"/>
+    <!-- <origin rpy="0 0 0" xyz="0.7 0 -14.23"/> -->
+    <origin rpy="0 0 0" xyz="0.7 0 -16.23"/>
   </joint>
 
   <!-- TODO: add pick-up rack -->
