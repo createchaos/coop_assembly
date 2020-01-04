@@ -1,5 +1,5 @@
 Troubleshooting
----------------
+================
 
 Sometimes things don't go as expected. Here are some of answers to the most common issues you might bump into:
 
