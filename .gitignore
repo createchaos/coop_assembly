@@ -119,3 +119,5 @@ ENV/
 
 # choreo results
 /*_result_.json
+
+.coverage

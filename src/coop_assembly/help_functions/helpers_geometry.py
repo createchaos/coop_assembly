@@ -69,6 +69,12 @@ def tet_volume(tet_end_points):
 
 ###############################################
 
+def Frame_to_plane_data(frame):
+    data = frame.to_data()
+    return (data['point'], data['xaxis'], data['yaxis'], cross_vectors(data['xaxis'], data['yaxis']))
+
+###############################################
+
 def calculate_coord_sys(end_pts, pt_mean):
     """construct local coordinate system for a line connecting two end_pts.
     Local x axis: along the element from st to end

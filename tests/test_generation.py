@@ -14,7 +14,7 @@ from coop_assembly.geometry_generation.tet_sequencing import \
     point2point_shortest_distance_tet_sequencing, \
     point2triangle_tet_sequencing
 from coop_assembly.geometry_generation.execute import execute_from_points
-from coop_assembly.assembly_info_generation import calculate_gripping_plane, calculate_offset, calculate_offsets_all
+from coop_assembly.assembly_info_generation import calculate_gripping_plane, calculate_offset
 from coop_assembly.help_functions.parsing import export_structure_data, parse_saved_structure_data
 
 @pytest.fixture
@@ -72,4 +72,4 @@ def test_gen_grasp_planes(points_library, test_file_name, save_dir):
     for v in b_struct.vertex:
         calculate_gripping_plane(b_struct, v, b_struct.vertex[v]["mean_point"], nb_rot=nb_rot, nb_trans=nb_trans)
         calculate_offset(o_struct, b_struct, v, offset_d1, offset_d2, seq)
-        calculate_offsets_all(o_struct, b_struct, v, offset_d1, offset_d2, seq)
+        # calculate_offsets_all(o_struct, b_struct, v, offset_d1, offset_d2, seq)
