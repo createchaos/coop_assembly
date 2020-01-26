@@ -101,7 +101,7 @@ class OverallStructure(Network):
             self.t_key_max += 1
         return v_key
 
-    def add_bar(self, v_key_1, v_key_2, bar_struct_vert_key, t_key = None):
+    def add_bar(self, v_key_1, v_key_2, bar_struct_vert_key, t_key=None):
         """create a network edge between vert 1 and vert 2,
         and assign the bar structure to the edge's attribute
 

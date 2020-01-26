@@ -1,17 +1,18 @@
 
 '''
-                                                                                                 
-    ****       *****       ******       ****      ******  ******          **           **       
-   **  **      **  **      **          **  **       **    **              **           **       
-   **          *****       ****        ******       **    ****            **   *****   *****    
-   **  **      **  **      **          **  **       **    **              **  **  **   **  **   
-    ****   **  **  **  **  ******  **  **  **  **   **    ******          **   ******  *****    
-                           
-                                           
+
+    ****       *****       ******       ****      ******  ******          **           **
+   **  **      **  **      **          **  **       **    **              **           **
+   **          *****       ****        ******       **    ****            **   *****   *****
+   **  **      **  **      **          **  **       **    **              **  **  **   **  **
+    ****   **  **  **  **  ******  **  **  **  **   **    ******          **   ******  *****
+
+
 created on 30.06.2019
 author: stefanaparascho
 '''
 
+raise RuntimeError('generate_triangle module is deprecated!')
 
 import random
 import itertools
@@ -25,7 +26,7 @@ from compas.geometry.average import centroid_points
 from compas.geometry import translate_points
 
 from coop_assembly.help_functions.helpers_geometry import calculate_coord_sys, calculate_bar_z, \
-    dropped_perpendicular_points, update_bar_lengths 
+    dropped_perpendicular_points, update_bar_lengths
 from coop_assembly.help_functions.tangents import tangent_from_point, check_length_sol_one, \
     tangent_through_two_points, check_colisions
 from coop_assembly.geometry_generation.generate_tetrahedra import add_tetra
@@ -85,12 +86,12 @@ def generate_first_tetra(o_struct, b_struct, r, points = None):
 
 def generate_structure(o_struct, b_struct, bool_draw, r, points = None, supports=None, loads=None, correct=True):
 
-    if points: 
+    if points:
         iterations = len(points)
     else:
         iterations = 1
     print("iterations", iterations)
-        
+
     # repeat for each point
     for i in range(iterations):
 
@@ -110,7 +111,7 @@ def generate_structure(o_struct, b_struct, bool_draw, r, points = None, supports
         # if points:
         pt_test = points[i]
         # else:
-        #     if i == 0: 
+        #     if i == 0:
         #         pt_test     = (300,300,1000)
         #     else:
         #         pt_test = (1200, 500, 700)
@@ -148,15 +149,15 @@ def generate_structure(o_struct, b_struct, bool_draw, r, points = None, supports
 
         # update lengths of bars of entire structure
         update_bar_lengths(b_struct)
-        
+
 
     return b_struct
 
 def generate_structure_no_points(o_struct, b_struct, bool_draw, r, iterations, bar_len_min, bar_len_max, breaker_num, supports=None, loads=None, correct=True, attr=None):
-    
+
     radius1 = r
     radius2 = r
-    
+
     # repeat for each bar added to structure
     for i in range(iterations):
         rps = None
@@ -250,7 +251,7 @@ def master_checker(b_struct, lv1, lv2, rp1, rp2, bar1, bar2, bar_len_min, bar_le
     b_ckr = bar_checker(i, bar1, lv1, rp1, bar2, lv2, rp2, bar_len_max, r)
     bb = below_base(rp1, rp2, r)
     h = 0
-    print(bca, b_ckr)    
+    print(bca, b_ckr)
     while bca is False or b_ckr or bb is False:
         h += 1
         if h > breaker_num:
@@ -270,7 +271,7 @@ def master_checker(b_struct, lv1, lv2, rp1, rp2, bar1, bar2, bar_len_min, bar_le
     return [rp1, rp2]
 
 def bar_connection_angle(lv1, lv2, rp1, rp2, bar1, bar2, bar_len_max, i):
-# checks to make sure the angle between the axis of two connecting bars satisfies a given condition, repicks points  
+# checks to make sure the angle between the axis of two connecting bars satisfies a given condition, repicks points
     bar_new = subtract_vectors(rp2, rp1)
     connection_angle_1 = angle_vectors(bar_new, lv1, deg=True)
     connection_angle_2 = angle_vectors(bar_new, lv2, deg=True)
@@ -299,7 +300,7 @@ def point_on_bar_1(b_struct, bar_end_points, line_vector, bar_len_min, bar_len_m
         if y > breaker_num:
             break
         cp      = centroid_points(bar_end_points)
-        bar_len = distance_point_point(bar_end_points[0], bar_end_points[1])    
+        bar_len = distance_point_point(bar_end_points[0], bar_end_points[1])
         max_len = bar_len_max - (bar_len/2)
         if bar_len > bar_len_min:
             min_len = bar_len/2
@@ -341,7 +342,7 @@ def point_on_bar_1(b_struct, bar_end_points, line_vector, bar_len_min, bar_len_m
             b1_end_points = [rp, bar_end_points[1]]
 
         no_collision = check_colisions(b_struct, b1_end_points, r)
-        
+
 
     return rp
 
@@ -380,18 +381,18 @@ def bar_checker(i, bar1, lv1, rp1, bar2, lv2, rp2, bar_len_max, r):
     dpp = distance_point_point(rp1, rp2)
     if dpl_1 >= 5*r and dpl_2 >= 5*r and dpp <= bar_len_max-r*4:
         return True
-    else:        
+    else:
         return False
 
 def add_tangent_no_points(b_struct, bp1, lv1, bp2, lv2, rp1, rp2, radius1, radius2, bars_ind, i):
-#   adds an acceptable solution to b_struct 
+#   adds an acceptable solution to b_struct
     sols_two_points     = tangent_through_two_points(bp1, lv1, rp1, bp2, lv2, rp2, radius1, radius2)
     sol = find_sol_interlock(b_struct, bars_ind[0], bars_ind[1], sols_two_points,  rp1, i, radius1)
 
     if sol is not None:
         print("bar was added here")
         vec_x, vec_y, vec_z = calculate_coord_sys(sol, (500,500,500))
-        pts_b1 = b_struct.vertex[bars_ind[0]]["axis_endpoints"] 
+        pts_b1 = b_struct.vertex[bars_ind[0]]["axis_endpoints"]
         dpp1 = dropped_perpendicular_points(
             pts_b1[0], pts_b1[1], sol[0], sol[1])
         pts_b2 = b_struct.vertex[bars_ind[1]]["axis_endpoints"]
@@ -404,7 +405,7 @@ def add_tangent_no_points(b_struct, bp1, lv1, bp2, lv2, rp1, rp2, radius1, radiu
         b_struct.connect_bars(b_new_bar, bars_ind[1])
 
         update_bar_lengths(b_struct)
-        return b_new_bar      
+        return b_new_bar
     else:
         return None
 
@@ -412,7 +413,7 @@ def add_tangent(b_struct, bp1, lv1, bp2, lv2, rp, dist1, dist2, bars_rnd):
     raise DeprecationWarning
     # not in use currently
     sol     = tangent_from_point(bp1, lv1, bp2, lv2, rp, dist1, dist2)
-    
+
     b1_key  = bars_rnd[0]
     b2_key  = bars_rnd[1]
     b1      = b_struct.vertex[b1_key]
@@ -432,7 +433,7 @@ def add_tangent(b_struct, bp1, lv1, bp2, lv2, rp, dist1, dist2, bars_rnd):
     # pt1_e = add_vectors(rp, scale_vector(vec_sol_1, l1))
     # # end_pts_0 = (bp1, pt1_e)
     # end_pts_0 = (rp, pt1_e)
-    
+
     # # add extension
     # ext_len = 30
     # # end_pts_0 = (add_vectors(bp1, scale_vector(normalize_vector(vector_from_points(pt1_e, bp1)), ext_len)), add_vectors(
@@ -441,10 +442,10 @@ def add_tangent(b_struct, bp1, lv1, bp2, lv2, rp, dist1, dist2, bars_rnd):
 
     # end_pts_0 = [map(float, p) for p in end_pts_0]
     # end_pts_0 = [list(p) for p in end_pts_0]
-    
+
     vec_x, vec_y, vec_z = calculate_coord_sys(end_pts_0, (500,500,500))
     pt_o        = centroid_points(end_pts_0)
-    
+
     b_v0 = b_struct.add_bar(0, end_pts_0, "tube", (25.0, 2.0), vec_z)
 
 
@@ -472,7 +473,7 @@ def find_sol_interlock(b_struct, b1_key, b2_key, sol,  rp1, i, r):
     angles_previous = []
     if i == 0:
         for pts in sol:
-            pts_b1 = b_struct.vertex[b1_key]["axis_endpoints"] 
+            pts_b1 = b_struct.vertex[b1_key]["axis_endpoints"]
             dpp1 = dropped_perpendicular_points(
                 pts_b1[0], pts_b1[1], pts[0], pts[1])
             pts_b2 = b_struct.vertex[b2_key]["axis_endpoints"]
@@ -481,12 +482,12 @@ def find_sol_interlock(b_struct, b1_key, b2_key, sol,  rp1, i, r):
             vec_1 = (subtract_vectors(dpp1[0], dpp1[1]))
             vec_2 = (subtract_vectors(dpp2[0], dpp2[1]))
 
-            ang_vec = angle_vectors(vec_1, vec_2, deg=True) 
+            ang_vec = angle_vectors(vec_1, vec_2, deg=True)
             angles.append(ang_vec)
 
         ang_max = max(angles)
         ind = angles.index(ang_max)
-        # selects the best solution (if one is available) that satisfies connection directions  
+        # selects the best solution (if one is available) that satisfies connection directions
         if 120 < ang_max < 180:
             solution = sol[ind]
             return solution
@@ -495,7 +496,7 @@ def find_sol_interlock(b_struct, b1_key, b2_key, sol,  rp1, i, r):
 
     else:
         for pts in sol:
-            pts_b1 = b_struct.vertex[b1_key]["axis_endpoints"] 
+            pts_b1 = b_struct.vertex[b1_key]["axis_endpoints"]
             dpp1 = dropped_perpendicular_points(
                 pts_b1[0], pts_b1[1], pts[0], pts[1])
             pts_b2 = b_struct.vertex[b2_key]["axis_endpoints"]
@@ -503,7 +504,7 @@ def find_sol_interlock(b_struct, b1_key, b2_key, sol,  rp1, i, r):
                 pts_b2[0], pts_b2[1], pts[0], pts[1])
             vec_1 = (subtract_vectors(dpp1[0], dpp1[1]))
             vec_2 = (subtract_vectors(dpp2[0], dpp2[1]))
-            
+
             previous_bar_connection_1 = b_struct.vertex[b1_key]["connection_vectors"]
 
             # checks which connection on the previous bar is the closest to rp1
@@ -514,13 +515,13 @@ def find_sol_interlock(b_struct, b1_key, b2_key, sol,  rp1, i, r):
             else:
                 vec_previous = subtract_vectors(previous_bar_connection_1[1][1], previous_bar_connection_1[1][0])
 
-            ang_vec = angle_vectors(vec_1, vec_2, deg=True) 
+            ang_vec = angle_vectors(vec_1, vec_2, deg=True)
             angles.append(ang_vec)
 
             # calculates the angle between the previous bar's most adjacent connection and the first connection of the new bar
             ang_previous = angle_vectors(vec_1, vec_previous, deg=True)
             angles_previous.append(ang_previous)
-        
+
         # creates a list of possible solutions
         possible_sol = []
         for w in range(len(angles)):
@@ -537,5 +538,5 @@ def find_sol_interlock(b_struct, b1_key, b2_key, sol,  rp1, i, r):
                 ind = sol.index(solution)
                 print("ind", ind)
                 return solution
-            
+
         return None

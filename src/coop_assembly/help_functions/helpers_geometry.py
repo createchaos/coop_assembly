@@ -113,9 +113,13 @@ def dropped_perpendicular_points(line_point_1_1, line_point_1_2, line_point_2_1,
     """compute the projected tangent point on axis defined by [L1_pt1, L1_pt2] and [L2_pt1, L2_pt2]
 
     See figure 'perpendicular_bar_tangent_to_two_existing_bars.png' in the docs/images
-    or Fig. 3.7. We are computing the point pair (P1, P_{C1}) here, given the axis endpoints of
+    or Fig. 3.7 in SP's dissertaion. We are computing the point pair (P1, P_{C1}) here, given the axis endpoints of
     bar b_{e1} and b_{n1}
 
+    Returns
+    -------
+    list of two points
+       representing the contact line segment between the two axes
     """
     line_unity_vector_1 = normalize_vector(vector_from_points(line_point_1_1, line_point_1_2))
     line_unity_vector_2 = normalize_vector(vector_from_points(line_point_2_1, line_point_2_2))
@@ -125,37 +129,44 @@ def dropped_perpendicular_points(line_point_1_1, line_point_1_2, line_point_2_1,
     normal_2 = cross_vectors(line_unity_vector_2, d_vector)
     plane_1 = (line_point_1_1, normal_1)
     plane_2 = (line_point_2_1, normal_2)
-    dp_point_line_1 = intersection_line_plane((line_point_1_1, line_point_1_2), plane_2)
-    dp_point_line_2 = intersection_line_plane((line_point_2_1, line_point_2_2), plane_1)
+    line_1_dp_point = intersection_line_plane((line_point_1_1, line_point_1_2), plane_2)
+    line_2_dp_point = intersection_line_plane((line_point_2_1, line_point_2_2), plane_1)
 
-    return [dp_point_line_1, dp_point_line_2]
+    return [line_1_dp_point, line_2_dp_point]
 
 
 def find_points_extreme(pts_all, pts_init):
-    vec_init = normalize_vector(vector_from_points(pts_init[0], pts_init[1]))
-    distances = []
-    dic_dist = {}
-    for pt in pts_all:
-        for pt1 in pts_all:
-            if pt != pt1:
-                distances.append(distance_point_point(pt, pt1))
-                dic_dist[distances[-1]] = [pt, pt1]
-    max_dist = max(distances)
-    pts_draw = dic_dist[max_dist]
-    vec_new = normalize_vector(vector_from_points(pts_draw[0], pts_draw[1]))
-    ang_test = angle_vectors(vec_init, vec_new, deg=True)
-    if ang_test > 90:
-        pts_draw = [pts_draw[1], pts_draw[0]]
+    """update a bar's axis end point based on all the contact projected points specified in `pts_all`
 
-    ext_len = 30
-    # pts_draw = (add_vectors(pts_draw[0], scale_vector(normalize_vector(vector_from_points(pts_draw[1], pts_draw[0])), ext_len)), add_vectors(
-    #            pts_draw[1], scale_vector(normalize_vector(vector_from_points(pts_draw[0], pts_draw[1])), ext_len)))
+    Parameters
+    ----------
+    pts_all : list of points
+        all the contact points projected on the axis (specified by pts_init)
+    pts_init : list of two points
+        the initial axis end points
+
+    Returns
+    -------
+    [type]
+        [description]
+    """
+    vec_init = normalize_vector(vector_from_points(*pts_init))
+    # * find the pair of points with maximal distance
+    sorted_pt_pairs = sorted(combinations(pts_all, 2), key=lambda pt_pair: distance_point_point(*pt_pair))
+    pts_draw = sorted_pt_pairs[-1]
+
+    vec_new = normalize_vector(vector_from_points(*pts_draw))
+    if angle_vectors(vec_init, vec_new, deg=True) > 90:
+        # angle can only be 0 or 180
+        pts_draw = pts_draw[::-1]
+
+    # ext_len = 30
+    # pts_draw = (add_vectors(pts_draw[0], scale_vector(normalize_vector(vector_from_points(pts_draw[1], pts_draw[0])), ext_len)), add_vectors(pts_draw[1], scale_vector(normalize_vector(vector_from_points(pts_draw[0], pts_draw[1])), ext_len)))
 
     return pts_draw
 
 
 def check_dir(vec1, vec2):
-
     ang = angle_vectors(vec1, vec2, deg=True)
     if ang < 90:
         return True
@@ -311,20 +322,24 @@ def adjust_gripping_plane(pt_bar, pt_new, b_struct, b_v0):
     #     gp_o_n  = translate_points([gp[0]], scale_vector(vec_move, d_move))[0]
     #     b_struct.vertex[b_v0]["gripping_plane_no_offset"] = (gp_o_n, gp[1], gp[2], gp[3])
 
-    # if b_v0 == 37:
-    #     vec_move    = normalize_vector(vector_from_points(pt_bar[0], pt_bar[1]))
-    #     len_bar = distance_point_point(pt_bar[0], pt_bar[1])
-    #     d_move  = -len_bar/5
-    #     gp      = b_struct.vertex[b_v0]["gripping_plane_no_offset"]
-    #     gp_o_n  = translate_points([gp[0]], scale_vector(vec_move, d_move))[0]
-    #     b_struct.vertex[b_v0]["gripping_plane_no_offset"] = (gp_o_n, gp[1], gp[2], gp[3])
+def find_bar_ends(b_struct, b_key):
+    """Update bar's end points according to the contact points
 
-
-
-def find_bar_ends(b_struct, b, b_key):
-    pts_all_b = []
+    Parameters
+    ----------
+    b_struct : [type]
+        [description]
+    b_key : int
+        BarStructure vertex key
+    """
+    bar = b_struct.vertex[b_key]
+    bar_all_contact_pts = []
     b_vert_n = b_struct.vertex_neighbors(b_key)
-    for n in b_vert_n:
-        pts_all_b.append(dropped_perpendicular_points(b["axis_endpoints"][0], b["axis_endpoints"][1], b_struct.vertex[n]["axis_endpoints"][0], b_struct.vertex[n]["axis_endpoints"][1])[0])
-    pts_b = find_points_extreme(pts_all_b, b["axis_endpoints"])
-    b_struct.vertex[b_key].update({"axis_endpoints":pts_b})
+    for neighbor_bar_key in b_vert_n:
+        bar_contact_pt, _ = dropped_perpendicular_points(bar["axis_endpoints"][0],
+                                                         bar["axis_endpoints"][1],
+                                                         b_struct.vertex[neighbor_bar_key]["axis_endpoints"][0],
+                                                         b_struct.vertex[neighbor_bar_key]["axis_endpoints"][1])
+        bar_all_contact_pts.append(bar_contact_pt)
+    bar_end_pts_new = find_points_extreme(bar_all_contact_pts, bar["axis_endpoints"])
+    b_struct.vertex[b_key].update({"axis_endpoints" : bar_end_pts_new})

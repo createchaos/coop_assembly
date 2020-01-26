@@ -17,8 +17,7 @@ import time
 
 from compas.utilities.xfunc import XFunc
 from coop_assembly.data_structure import OverallStructure, BarStructure
-from coop_assembly.geometry_generation.generate_triangles import generate_structure
-from coop_assembly.geometry_generation.generate_tetrahedra import generate_first_tri, generate_structure_from_points
+from coop_assembly.geometry_generation.generate_tetrahedra import generate_first_triangle, generate_structure_from_points
 from coop_assembly.help_functions.helpers_geometry import update_bar_lengths
 
 def execute_from_points(points, tet_node_ids, radius, check_collision=False, correct=True):

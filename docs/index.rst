@@ -40,6 +40,7 @@ Contents
 
    readme
    instructions
+   code_reading_companion
    troubleshooting
    authors
    changelog
