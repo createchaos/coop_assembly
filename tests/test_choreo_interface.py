@@ -23,7 +23,7 @@ def test_choreo_seq_plan(viewer, solve_method, pkg_name, dir_setup):
     assembly_json_path = os.path.join(test_data_dir, pkg_name, 'json', pkg_name + '.json')
 
     sequenced_picknplace_plan(assembly_json_path, solve_method=solve_method, scale=1e-3, viewer=viewer, viz_inspect=False, \
-        save_dir=result_dir, step_num=5, sample_time=5, sparse_time_out=0, jt_res=0.1)
+        save_dir=result_dir, sample_time=5, sparse_time_out=0, jt_res=0.1)
 
 @pytest.mark.choreo_viz
 def test_viz_choreo_planning_result(viewer, pkg_name, dir_setup):

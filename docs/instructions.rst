@@ -1,0 +1,10 @@
+
+Instructions
+================
+
+how to add static collision objects?
+------------------------------------
+
+
+how to disable collision checks between certain links?
+------------------------------------------------------

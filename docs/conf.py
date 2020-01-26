@@ -54,7 +54,7 @@ on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 html_theme = 'alabaster'
 html_theme_options = {
     # 'logo': 'logo.png',
-    # 'description': 'coop_assembly',
+    'description': 'coop_assembly',
     'github_user': 'yijiangh',
     'github_repo': project,
     'fixed_sidebar': True,
@@ -65,7 +65,8 @@ html_last_updated_fmt = '%b %d, %Y'
 html_split_index = False
 html_static_path = ['_static']
 html_sidebars = {
-   '**': ['about.html', 'navigation.html', 'searchbox.html'],
+#    '**': ['about.html', 'navigation.html', 'searchbox.html'],
+   '**': ['navigation.html', 'searchbox.html'],
 }
 html_short_title = '%s-%s' % (project, version)
 

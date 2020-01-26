@@ -5,7 +5,7 @@ coop_assembly
 .. start-badges
 
 .. image:: https://img.shields.io/badge/License-MIT-blue.svg
-    :target: https://github.com/stefanaparascho/coop_assembly/blob/master/LICENSE
+    :target: https://github.com/yijiangh/coop_assembly/blob/master/LICENSE
     :alt: License MIT
 
 .. image:: https://travis-ci.com/yijiangh/coop_assembly.svg?branch=master
@@ -39,6 +39,7 @@ Contents
    :maxdepth: 1
 
    readme
+   instructions
    troubleshooting
    authors
    changelog

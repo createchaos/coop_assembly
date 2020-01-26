@@ -37,10 +37,10 @@ def get_picknplace_robot_data():
 
     base_link_name = robot.get_base_link_name(group=move_group)
     # ee_link_name = robot.get_end_effector_link_name(group=move_group)
-    ee_link_name = None
+    ee_link_name = None # set to None since end effector is not included in the robot URDF, but attached later
     ik_joint_names = robot.get_configurable_joint_names(group=move_group)
     disabled_self_collision_link_names = robot_semantics.get_disabled_collisions()
-    tool_root_link_name = robot.get_end_effector_link_name(group=move_group) # TODO: should be derived from SRDF as well
+    tool_root_link_name = robot.get_end_effector_link_name(group=move_group)
 
     workspace_model = RobotModel.from_urdf_file(workspace_urdf)
     workspace_semantics = RobotSemantics.from_srdf_file(workspace_srdf, workspace_model)
@@ -52,8 +52,6 @@ def get_picknplace_robot_data():
 
 def get_picknplace_end_effector_urdf():
     return coop_assembly.get_data('models/kuka_kr6_r900/urdf/mit_arch_grasp_end_effector.urdf')
-    # return coop_assembly.get_data(
-    #     'models/kuka_kr6_r900/meshes/mit_arch_grasp_end_effector/collision/mit_arch_grasp_end_effector_collision.obj')
 
 def get_picknplace_tcp_def():
     # TODO: should be derived from the end effector URDF

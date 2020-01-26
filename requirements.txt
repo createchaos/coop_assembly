@@ -1,5 +1,6 @@
 compas
 scipy
+pycddlib
 # ! before PR is merged...
 # compas_fab
 # pychoreo

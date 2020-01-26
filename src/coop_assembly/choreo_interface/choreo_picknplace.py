@@ -31,13 +31,55 @@ from pychoreo_examples.picknplace.parsing import parse_saved_trajectory
 from pychoreo_examples.picknplace.transition_planner import solve_transition_between_picknplace_processes
 
 from coop_assembly.choreo_interface.robot_setup import IK_MODULE
-from coop_assembly.choreo_interface.robot_setup import get_picknplace_robot_data, get_picknplace_end_effector_urdf, get_picknplace_tcp_def, \
-    get_robot_init_conf
+from coop_assembly.choreo_interface.robot_setup import get_picknplace_robot_data, get_picknplace_end_effector_urdf, \
+    get_picknplace_tcp_def, get_robot_init_conf
 
 AVAIBLE_SOLVE_METHODS = ['ladder_graph', 'sparse_ladder_graph']
 
-def sequenced_picknplace_plan(assembly_pkg_json_path, solve_method='sparse_ladder_graph', viewer=False, scale=1.0,
-    step_num=5, sample_time=5, sparse_time_out=2, jt_res=0.1, **kwargs):
+def sequenced_picknplace_plan(assembly_pkg_json_path, solve_method='sparse_ladder_graph', viewer=False, scale=1e-3,
+    sample_time=5, sparse_time_out=2, jt_res=0.1, pos_step_size=0.01, ori_step_size=np.pi/16,
+    viz_inspect=False, warning_pause=False, save_dir=None, **kwargs):
+    """call pychoreo's planner to solve for picknplace Cartesian & transition trajectories.
+
+    Robot setup is specified in coop_assembly.choreo_interface.robot_setup
+
+    Parameters
+    ----------
+    assembly_pkg_json_path : [type]
+        [description]
+    solve_method : str, optional
+        [description], by default 'sparse_ladder_graph'
+    viewer : bool, optional
+        [description], by default False
+    scale : [type], optional
+        [description], by default 1e-3
+    sample_time : int, optional
+        [description], by default 5
+    sparse_time_out : int, optional
+        [description], by default 2
+    jt_res : float, optional
+        joint resolution for transition planning, by default 0.1
+    pos_step_size : float, optional
+        interpolation step size for the end effector Cartesia movements, by default 0.01 (meter)
+    ori_step_size : [type], optional
+        [description], by default np.pi/16
+    viz_inspect : bool, optional
+        visualize planning process in a pybullet window (slow!), by default False
+    warning_pause : bool, optional
+        wait for user input if any of the planning process cannot find a solution, by default False
+    save_dir : string, optional
+        absolute directory path to save the planning result json file, by default None
+
+    Returns
+    -------
+    [type]
+        [description]
+
+    Raises
+    ------
+    ValueError
+        [description]
+    """
     # TODO: assert solve method in avaiable list
 
     # * load robot setup data
@@ -104,6 +146,7 @@ def sequenced_picknplace_plan(assembly_pkg_json_path, solve_method='sparse_ladde
     #     static_obstacles.extend(ug.mesh)
 
     # * load precomputed sequence / use assigned sequence
+    # TODO: load this as function argument
     # element_seq = elements.keys()
     element_seq = [0, 1, 2, 3, 4, 5]
     # element_seq = [3, 4, 5]
@@ -122,13 +165,14 @@ def sequenced_picknplace_plan(assembly_pkg_json_path, solve_method='sparse_ladde
                             set_pose(pb_geo, random.choice(unit_geo.get_goal_frames(get_pb_pose=True)))
                 # print('---------')
                 # wait_for_user()
-        wait_for_user()
+        # wait_for_user()
 
     # * construct ignored body-body links for collision checking
     # in this case, including self-collision between links of the robot
     disabled_self_collisions = get_disabled_collisions(robot, disabled_self_collision_link_names)
     # and links between the robot and the workspace (e.g. robot_base_link to base_plate)
     extra_disabled_collisions = get_body_body_disabled_collisions(robot, workspace, workspace_robot_disabled_link_names)
+    # TODO: extra disabled collisions as function argument
     extra_disabled_collisions.update({
         ((robot, link_from_name(robot, 'robot_link_5')), (ee_body, link_from_name(ee_body, 'eef_base_link'))),
         ((robot, link_from_name(robot, 'robot_link_6')), (ee_body, link_from_name(ee_body, 'eef_base_link')))
@@ -138,17 +182,15 @@ def sequenced_picknplace_plan(assembly_pkg_json_path, solve_method='sparse_ladde
     cart_process_seq = build_picknplace_cartesian_process_seq(
         element_seq, elements,
         robot, ik_joint_names, root_link, sample_ik_fn,
-        num_steps=step_num, ee_attachs=[ee_attach],
-        self_collisions=True, disabled_collisions=disabled_self_collisions,
+        ee_attachs=[ee_attach], self_collisions=True, disabled_collisions=disabled_self_collisions,
         obstacles=[workspace],extra_disabled_collisions=extra_disabled_collisions,
-        tool_from_root=invert(root_from_tcp), viz_step=False, pick_from_same_rack=True)
+        tool_from_root=invert(root_from_tcp), viz_step=False, pick_from_same_rack=True,
+        pos_step_size=pos_step_size, ori_step_size=ori_step_size)
 
     # specifically for UR5, because of its wide joint range, we need to apply joint value snapping
     for cp in cart_process_seq:
         cp.target_conf = robot_start_conf
 
-    viz_inspect = False if 'viz_inspect' not in kwargs else kwargs['viz_inspect']
-    warning_pause = False if 'warning_pause' not in kwargs else kwargs['viz_inspect']
     with LockRenderer(not viz_inspect):
         if solve_method == 'ladder_graph':
             print('\n'+'#' * 10)
@@ -182,15 +224,16 @@ def sequenced_picknplace_plan(assembly_pkg_json_path, solve_method='sparse_ladde
                 if sp.trajectory.tag == 'pick_retreat' or sp.trajectory.tag == 'place_approach':
                     sp.trajectory.attachments= element_attachs
                 pnp_trajs[cp_id].append(sp.trajectory)
-    full_trajs = pnp_trajs
+        full_trajs = pnp_trajs
 
-    # * transition motion planning between extrusions
-    return2idle = True
-    transition_traj = solve_transition_between_picknplace_processes(pnp_trajs, elements, robot_start_conf,
-                                                                    disabled_collisions=disabled_self_collisions,
-                                                                    extra_disabled_collisions=extra_disabled_collisions,
-                                                                    obstacles=[workspace], return2idle=return2idle,
-                                                                    resolutions=[jt_res]*len(ik_joints))
+        # * transition motion planning between extrusions
+        return2idle = True
+        transition_traj = solve_transition_between_picknplace_processes(pnp_trajs, elements, robot_start_conf,
+                                                                        disabled_collisions=disabled_self_collisions,
+                                                                        extra_disabled_collisions=extra_disabled_collisions,
+                                                                        obstacles=[workspace], return2idle=return2idle,
+                                                                        resolutions=[jt_res]*len(ik_joints),
+                                                                        **kwargs)
 
     # * weave the Cartesian and transition processses together
     for cp_id, print_trajs in enumerate(full_trajs):
@@ -199,11 +242,9 @@ def sequenced_picknplace_plan(assembly_pkg_json_path, solve_method='sparse_ladde
     if return2idle:
         full_trajs[-1].append(transition_traj[-1][-1])
 
-    if 'save_dir' not in kwargs:
+    if save_dir is None:
         here = os.path.dirname(__file__)
         save_dir = os.path.join(here, 'results')
-    else:
-        save_dir = kwargs['save_dir']
     export_trajectory(save_dir, full_trajs, ee_link_name, indent=1, shape_file_path=assembly_pkg_json_path,
         include_robot_data=True, include_link_path=True)
 
