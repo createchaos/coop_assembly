@@ -36,11 +36,11 @@ Contents
 ========
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 3
+   :titlesonly:
 
    instructions
    reference
-   code_reading_companion
    troubleshooting
    authors
    changelog

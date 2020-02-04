@@ -1,4 +1,3 @@
-
 '''
 
     ****       *****       ******       ****       ******  ******          **           **
@@ -23,7 +22,7 @@ from coop_assembly.help_functions.helpers_geometry import dropped_perpendicular_
 
 
 class OverallStructure(Network):
-    """class defining the overall structure in which a node is represented
+    """this class defines the overall structure in which a node is represented
     by a network.vertex and a bar by a network.edge does not include
     connectors - these are referenced through the additional bar_structure class
 
@@ -46,6 +45,15 @@ class OverallStructure(Network):
 
     This model is referred as *abstract data model*.
 
+    Parameters
+    ----------
+    Network : [type]
+        [description]
+
+    Returns
+    -------
+    [type]
+        [description]
     """
 
     def __init__(self, struct_bar):

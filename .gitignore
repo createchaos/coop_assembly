@@ -121,3 +121,5 @@ ENV/
 /*_result_.json
 
 .coverage
+
+docs/reference/generated/

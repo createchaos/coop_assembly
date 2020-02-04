@@ -102,6 +102,15 @@ def calculate_coord_sys(end_pts, pt_mean):
 def calculate_bar_z(points):
     """compute cross product between the vector formed by points and the global z axis.
 
+    Parameters
+    ----------
+    points : [type]
+        [description]
+
+    Returns
+    -------
+    [type]
+        [description]
     """
     vec_x = subtract_vectors(points[1], points[0])
     vec_y_temp = (1,0,0)
@@ -112,9 +121,23 @@ def calculate_bar_z(points):
 def dropped_perpendicular_points(line_point_1_1, line_point_1_2, line_point_2_1, line_point_2_2):
     """compute the projected tangent point on axis defined by [L1_pt1, L1_pt2] and [L2_pt1, L2_pt2]
 
-    See figure 'perpendicular_bar_tangent_to_two_existing_bars.png' in the docs/images
-    or Fig. 3.7 in SP's dissertaion. We are computing the point pair (P1, P_{C1}) here, given the axis endpoints of
-    bar b_{e1} and b_{n1}
+    See Fig. 3.7 in SP's dissertaion (below). We are computing the point pair (P1, P_{C1}) here, given the axis endpoints of bar b_{e1} and b_{n1}
+
+    .. image:: ../images/perpendicular_bar_tangent_to_two_existing_bars.png
+        :scale: 80 %
+        :alt: perpendicular_bar_tangent_to_two_existing_bars
+        :align: center
+
+    Parameters
+    ----------
+    line_point_1_1 : [type]
+        [description]
+    line_point_1_2 : [type]
+        [description]
+    line_point_2_1 : [type]
+        [description]
+    line_point_2_2 : [type]
+        [description]
 
     Returns
     -------

@@ -2,16 +2,19 @@
 *************
 coop_assembly
 *************
+
 .. currentmodule:: coop_assembly
 
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2
 
     coop_assembly.data_structure
     coop_assembly.geometry_generation
     coop_assembly.help_functions
 
 """
+    # coop_assembly.assembly_info_generation
+    # coop_assembly.choreo_interface
 
 from __future__ import print_function
 

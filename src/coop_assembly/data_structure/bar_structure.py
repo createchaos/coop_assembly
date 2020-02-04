@@ -41,7 +41,17 @@ class BarStructure(Network):
 
     TODO: this data structure should be able to be derived from base class "VirtualJoint"
 
+    Parameters
+    ----------
+    Network : [type]
+        [description]
+
+    Returns
+    -------
+    [type]
+        [description]
     """
+
     # crosec_type     = "rectangle" / "tube" / "circle"
     # crosec_values = "rectangle" : (width, height) - height = dimension in z-axis direction
     #                                                            "tube"   : (outer diameter, thickness)
