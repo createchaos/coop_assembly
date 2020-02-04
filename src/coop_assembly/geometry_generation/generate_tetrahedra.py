@@ -27,7 +27,7 @@ from compas.geometry.angles import angle_vectors
 from compas.geometry.average import centroid_points
 
 from coop_assembly.help_functions.helpers_geometry import calculate_coord_sys, calculate_bar_z, \
-    dropped_perpendicular_points, update_bar_lengths, correct_point, adjust_gripping_plane, find_bar_ends
+    dropped_perpendicular_points, update_bar_lengths, correct_point, find_bar_ends
 from coop_assembly.help_functions.tangents import tangent_from_point, check_length_sol_one, \
     first_tangent, second_tangent, third_tangent
 
@@ -272,9 +272,9 @@ def add_tetra(o_struct, b_struct, tri_node_ids, comb_bars_1, comb_bars_2, comb_b
     b_struct : [type]
         [description]
     tri_node_ids : list of three int
-
+        OverallStructure's vertex id triplets, representing the "ideal vertex" where multiple bars meet together.
     comb_bars_1 : [type]
-        [description]
+           [description]
     comb_bars_2 : [type]
         [description]
     comb_bars_3 : [type]
@@ -308,7 +308,7 @@ def add_tetra(o_struct, b_struct, tri_node_ids, comb_bars_1, comb_bars_2, comb_b
 
     len_vec_min     = 500
     len_vec_max     = 1400
-    len_vec         = (random.random()*(len_vec_max - len_vec_min))+len_vec_min
+    # len_vec         = (random.random()*(len_vec_max - len_vec_min))+len_vec_min
     max_len         = 1800
 
     jnd = 0

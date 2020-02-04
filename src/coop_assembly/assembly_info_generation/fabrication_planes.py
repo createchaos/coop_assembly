@@ -21,6 +21,7 @@ from compas.geometry.queries import is_point_on_line
 # from coop_assembly.assembly_info_generation.interlock import compute_feasible_region_from_block_dir
 from coop_assembly.help_functions.helpers_geometry import calculate_bar_z, calculate_coord_sys, Frame_to_plane_data
 from coop_assembly.help_functions.debug_utils import deprecation_error
+from coop_assembly.help_functions.shared_const import TOL
 
 def calculate_gripping_plane(b_struct, v, pt_mean, nb_rot=8, nb_trans=8,
     planes_rot=True, planes_trans=True):
@@ -160,16 +161,16 @@ def calculate_offset(o_struct, b_struct, v_key, d_o_1, d_o_2, seq):
 
     bar_1 = b_struct.vertex[v_key]["axis_endpoints"]
 
-    tol = 0.1
+    TOL = 0.1
     vecs_con_1  = [] # vectors of all connections to the bar in endpoint 1
     pts_con_1   = [] # points of connections on bar axis
     for c in cons_all_1:
         # ep = b_struct.edge[c[0]][c[1]]["endpoints"][list(b_struct.edge[c[0]][c[1]]["endpoints"].keys())[0]]
         ep = list(b_struct.edge[c[0]][c[1]]["endpoints"].values())[0]
-        if is_point_on_line(ep[0], bar_1, tol):
+        if is_point_on_line(ep[0], bar_1, TOL):
             vecs_con_1.append(vector_from_points(ep[0], ep[1]))
             pts_con_1.append(ep[0])
-        elif is_point_on_line(ep[1], bar_1, tol):
+        elif is_point_on_line(ep[1], bar_1, TOL):
             vecs_con_1.append(vector_from_points(ep[1], ep[0]))
             pts_con_1.append(ep[1])
         else:
@@ -253,8 +254,7 @@ def calculate_offset(o_struct, b_struct, v_key, d_o_1, d_o_2, seq):
         b_struct.vertex[v_key].update({"gripping_plane_offset":(pt_o_n, vec_x_n, y_ax, vec_z)})
         # return pt_o_n, vec_x_n, y_ax, vec_z
 
-    # gripping_planes_all by applying transformation from gripping_plane
-
+    # * gripping_planes_all by applying transformation from gripping_plane
     gripping_frame = Frame(*b_struct.vertex[v_key]["gripping_plane"][0:3])
     gripping_frame_offset = Frame(*b_struct.vertex[v_key]["gripping_plane_offset"][0:3])
     offset_tf = Transformation.from_frame_to_frame(gripping_frame, gripping_frame_offset)

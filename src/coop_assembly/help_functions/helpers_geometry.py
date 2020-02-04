@@ -277,51 +277,6 @@ def intersection_bars_base(b_struct, bars_1):
 
     return pt_fin
 
-
-def adjust_gripping_plane(pt_bar, pt_new, b_struct, b_v0):
-
-    if distance_point_point(pt_bar[0], pt_bar[1]) > 10000:
-    ### hardcoded asjustments for prototype node - to be implemented in overall iteration
-    #if b_v0 == 27 or b_v0 == 20 or b_v0 == 12 or b_v0 == 9 or b_v0 == 15 or b_v0 == 24:
-        pt_o    = pt_new
-        d_1     = distance_point_point(pt_o, pt_bar[0])
-        d_2     = distance_point_point(pt_o, pt_bar[1])
-        if d_1 < d_2:
-            vec_move    = normalize_vector(vector_from_points(pt_bar[1], pt_bar[0]))
-        else:
-            vec_move    = normalize_vector(vector_from_points(pt_bar[0], pt_bar[1]))
-        len_bar = distance_point_point(pt_bar[0], pt_bar[1])
-        d_move  = len_bar/5
-        # if b_v0 == 12 or b_v0 == 9 or b_v0 == 15 or b_v0 == 24:
-        #     d_move = len_bar/7
-
-        gp      = b_struct.vertex[b_v0]["gripping_plane_no_offset"]
-        gp_o_n  = translate_points([gp[0]], scale_vector(vec_move, d_move))[0]
-        b_struct.vertex[b_v0]["gripping_plane_no_offset"] = (gp_o_n, gp[1], gp[2], gp[3])
-
-    #hard coded gripping plane shifting
-    # if b_v0 == 32:
-    #     pt_o    = pt_new
-    #     d_1     = distance_point_point(pt_o, pt_bar[0])
-    #     d_2     = distance_point_point(pt_o, pt_bar[1])
-    #     if d_1 < d_2:
-    #         vec_move    = normalize_vector(vector_from_points(pt_bar[1], pt_bar[0]))
-    #     else:
-    #         vec_move    = normalize_vector(vector_from_points(pt_bar[0], pt_bar[1]))
-    #     len_bar = distance_point_point(pt_bar[0], pt_bar[1])
-    #     d_move  = -len_bar/5
-    #     gp      = b_struct.vertex[b_v0]["gripping_plane_no_offset"]
-    #     gp_o_n  = translate_points([gp[0]], scale_vector(vec_move, d_move))[0]
-    #     b_struct.vertex[b_v0]["gripping_plane_no_offset"] = (gp_o_n, gp[1], gp[2], gp[3])
-
-    # if b_v0 == 35:
-    #     vec_move    = normalize_vector(vector_from_points(pt_bar[0], pt_bar[1]))
-    #     len_bar = distance_point_point(pt_bar[0], pt_bar[1])
-    #     d_move  = -len_bar/4.5
-    #     gp      = b_struct.vertex[b_v0]["gripping_plane_no_offset"]
-    #     gp_o_n  = translate_points([gp[0]], scale_vector(vec_move, d_move))[0]
-    #     b_struct.vertex[b_v0]["gripping_plane_no_offset"] = (gp_o_n, gp[1], gp[2], gp[3])
-
 def find_bar_ends(b_struct, b_key):
     """Update bar's end points according to the contact points
 
