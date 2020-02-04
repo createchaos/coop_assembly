@@ -1,4 +1,4 @@
-code reading companion
+Code reading companion
 ======================
 
 dropped_perpendicular_points

@@ -38,16 +38,9 @@ Contents
 .. toctree::
    :maxdepth: 1
 
-   readme
    instructions
+   reference
    code_reading_companion
    troubleshooting
    authors
    changelog
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
