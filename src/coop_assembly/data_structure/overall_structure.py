@@ -43,7 +43,7 @@ class OverallStructure(Network):
     nodes and edges to describe the topological function of bars, i.e. which nodes
     are connected through a bar.
 
-    This model is referred as *abstract data model*.
+    This model is referred as **abstract data model**.
 
     Parameters
     ----------

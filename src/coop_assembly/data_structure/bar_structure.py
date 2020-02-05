@@ -37,7 +37,7 @@ class BarStructure(Network):
     `BarStructure` includes geometric information about the bars endpoints and the joint positions in the
     space.
 
-    This model is referred as *base data model*.
+    This model is referred as **base data model**.
 
     TODO: this data structure should be able to be derived from base class "VirtualJoint"
 

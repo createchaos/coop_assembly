@@ -7,3 +7,8 @@ INF = 1e23
 
 # TOL
 TOL = 0.1
+
+# vertex correction, deciding how low a new vertex can go for a three-bar group
+NODE_CORRECTION_TOP_DISTANCE = 80 # millimter
+
+NODE_CORRECTION_SINE_ANGLE = 0.4

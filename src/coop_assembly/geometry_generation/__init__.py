@@ -15,6 +15,7 @@ todo
     :nosignatures:
 
     generate_first_triangle
+    add_tetra
 
 """
 
