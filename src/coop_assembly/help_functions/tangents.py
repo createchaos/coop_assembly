@@ -522,7 +522,6 @@ def second_tangent(b2_1, b2_2, pt_mean_2, b_v2_1, b_v2_2, b_struct, b_v_old, pt1
             if sols_test == None:
                 continue
 
-
             args    = ptM, ex, ey, radius, pt_b_1, l_1, pt_b_2, l_2, 2*radius, 2*radius, ind
             ret_sst = solve_second_tangent(*args)
             if ret_sst:

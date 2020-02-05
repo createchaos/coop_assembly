@@ -11,7 +11,7 @@ dependencies:
    - scipy
    - cmake
    - pip:
-    # TODO: needs update
+    # TODO: needs to be updated
      - pybullet
      - git+https://github.com/yijiangh/compas_fab.git@feature/dms2019_ws#egg=compas_fab
      - git+https://github.com/yijiangh/ikfast_pybind.git@master#egg=ikfast_pybind

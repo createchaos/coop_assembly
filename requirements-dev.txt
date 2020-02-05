@@ -1,5 +1,5 @@
-sphinx>=1.6
 sphinx_rtd_theme>=0.4
+sphinx>=1.6
 invoke>=0.14
 bump2version>=0.5.11
 check-manifest>=0.36
@@ -11,8 +11,3 @@ pytest-cov
 python-coveralls
 isort
 twine
-# TODO: cmake should be listed to ikfast_pybind
-cmake
--e git+git://github.com/yijiangh/compas_fab.git@feature/assembly_datastructure#egg=compas_fab
--e git+git://github.com/yijiangh/pychoreo.git@dev#egg=pychoreo
--e .

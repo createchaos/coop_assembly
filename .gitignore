@@ -122,4 +122,9 @@ ENV/
 
 .coverage
 
+###############################
+# coop_assembly
+###############################
 docs/reference/generated/
+src/compas_fab
+src/pychoreo
