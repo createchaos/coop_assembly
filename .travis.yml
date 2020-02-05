@@ -20,6 +20,7 @@ install:
   - pip install cmake
   - pip install -e git+git://github.com/yijiangh/compas_fab.git@feature/assembly_datastructure#egg=compas_fab
   - pip install -e git+git://github.com/yijiangh/pychoreo.git@test/extrusion_rss#egg=pychoreo
+  - pip install scipy>=1.4.1
 
 script:
 # The new coverage version has some breaking changes and is not backwards
