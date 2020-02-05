@@ -21,12 +21,10 @@ def read(*names, **kwargs):
 requirements = [
     # Until COMPAS reaches 1.0, we pin major.minor and allow patch version updates
     # 'compas>=0.11,<0.12',
-    'compas',
-    # ! before PR is merged...
+    'compas>=0.11',
+    'scipy>=1.3.1',
     # 'compas_fab',
     # 'pychoreo',
-    # ! runtime dependencies
-    # 'scipy>=1.4.1',
     # 'pycddlib',
 ]
 keywords_list = ['robotic assembly', 'double-tangent frame structure', 'digital fabrication', 'architecture']
