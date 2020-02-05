@@ -1,1 +1,2 @@
+Cython --install-option="--no-cython-compile"
 -r ../requirements-dev.txt
