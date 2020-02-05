@@ -249,6 +249,7 @@ def correct_point(b_struct, o_struct, pt_new, bar_pairs, o_v_key=None):
         pt_new = pt_4
 
     if o_v_key:
+        print('correct_point: OverallS #{} vertex position updated.'.format(o_v_key))
         o_struct.vertex[o_v_key]["x"], o_struct.vertex[o_v_key]["y"], o_struct.vertex[o_v_key]["z"] = pt_new
 
     return pt_new

@@ -43,7 +43,15 @@ class OverallStructure(Network):
     nodes and edges to describe the topological function of bars, i.e. which nodes
     are connected through a bar.
 
-    This model is referred as **abstract data model**.
+    .. image:: ../images/node_subnode_joint.png
+        :scale: 80 %
+        :align: center
+
+    This model is referred as **abstract data model** (see left sub-figure below).
+
+    .. image:: ../images/data_structures.png
+        :scale: 80 %
+        :align: center
 
     Parameters
     ----------
@@ -122,7 +130,7 @@ class OverallStructure(Network):
         bar_struct_vert_key : int
             bar structure vertex id, representing a bar
         t_key : int, optional
-            tet, by default None
+            tetrahedra index, by default None
 
         Returns
         -------
@@ -144,6 +152,7 @@ class OverallStructure(Network):
             else:
                 self.tetrahedra.update({t_key:{"vertices":[v_key_1, v_key_2]}})
         else:
+            # no tetrahedra index is provided, bump max tet key
             if self.t_key_max in self.tetrahedra:
                 if v_key_1 not in self.tetrahedra[self.t_key_max]["vertices"]:
                     self.tetrahedra[self.t_key_max]["vertices"].append(v_key_1)

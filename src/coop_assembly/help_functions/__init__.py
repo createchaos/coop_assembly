@@ -26,8 +26,8 @@ Update bar axis end point
     find_points_extreme
     find_bar_ends
 
-Correction
-------------------------
+Correction & Collision checking
+--------------------------------
 
 .. autosummary::
     :toctree: generated/
@@ -37,6 +37,19 @@ Correction
     calc_correction_vector
     correct_angle
     calc_correction_vector_tip
+    check_colisions
+
+First Bar position calculation
+------------------------------
+
+.. autosummary::
+    :toctree: generated/
+    :nosignatures:
+
+    first_tangent
+    tangent_from_point_one
+    p_planes_tangent_to_cylinder
+    lines_tangent_to_cylinder
 
 """
 
