@@ -24,7 +24,7 @@ from compas.geometry import project_point_plane, translate_points
 from compas.geometry import distance_point_point, distance_point_line, distance_point_plane, \
     area_triangle, volume_polyhedron
 
-from coop_assembly.help_functions.shared_const import EPS
+from coop_assembly.help_functions.shared_const import EPS, NODE_CORRECTION_TOP_DISTANCE, NODE_CORRECTION_SINE_ANGLE
 
 
 ###############################################
@@ -69,6 +69,12 @@ def tet_volume(tet_end_points):
 
 ###############################################
 
+def Frame_to_plane_data(frame):
+    data = frame.to_data()
+    return (data['point'], data['xaxis'], data['yaxis'], cross_vectors(data['xaxis'], data['yaxis']))
+
+###############################################
+
 def calculate_coord_sys(end_pts, pt_mean):
     """construct local coordinate system for a line connecting two end_pts.
     Local x axis: along the element from st to end
@@ -96,6 +102,15 @@ def calculate_coord_sys(end_pts, pt_mean):
 def calculate_bar_z(points):
     """compute cross product between the vector formed by points and the global z axis.
 
+    Parameters
+    ----------
+    points : [type]
+        [description]
+
+    Returns
+    -------
+    [type]
+        [description]
     """
     vec_x = subtract_vectors(points[1], points[0])
     vec_y_temp = (1,0,0)
@@ -106,10 +121,28 @@ def calculate_bar_z(points):
 def dropped_perpendicular_points(line_point_1_1, line_point_1_2, line_point_2_1, line_point_2_2):
     """compute the projected tangent point on axis defined by [L1_pt1, L1_pt2] and [L2_pt1, L2_pt2]
 
-    See figure 'perpendicular_bar_tangent_to_two_existing_bars.png' in the docs/images
-    or Fig. 3.7. We are computing the point pair (P1, P_{C1}) here, given the axis endpoints of
-    bar b_{e1} and b_{n1}
+    See Fig. 3.7 in SP's dissertaion (below). We are computing the point pair (P1, P_{C1}) here, given the axis endpoints of bar b_{e1} and b_{n1}
 
+    .. image:: ../images/perpendicular_bar_tangent_to_two_existing_bars.png
+        :scale: 80 %
+        :alt: perpendicular_bar_tangent_to_two_existing_bars
+        :align: center
+
+    Parameters
+    ----------
+    line_point_1_1 : [type]
+        [description]
+    line_point_1_2 : [type]
+        [description]
+    line_point_2_1 : [type]
+        [description]
+    line_point_2_2 : [type]
+        [description]
+
+    Returns
+    -------
+    list of two points
+       representing the contact line segment between the two axes
     """
     line_unity_vector_1 = normalize_vector(vector_from_points(line_point_1_1, line_point_1_2))
     line_unity_vector_2 = normalize_vector(vector_from_points(line_point_2_1, line_point_2_2))
@@ -119,37 +152,44 @@ def dropped_perpendicular_points(line_point_1_1, line_point_1_2, line_point_2_1,
     normal_2 = cross_vectors(line_unity_vector_2, d_vector)
     plane_1 = (line_point_1_1, normal_1)
     plane_2 = (line_point_2_1, normal_2)
-    dp_point_line_1 = intersection_line_plane((line_point_1_1, line_point_1_2), plane_2)
-    dp_point_line_2 = intersection_line_plane((line_point_2_1, line_point_2_2), plane_1)
+    line_1_dp_point = intersection_line_plane((line_point_1_1, line_point_1_2), plane_2)
+    line_2_dp_point = intersection_line_plane((line_point_2_1, line_point_2_2), plane_1)
 
-    return [dp_point_line_1, dp_point_line_2]
+    return [line_1_dp_point, line_2_dp_point]
 
 
 def find_points_extreme(pts_all, pts_init):
-    vec_init = normalize_vector(vector_from_points(pts_init[0], pts_init[1]))
-    distances = []
-    dic_dist = {}
-    for pt in pts_all:
-        for pt1 in pts_all:
-            if pt != pt1:
-                distances.append(distance_point_point(pt, pt1))
-                dic_dist[distances[-1]] = [pt, pt1]
-    max_dist = max(distances)
-    pts_draw = dic_dist[max_dist]
-    vec_new = normalize_vector(vector_from_points(pts_draw[0], pts_draw[1]))
-    ang_test = angle_vectors(vec_init, vec_new, deg=True)
-    if ang_test > 90:
-        pts_draw = [pts_draw[1], pts_draw[0]]
+    """update a bar's axis end point based on all the contact projected points specified in `pts_all`
 
-    ext_len = 30
-    # pts_draw = (add_vectors(pts_draw[0], scale_vector(normalize_vector(vector_from_points(pts_draw[1], pts_draw[0])), ext_len)), add_vectors(
-    #            pts_draw[1], scale_vector(normalize_vector(vector_from_points(pts_draw[0], pts_draw[1])), ext_len)))
+    Parameters
+    ----------
+    pts_all : list of points
+        all the contact points projected on the axis (specified by pts_init)
+    pts_init : list of two points
+        the initial axis end points
+
+    Returns
+    -------
+    [type]
+        [description]
+    """
+    vec_init = normalize_vector(vector_from_points(*pts_init))
+    # * find the pair of points with maximal distance
+    sorted_pt_pairs = sorted(combinations(pts_all, 2), key=lambda pt_pair: distance_point_point(*pt_pair))
+    pts_draw = sorted_pt_pairs[-1]
+
+    vec_new = normalize_vector(vector_from_points(*pts_draw))
+    if angle_vectors(vec_init, vec_new, deg=True) > 90:
+        # angle can only be 0 or 180
+        pts_draw = pts_draw[::-1]
+
+    # ext_len = 30
+    # pts_draw = (add_vectors(pts_draw[0], scale_vector(normalize_vector(vector_from_points(pts_draw[1], pts_draw[0])), ext_len)), add_vectors(pts_draw[1], scale_vector(normalize_vector(vector_from_points(pts_draw[0], pts_draw[1])), ext_len)))
 
     return pts_draw
 
 
 def check_dir(vec1, vec2):
-
     ang = angle_vectors(vec1, vec2, deg=True)
     if ang < 90:
         return True
@@ -160,165 +200,235 @@ def check_dir(vec1, vec2):
 def update_bar_lengths(b_struct):
     raise ImportError('Moved to Bar_Structure class function.')
 
+###################################################
 
-def correct_point(b_struct, o_struct, o_v_key, pt_new, bars_1, bars_2, bars_3):
+def correct_point(b_struct, o_struct, pt_new, bar_pairs, o_v_key=None):
+    """vertex position correction following an angle/distance heuristic to improve the success rate of a feasible three-bar group.
+        Performing vertex correction wrt individual bar bases (fig.1 below) and three-bar base (fig.2 below)
+        See SP dissertation 3.1.3.f. (p.80)
 
-    pt_n = pt_new
-    for i in range(1):
-        lins_all    = []
-        lin_1   = calc_correction_vector(b_struct, pt_n, bars_1)
-        if lin_1 != None:   lins_all.append(lin_1)
-        lin_2   = calc_correction_vector(b_struct, pt_n, bars_2)
-        if lin_2 != None:   lins_all.append(lin_2)
-        lin_3   = calc_correction_vector(b_struct, pt_n, bars_3)
-        if lin_3 != None:   lins_all.append(lin_3)
-        pt_base_1   = intersection_bars_base(b_struct, bars_1)
-        pt_base_2   = intersection_bars_base(b_struct, bars_2)
-        pt_base_3   = intersection_bars_base(b_struct, bars_3)
+    .. image:: ../images/vertex_correction_to_base.png
+        :scale: 80 %
+        :align: center
 
-        if lins_all != []:
-            if len(lins_all) == 1: pt_n = lins_all[0][1]
-            else: pt_n = calculate_new_point(lins_all)
+    .. image:: ../images/vertex_correction_to_top_connection.png
+        :scale: 80 %
+        :align: center
 
-        pt_4    = calc_correction_vector_tip(b_struct, pt_n, pt_base_1, pt_base_2, pt_base_3)
-        if pt_4:
-            pt_n = pt_4
+    Parameters
+    ----------
+    b_struct : [type]
+        [description]
+    o_struct : [type]
+        [description]
+    pt_new : [type]
+        [description]
+    bars_1 : list of two-int tuples
+        BarS vertex tuple pairs, representing three pairs of touching bars.
+    o_v_key : int, optional
+        if specified, o_struct's corresponding vertex pt will be updated, by default None
+
+    Returns
+    -------
+    [type]
+        [description]
+    """
+    # correction of node position in regards to the base bars (angle)
+    lins_all    = []
+    for bar_pair in bar_pairs:
+        new_base2vert_line = calc_correction_vector(b_struct, pt_new, bar_pair)
+        if new_base2vert_line is not None:
+            lins_all.append(new_base2vert_line)
+    if len(lins_all) > 0:
+        pt_new = calculate_new_point(lins_all)
+
+    # correction of node position in regards to the top connection (distance)
+    base_pts = [intersection_bars_base(b_struct, bar_pair) for bar_pair in bar_pairs]
+    pt_4 = calc_correction_vector_tip(pt_new, base_pts)
+    if pt_4:
+        pt_new = pt_4
 
     if o_v_key:
-        o_struct.vertex[o_v_key]["x"], o_struct.vertex[o_v_key]["y"], o_struct.vertex[o_v_key]["z"] = pt_n
+        print('correct_point: OverallS #{} vertex position updated.'.format(o_v_key))
+        o_struct.vertex[o_v_key]["x"], o_struct.vertex[o_v_key]["y"], o_struct.vertex[o_v_key]["z"] = pt_new
 
-    return pt_n
+    return pt_new
 
 
-def calc_correction_vector(b_struct, pt_new, bars_1):
-    bar_11  = b_struct.vertex[bars_1[0]]
-    bar_12  = b_struct.vertex[bars_1[1]]
+def calc_correction_vector(b_struct, pt_new, bar_pair):
+    """Computing correction vector to meet the angle threshold.
+        return vector P-P_c (figure below).
 
-    pts_int = dropped_perpendicular_points(bar_11["axis_endpoints"][0], bar_11["axis_endpoints"][1], bar_12["axis_endpoints"][0], bar_12["axis_endpoints"][1])
+    .. image:: ../images/vertex_correction_to_base.png
+        :scale: 80 %
+        :align: center
 
-    pt_int  = centroid_points(pts_int)
-    vec_x   = normalize_vector(vector_from_points(bar_11["axis_endpoints"][0], bar_11["axis_endpoints"][1]))
-    vec_y   = normalize_vector(vector_from_points(bar_12["axis_endpoints"][0], bar_12["axis_endpoints"][1]))
+    Parameters
+    ----------
+    b_struct : [type]
+        [description]
+    pt_new : [type]
+        [description]
+    bar_pair : list of two int
+        BarS vertex key, representing two bars
+
+    Returns
+    -------
+    list of two points
+        return None if feasible (bigger than the angle threshold), otherwise return the line connecting pt_int and modified pt
+    """
+    bar1  = b_struct.vertex[bar_pair[0]]
+    bar2  = b_struct.vertex[bar_pair[1]]
+    pt_int = intersection_bars_base(b_struct, bar_pair)
+
+    vec_x   = normalize_vector(vector_from_points(bar1["axis_endpoints"][0], bar1["axis_endpoints"][1]))
+    vec_y   = normalize_vector(vector_from_points(bar2["axis_endpoints"][0], bar2["axis_endpoints"][1]))
+    # contact vector
     vec_z   = normalize_vector(cross_vectors(vec_x, vec_y))
+    # test plane
     pl_test = (pt_int, vec_z)
     vec_m   = correct_angle(pt_new, pt_int, pl_test)
-
     return vec_m
 
 
 def correct_angle(pt_new, pt_int, pl_test):
+    """Computing correction vector to meet the angle threshold.
+        return vector P-P_c (figure below).
+
+    .. image:: ../images/vertex_correction_to_base.png
+        :scale: 80 %
+        :align: center
+
+    Parameters
+    ----------
+    pt_new : point
+        new point P
+    pt_int : point
+        contact point between two bars, i.e. point N in the image above
+    pl_test : tuple (point, vector)
+        the grey plane shown in the image above
+
+    Returns
+    -------
+    tuple of two points
+        return None if feasible (bigger than the angle threshold), otherwise return the line connecting pt_int and modified pt
+    """
 
     pt_proj = project_point_plane(pt_new, pl_test)
     sin_ang = distance_point_point(pt_new, pt_proj)/distance_point_point(pt_new, pt_int)
-    if sin_ang < 0.4:
-        dist_n  = 0.3 * distance_point_point(pt_new, pt_int)
-        pt_m    = add_vectors(pt_proj, scale_vector(normalize_vector(vector_from_points(pt_proj, pt_new)), dist_n))        #vec_m   = vector_from_points(pt_new, pt_m)
-        #return vec_m
-        lin_c   = (pt_int, pt_m)
+    if sin_ang < NODE_CORRECTION_SINE_ANGLE:
+        # ? why 0.3 here?
+        # length of the triangle's hypotenuse
+        # dist_n = 0.3 * distance_point_point(pt_new, pt_int)
+        dist_n = NODE_CORRECTION_SINE_ANGLE * distance_point_point(pt_new, pt_int)
+        # modified point Pc
+        pt_m = add_vectors(pt_proj, scale_vector(normalize_vector(vector_from_points(pt_proj, pt_new)), dist_n))
+        lin_c = (pt_int, pt_m)
         return lin_c
     else:
         return None
 
 
-def calc_correction_vector_tip(b_struct, pt_new, pt_base_1, pt_base_2, pt_base_3):
-    # print("correcting")
-    vec_x   = normalize_vector(vector_from_points(pt_base_1, pt_base_2))
-    vec_y   = normalize_vector(vector_from_points(pt_base_1, pt_base_3))
+def calc_correction_vector_tip(pt_new, base_pts):
+    """Computing correction vector to meet the distance threshold.
+        return vector P-P_c (figure below).
+
+    .. image:: ../images/vertex_correction_to_top_connection.png
+        :scale: 80 %
+        :align: center
+
+    Parameters
+    ----------
+    pt_new : [type]
+        [description]
+    base_pts : list of three points
+        contact base points for the base bars
+    """
+    assert len(base_pts) == 3
+    vec_x   = normalize_vector(vector_from_points(base_pts[0], base_pts[1]))
+    vec_y   = normalize_vector(vector_from_points(base_pts[0], base_pts[2]))
     vec_z   = normalize_vector(cross_vectors(vec_x, vec_y))
-    pl_test = (pt_base_1, vec_z)
-#     pt_int  = centroid_points([pt_base_1, pt_base_2, pt_base_3])
-#     vec_m   = correct_angle(pt_new, pt_int, pl_test)
+    pl_test = (base_pts[0], vec_z)
     dist_p  = distance_point_plane(pt_new, pl_test)
     pt_proj = project_point_plane(pt_new, pl_test)
 
-    if dist_p < 80:
-        vec_m   = scale_vector(normalize_vector(vector_from_points(pt_proj, pt_new)), 80)
-        pt_n    = add_vectors(pt_proj, vec_m)
-    else: pt_n = None
-
+    if dist_p < NODE_CORRECTION_TOP_DISTANCE:
+        vec_m = scale_vector(normalize_vector(vector_from_points(pt_proj, pt_new)), NODE_CORRECTION_TOP_DISTANCE)
+        pt_n = add_vectors(pt_proj, vec_m)
+    else:
+        pt_n = None
     return pt_n
 
 
 def calculate_new_point(lines):
+    """calculate average point of the contact points between the given list of lines.
 
+    Parameters
+    ----------
+    lines : list of (pt_0, pt_1)
+        list of lines, each line: (bar contact (base) point, new vertex point)
+
+    Returns
+    -------
+    point
+        point coordinate
+    """
+    if len(lines) == 1:
+        return lines[0][1]
     pts_all = []
-    for i, l1 in enumerate(lines):
-        for j, l2 in enumerate(lines):
-            if j > i:
-                pts = dropped_perpendicular_points(l1[0], l1[1], l2[0], l2[1])
-                pts_all.append(centroid_points(pts))
+    for l1, l2 in combinations(lines, 2):
+        pts = dropped_perpendicular_points(l1[0], l1[1], l2[0], l2[1])
+        pts_all.append(centroid_points(pts))
     pt = centroid_points(pts_all)
     return pt
 
 
-def intersection_bars_base(b_struct, bars_1):
+def intersection_bars_base(b_struct, bar_pair):
+    """find contact point between two connected bars
+        Find point N, given two bars b_e1 and b_e2 (see figure below).
 
-    bar_11  = b_struct.vertex[bars_1[0]]
-    bar_12  = b_struct.vertex[bars_1[1]]
-    pts_int = dropped_perpendicular_points(bar_11["axis_endpoints"][0], bar_11["axis_endpoints"][1], bar_12["axis_endpoints"][0], bar_12["axis_endpoints"][1])
-    pt_fin  = centroid_points(pts_int)
+    .. image:: ../images/vertex_correction_to_base.png
+        :scale: 80 %
+        :align: center
 
-    return pt_fin
+    Parameters
+    ----------
+    b_struct : [type]
+        [description]
+    bar_pair : list of two int
+        BarS vertex keys, representing two bars.
 
+    Returns
+    -------
+    list of three float
+        point N
+    """
+    bar1 = b_struct.vertex[bar_pair[0]]
+    bar2  = b_struct.vertex[bar_pair[1]]
+    pts_int = dropped_perpendicular_points(bar1["axis_endpoints"][0], bar1["axis_endpoints"][1],
+                                           bar2["axis_endpoints"][0], bar2["axis_endpoints"][1])
+    return centroid_points(pts_int)
 
-def adjust_gripping_plane(pt_bar, pt_new, b_struct, b_v0):
+###################################################
 
-    if distance_point_point(pt_bar[0], pt_bar[1]) > 10000:
-    ### hardcoded asjustments for prototype node - to be implemented in overall iteration
-    #if b_v0 == 27 or b_v0 == 20 or b_v0 == 12 or b_v0 == 9 or b_v0 == 15 or b_v0 == 24:
-        pt_o    = pt_new
-        d_1     = distance_point_point(pt_o, pt_bar[0])
-        d_2     = distance_point_point(pt_o, pt_bar[1])
-        if d_1 < d_2:
-            vec_move    = normalize_vector(vector_from_points(pt_bar[1], pt_bar[0]))
-        else:
-            vec_move    = normalize_vector(vector_from_points(pt_bar[0], pt_bar[1]))
-        len_bar = distance_point_point(pt_bar[0], pt_bar[1])
-        d_move  = len_bar/5
-        # if b_v0 == 12 or b_v0 == 9 or b_v0 == 15 or b_v0 == 24:
-        #     d_move = len_bar/7
+def find_bar_ends(b_struct, b_key):
+    """Update bar's end points according to the contact points
 
-        gp      = b_struct.vertex[b_v0]["gripping_plane_no_offset"]
-        gp_o_n  = translate_points([gp[0]], scale_vector(vec_move, d_move))[0]
-        b_struct.vertex[b_v0]["gripping_plane_no_offset"] = (gp_o_n, gp[1], gp[2], gp[3])
-
-    #hard coded gripping plane shifting
-    # if b_v0 == 32:
-    #     pt_o    = pt_new
-    #     d_1     = distance_point_point(pt_o, pt_bar[0])
-    #     d_2     = distance_point_point(pt_o, pt_bar[1])
-    #     if d_1 < d_2:
-    #         vec_move    = normalize_vector(vector_from_points(pt_bar[1], pt_bar[0]))
-    #     else:
-    #         vec_move    = normalize_vector(vector_from_points(pt_bar[0], pt_bar[1]))
-    #     len_bar = distance_point_point(pt_bar[0], pt_bar[1])
-    #     d_move  = -len_bar/5
-    #     gp      = b_struct.vertex[b_v0]["gripping_plane_no_offset"]
-    #     gp_o_n  = translate_points([gp[0]], scale_vector(vec_move, d_move))[0]
-    #     b_struct.vertex[b_v0]["gripping_plane_no_offset"] = (gp_o_n, gp[1], gp[2], gp[3])
-
-    # if b_v0 == 35:
-    #     vec_move    = normalize_vector(vector_from_points(pt_bar[0], pt_bar[1]))
-    #     len_bar = distance_point_point(pt_bar[0], pt_bar[1])
-    #     d_move  = -len_bar/4.5
-    #     gp      = b_struct.vertex[b_v0]["gripping_plane_no_offset"]
-    #     gp_o_n  = translate_points([gp[0]], scale_vector(vec_move, d_move))[0]
-    #     b_struct.vertex[b_v0]["gripping_plane_no_offset"] = (gp_o_n, gp[1], gp[2], gp[3])
-
-    # if b_v0 == 37:
-    #     vec_move    = normalize_vector(vector_from_points(pt_bar[0], pt_bar[1]))
-    #     len_bar = distance_point_point(pt_bar[0], pt_bar[1])
-    #     d_move  = -len_bar/5
-    #     gp      = b_struct.vertex[b_v0]["gripping_plane_no_offset"]
-    #     gp_o_n  = translate_points([gp[0]], scale_vector(vec_move, d_move))[0]
-    #     b_struct.vertex[b_v0]["gripping_plane_no_offset"] = (gp_o_n, gp[1], gp[2], gp[3])
-
-
-
-def find_bar_ends(b_struct, b, b_key):
-    pts_all_b = []
+    Parameters
+    ----------
+    b_struct : [type]
+        [description]
+    b_key : int
+        BarStructure vertex key
+    """
+    bar = b_struct.vertex[b_key]
+    bar_all_contact_pts = []
     b_vert_n = b_struct.vertex_neighbors(b_key)
-    for n in b_vert_n:
-        pts_all_b.append(dropped_perpendicular_points(b["axis_endpoints"][0], b["axis_endpoints"][1], b_struct.vertex[n]["axis_endpoints"][0], b_struct.vertex[n]["axis_endpoints"][1])[0])
-    pts_b = find_points_extreme(pts_all_b, b["axis_endpoints"])
-    b_struct.vertex[b_key].update({"axis_endpoints":pts_b})
+    for neighbor_bar_key in b_vert_n:
+        bar_contact_pt, _ = dropped_perpendicular_points(bar["axis_endpoints"][0],
+                                                         bar["axis_endpoints"][1],
+                                                         b_struct.vertex[neighbor_bar_key]["axis_endpoints"][0],
+                                                         b_struct.vertex[neighbor_bar_key]["axis_endpoints"][1])
+        bar_all_contact_pts.append(bar_contact_pt)
+    bar_end_pts_new = find_points_extreme(bar_all_contact_pts, bar["axis_endpoints"])
+    b_struct.vertex[b_key].update({"axis_endpoints" : bar_end_pts_new})

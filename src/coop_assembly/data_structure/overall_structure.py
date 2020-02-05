@@ -1,4 +1,3 @@
-
 '''
 
     ****       *****       ******       ****       ******  ******          **           **
@@ -23,7 +22,7 @@ from coop_assembly.help_functions.helpers_geometry import dropped_perpendicular_
 
 
 class OverallStructure(Network):
-    """class defining the overall structure in which a node is represented
+    """this class defines the overall structure in which a node is represented
     by a network.vertex and a bar by a network.edge does not include
     connectors - these are referenced through the additional bar_structure class
 
@@ -44,8 +43,25 @@ class OverallStructure(Network):
     nodes and edges to describe the topological function of bars, i.e. which nodes
     are connected through a bar.
 
-    This model is referred as *abstract data model*.
+    .. image:: ../images/node_subnode_joint.png
+        :scale: 80 %
+        :align: center
 
+    This model is referred as **abstract data model** (see left sub-figure below).
+
+    .. image:: ../images/data_structures.png
+        :scale: 80 %
+        :align: center
+
+    Parameters
+    ----------
+    Network : [type]
+        [description]
+
+    Returns
+    -------
+    [type]
+        [description]
     """
 
     def __init__(self, struct_bar):
@@ -101,7 +117,7 @@ class OverallStructure(Network):
             self.t_key_max += 1
         return v_key
 
-    def add_bar(self, v_key_1, v_key_2, bar_struct_vert_key, t_key = None):
+    def add_bar(self, v_key_1, v_key_2, bar_struct_vert_key, t_key=None):
         """create a network edge between vert 1 and vert 2,
         and assign the bar structure to the edge's attribute
 
@@ -114,7 +130,7 @@ class OverallStructure(Network):
         bar_struct_vert_key : int
             bar structure vertex id, representing a bar
         t_key : int, optional
-            tet, by default None
+            tetrahedra index, by default None
 
         Returns
         -------
@@ -136,6 +152,7 @@ class OverallStructure(Network):
             else:
                 self.tetrahedra.update({t_key:{"vertices":[v_key_1, v_key_2]}})
         else:
+            # no tetrahedra index is provided, bump max tet key
             if self.t_key_max in self.tetrahedra:
                 if v_key_1 not in self.tetrahedra[self.t_key_max]["vertices"]:
                     self.tetrahedra[self.t_key_max]["vertices"].append(v_key_1)

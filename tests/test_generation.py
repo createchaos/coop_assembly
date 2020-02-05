@@ -14,7 +14,7 @@ from coop_assembly.geometry_generation.tet_sequencing import \
     point2point_shortest_distance_tet_sequencing, \
     point2triangle_tet_sequencing
 from coop_assembly.geometry_generation.execute import execute_from_points
-from coop_assembly.assembly_info_generation import calculate_gripping_plane, calculate_offset, calculate_offsets_all
+from coop_assembly.assembly_info_generation import calculate_gripping_plane, calculate_offset
 from coop_assembly.help_functions.parsing import export_structure_data, parse_saved_structure_data
 
 @pytest.fixture
@@ -29,7 +29,7 @@ def save_dir():
 # @pytest.mark.parametrize('pt_search_method', [('point2point'), ])
 @pytest.mark.parametrize('pt_search_method', [('point2triangle'), ])
 # @pytest.mark.parametrize('pt_search_method', [('point2point'), ('point2triangle')])
-def test_generate_from_points(points_library, test_set_name, radius, pt_search_method, save_dir):
+def test_generate_from_points(points_library, test_set_name, radius, pt_search_method, save_dir, write):
     points, base_tri_pts = points_library[test_set_name]
     print('\n' + '#'*10)
     print('Testing generate from point for set: {}, total # of pts: {}'.format(test_set_name, len(points)))
@@ -54,7 +54,8 @@ def test_generate_from_points(points_library, test_set_name, radius, pt_search_m
         raise NotImplementedError('search method not implemented!')
 
     b_struct_data, o_struct_data = execute_from_points(points, tet_node_ids, radius, correct=True, check_collision=True)
-    export_structure_data(save_dir, b_struct_data, o_struct_data, file_name=test_set_name+'_'+pt_search_method+'.json')
+    if write:
+        export_structure_data(save_dir, b_struct_data, o_struct_data, file_name=test_set_name+'_'+pt_search_method+'.json')
 
 @pytest.mark.gen_grasp_planes
 @pytest.mark.parametrize('test_file_name', [('YJ_12_bars_point2triangle.json'),])
@@ -72,4 +73,3 @@ def test_gen_grasp_planes(points_library, test_file_name, save_dir):
     for v in b_struct.vertex:
         calculate_gripping_plane(b_struct, v, b_struct.vertex[v]["mean_point"], nb_rot=nb_rot, nb_trans=nb_trans)
         calculate_offset(o_struct, b_struct, v, offset_d1, offset_d2, seq)
-        calculate_offsets_all(o_struct, b_struct, v, offset_d1, offset_d2, seq)

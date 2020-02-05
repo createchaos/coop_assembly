@@ -18,7 +18,16 @@ def read(*names, **kwargs):
         encoding=kwargs.get('encoding', 'utf8')
     ).read()
 
-requirements = read('requirements.txt').split('\n')
+requirements = [
+    # Until COMPAS reaches 1.0, we pin major.minor and allow patch version updates
+    # 'compas>=0.11,<0.12',
+    'compas>=0.11',
+    'scipy>=1.3.1',
+    # 'compas_fab',
+    # 'pychoreo',
+    # 'pycddlib',
+]
+keywords_list = ['robotic assembly', 'double-tangent frame structure', 'digital fabrication', 'architecture']
 
 keywords_list = []
 

@@ -16,6 +16,7 @@ edited on 17.12.2019 by Yijiang Huang, yijiangh@mit.edu
 from compas.datastructures.network import Network
 from compas.geometry import is_point_on_line
 from coop_assembly.help_functions.helpers_geometry import dropped_perpendicular_points, find_points_extreme
+from coop_assembly.help_functions.shared_const import TOL
 
 
 class BarStructure(Network):
@@ -36,9 +37,29 @@ class BarStructure(Network):
     `BarStructure` includes geometric information about the bars endpoints and the joint positions in the
     space.
 
-    This model is referred as *base data model*.
+    .. image:: ../images/node_subnode_joint.png
+        :scale: 80 %
+        :align: center
 
+    This model is referred as **base data model**.
+
+    .. image:: ../images/data_structures.png
+        :scale: 80 %
+        :align: center
+
+    TODO: this data structure should be able to be derived from base class "VirtualJoint"
+
+    Parameters
+    ----------
+    Network : [type]
+        [description]
+
+    Returns
+    -------
+    [type]
+        [description]
     """
+
     # crosec_type     = "rectangle" / "tube" / "circle"
     # crosec_values = "rectangle" : (width, height) - height = dimension in z-axis direction
     #                                                            "tube"   : (outer diameter, thickness)
@@ -64,6 +85,26 @@ class BarStructure(Network):
         return v_key
 
     def connect_bars(self, v_key1, v_key2, _endpoints=[], _connection_type=0, _connection_parameters=[]):
+        """create an edge connecting bar v_key1 and v_key2 or update edge attributes if edge exists already
+
+        Parameters
+        ----------
+        v_key1 : int
+            bar vertex id 1
+        v_key2 : int
+            bar vertex id 2
+        _endpoints : list, optional
+            [description], by default []
+        _connection_type : int, optional
+            [description], by default 0
+        _connection_parameters : list, optional
+            [description], by default []
+
+        Returns
+        -------
+        [type]
+            [description]
+        """
         if self.has_edge(v_key1, v_key2):
             # edge exists already, updating edge attributes
             id = self.edge[v_key1][v_key2]["connections_count"]
@@ -83,24 +124,25 @@ class BarStructure(Network):
         return (v_key1, v_key2)
 
     def update_bar_lengths(self):
-        """[summary]
+        """update each bar's length so that it can cover all the contact points specified in edges (contact joints)
         """
         for b in self.vertex:
+            # edges are contact joints
             edges_con = self.vertex_connected_edges(b)
             list_pts = []
-            for e, f in edges_con:
-                dpp = dropped_perpendicular_points(self.vertex[e]["axis_endpoints"][0],
-                                                   self.vertex[e]["axis_endpoints"][1],
-                                                   self.vertex[f]["axis_endpoints"][0],
-                                                   self.vertex[f]["axis_endpoints"][1])
-                self.edge[e][f]["endpoints"][0] = dpp
-                points = self.edge[e][f]["endpoints"]
+            # for each connnected joint
+            for bar_vert_1, bar_vert_2 in edges_con:
+                dpp = dropped_perpendicular_points(self.vertex[bar_vert_1]["axis_endpoints"][0],
+                                                   self.vertex[bar_vert_1]["axis_endpoints"][1],
+                                                   self.vertex[bar_vert_2]["axis_endpoints"][0],
+                                                   self.vertex[bar_vert_2]["axis_endpoints"][1])
+                self.edge[bar_vert_1][bar_vert_2]["endpoints"][0] = dpp
+                points = self.edge[bar_vert_1][bar_vert_2]["endpoints"]
                 for p in points.keys():
                     pair_points = points[p]
-                    if pair_points !=[]:
+                    if pair_points != []:
                         for pt in pair_points:
-                            bool_online = is_point_on_line(pt, self.vertex[b]["axis_endpoints"], 0.1)
-                            if bool_online:
+                            if is_point_on_line(pt, self.vertex[b]["axis_endpoints"], TOL):
                                 list_pts.append(pt)
 
             if len(list_pts) > 0:
@@ -108,6 +150,7 @@ class BarStructure(Network):
                     pts_extr = find_points_extreme(list_pts, self.vertex[b]["axis_endpoints"])
                 else:
                     pts_extr = list_pts
+                # update axis end points
                 self.vertex[b].update({"axis_endpoints":pts_extr})
 
     # def add_bar_support(self, v_key, _point, _dof=(-1,-1,-1,0,0,0), _support_type=0):

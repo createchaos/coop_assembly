@@ -119,3 +119,12 @@ ENV/
 
 # choreo results
 /*_result_.json
+
+.coverage
+
+###############################
+# coop_assembly
+###############################
+docs/reference/generated/
+src/compas_fab
+src/pychoreo

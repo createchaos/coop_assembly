@@ -36,17 +36,11 @@ Contents
 ========
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 3
+   :titlesonly:
 
-   readme
    instructions
+   reference
    troubleshooting
    authors
    changelog
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
